@@ -41,6 +41,9 @@ button{font-family:inherit;color:inherit}
   text-transform:uppercase;
   color:var(--fg-dim);
 }
+.brand-mark{display:flex;align-items:center;gap:7px}
+.brand-mark svg{width:15px;height:15px;fill:var(--accent);flex:none}
+.copyright{font-size:9.5px;color:var(--fg-dim);opacity:.55;text-align:center;margin-top:10px}
 
 /* ---------- Setup overlay ---------- */
 #setup{
@@ -289,7 +292,10 @@ body.stage-window #bar{display:none !important}
 </style>
 
 <div id="setup">
-  <div class="eyebrow">MGD Teleprompter</div>
+  <div class="brand-mark">
+    <svg viewBox="0 0 24 24"><path d="M4 4h16a2 2 0 012 2v9a2 2 0 01-2 2h-5l1.5 4h-9L9 17H4a2 2 0 01-2-2V6a2 2 0 012-2zm1 3v8h14V7H5zm3 2h8v1.5H8V9zm0 3h6v1.5H8V12z"/></svg>
+    <div class="eyebrow">MGD Teleprompter</div>
+  </div>
   <div class="brand">Paste your script</div>
   <div class="sub">Plain text, or anything copied from a Google Doc. It's saved on this device so you can reopen straight to the stage next time.</div>
   <textarea id="script-input" placeholder="Paste or type your script here&#10;&#10;Line breaks become paragraph breaks on the prompter."></textarea>
@@ -297,6 +303,7 @@ body.stage-window #bar{display:none !important}
     <button class="btn primary" id="start-btn">Start prompting</button>
     <button class="btn ghost" id="cancel-edit" style="display:none">Back to stage</button>
   </div>
+  <div class="copyright">© shovonix</div>
 </div>
 
 <div id="stage" class="hidden">
@@ -306,8 +313,8 @@ body.stage-window #bar{display:none !important}
   <div id="guide"></div>
   <div id="stage-hint" class="hidden">
     <div id="stage-hint-card">
-      <div class="t">External display</div>
-      <div class="s">Drag this window onto your other monitor, then click anywhere (or press F) to go fullscreen. Control everything from the main window.</div>
+      <div class="t">Staging Teleprompter Preview</div>
+      <div class="s">Drag this window onto your external display, then click anywhere (or press F) to go fullscreen. Press Play in the control window to start scrolling here. Press <kbd>Esc</kbd> anytime to return to this screen.</div>
     </div>
   </div>
 
@@ -331,10 +338,10 @@ body.stage-window #bar{display:none !important}
         </div>
       </div>
       <div class="row">
-        <button class="icon-btn" id="mirror-btn" aria-pressed="false" aria-label="Mirror (horizontal flip) — key H">
+        <button class="icon-btn" id="mirror-btn" aria-pressed="false" aria-label="Horizontal flip — key H">
           <svg viewBox="0 0 24 24"><path d="M11 3h2v18h-2zM4 7l5 5-5 5zM20 7l-5 5 5 5z"/></svg>
         </button>
-        <button class="icon-btn" id="flip-btn" aria-pressed="false" aria-label="Flip vertical — key B">
+        <button class="icon-btn" id="flip-btn" aria-pressed="false" aria-label="Vertical flip — key V">
           <svg viewBox="0 0 24 24" style="transform:rotate(90deg)"><path d="M11 3h2v18h-2zM4 7l5 5-5 5zM20 7l-5 5 5 5z"/></svg>
         </button>
         <button class="icon-btn" id="fullscreen-btn" aria-label="Fullscreen">
@@ -360,7 +367,7 @@ body.stage-window #bar{display:none !important}
           <button class="btn" id="display-fallback-copy" style="padding:7px 10px">Copy</button>
         </div>
       </div>
-      <div class="hint"><kbd>Space</kbd> Play/Pause · <kbd>↑↓</kbd> Speed · <kbd>I/D</kbd> Size · <kbd>M/N</kbd> Margin · <kbd>H</kbd> Mirror · <kbd>B</kbd> Flip · <kbd>F</kbd> Fullscreen</div>
+      <div class="hint"><kbd>Space</kbd> Play/Pause · <kbd>↑</kbd> Speed up · <kbd>↓</kbd> Speed down · <kbd>I</kbd> Increase size · <kbd>D</kbd> Decrease size · <kbd>M</kbd> More margin · <kbd>N</kbd> Less margin · <kbd>H</kbd> Horizontal flip · <kbd>V</kbd> Vertical flip · <kbd>F</kbd> Fullscreen</div>
     </div>
   </div>
 </div>
@@ -650,6 +657,15 @@ body.stage-window #bar{display:none !important}
       try{ stage.requestFullscreen && stage.requestFullscreen().catch(function(){}); }catch(e){}
     });
     if(bc) bc.postMessage({type:'hello'});
+
+    // Esc = "return": stop scrolling, drop out of fullscreen, bring the
+    // explainer card back so the window is ready to be handed off again.
+    document.addEventListener('keydown', function(e){
+      if(e.key !== 'Escape') return;
+      pause();
+      try{ if(document.fullscreenElement) document.exitFullscreen().catch(function(){}); }catch(e2){}
+      stageHint.classList.remove('hidden');
+    });
   }
 
   // ---- Cross-window sync ----
@@ -691,7 +707,7 @@ body.stage-window #bar{display:none !important}
     else if(k === 'm'){ state.marginPx = Math.min(500, state.marginPx + 20); applyMargin(); save(); showBar(); }
     else if(k === 'n'){ state.marginPx = Math.max(0, state.marginPx - 20); applyMargin(); save(); showBar(); }
     else if(k === 'h'){ state.mirrored = !state.mirrored; applyFlip(); save(); showBar(); }
-    else if(k === 'b'){ state.flipped = !state.flipped; applyFlip(); save(); showBar(); }
+    else if(k === 'v'){ state.flipped = !state.flipped; applyFlip(); save(); showBar(); }
     else if(k === 'f'){ fullscreenBtn.click(); }
     else if(k === 'e'){ showSetup(true); }
   });
