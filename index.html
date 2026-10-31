@@ -186,20 +186,36 @@ button{font-family:inherit;color:inherit}
 /* Mobile-first: .cluster is display:contents below 900px, so it adds no
    box of its own — its icon buttons become direct children of .row,
    free to pack on their own compact centered line next to Play. Each
-   slider-group (also a direct .row child by the same trick, even though
-   it's nested inside a cluster in markup) claims flex-basis:100%, so it
-   always gets a full-width line of its own. `order` puts every icon
-   button and Play ahead of every slider regardless of DOM position, so
-   phones/tablets read: a tight centered icon+Play row first, then all
-   four sliders stacked full-width below it, in Margin/Background/Speed/
-   Text-size order.
+   slider-group is a direct .row child the same way (even though nested
+   in a cluster in markup), and sits ~calc(50% - 8px) wide so two sit side
+   by side per line (wrapping to one column only if the screen is too
+   narrow for that). A .row-break spacer (flex-basis:100%) right after the
+   icons forces a hard line break there, so every slider line always starts
+   with the full row width on offer — the pairing doesn't drift with how
+   much space the icon row happened to leave over. `order` puts every icon
+   button and Play first, then the break, then Speed and Text size (the
+   two most-used during a read), then Margin and Background — so
+   phones/tablets read: a tight centered icon+Play row, then a Speed/
+   Text-size pair, then a Margin/Background pair below it.
    At >=900px (media query below) clusters become real flex:1 boxes again,
-   order is reset to DOM order, and sliders stop forcing their own line —
-   the whole bar, icons and sliders on both sides of Play, reads as one
-   single line, with Play staying centered regardless of side content. */
+   order is reset to DOM order, the break is hidden, and sliders stop
+   forcing a fixed width — the whole bar, icons and sliders on both sides
+   of Play, reads as one single line, with Play staying centered regardless
+   of side content. */
 .cluster{display:contents}
 .icon-btn,#play{order:1}
-.slider-group{order:2}
+/* Forces a hard line break after the icon+Play row: flex-basis:100% means
+   this invisible item always claims the rest of its line by itself, so
+   whatever's left over after the icons (which varies by icon count/width)
+   never bleeds into the slider pairing below. Every slider group then
+   always starts counting from a fresh, full-width line — which is what
+   makes the 2-up pairing below land the same way every time instead of
+   drifting with how much space the icons happened to leave over. */
+.row-break{flex-basis:100%;width:0;height:0;order:2;margin:0;padding:0}
+#speed-group{order:3}
+#size-group{order:4}
+#margin-group{order:5}
+#bgop-group{order:6}
 #play{
   width:50px;height:50px;
   border-radius:50%;
@@ -222,7 +238,12 @@ button{font-family:inherit;color:inherit}
   flex:none;
 }
 .tally.live{background:var(--accent);box-shadow:0 0 8px var(--accent)}
-.slider-group{flex:1 1 100%;min-width:0;display:flex;flex-direction:column;gap:4px}
+/* calc(50% - 8px) rather than -6px deliberately leaves a few px of slack
+   below the true half-width (two of these plus the 12px gap land a little
+   under 100%, not flush against it) — floating-point/box rounding can
+   otherwise tip a pair just over 100% and bump the second one to its own
+   line, which is what was happening before the .row-break fix above. */
+.slider-group{flex:1 1 calc(50% - 8px);min-width:140px;display:flex;flex-direction:column;gap:4px}
 .slider-label{display:flex;justify-content:space-between;font-size:11px;color:var(--fg-dim);font-variant-numeric:tabular-nums}
 input[type=range]{
   -webkit-appearance:none;appearance:none;
@@ -287,7 +308,8 @@ kbd{
   .cluster{display:flex;align-items:center;gap:12px;flex:1;min-width:0;flex-wrap:nowrap}
   .cluster-left{justify-content:flex-end}
   .cluster-right{justify-content:flex-start}
-  .icon-btn,#play,.slider-group{order:0}
+  .icon-btn,#play,.slider-group,#speed-group,#size-group,#margin-group,#bgop-group{order:0}
+  .row-break{display:none}
   .slider-group{flex:1 1 auto;min-width:0}
   .hint,#display-fallback{flex-basis:100%}
 }
@@ -449,11 +471,11 @@ body.stage-window #connected-frame{display:none !important}
     <div id="bar-inner">
       <div class="row controls-row">
         <div class="cluster cluster-left">
-          <div class="slider-group">
+          <div class="slider-group" id="margin-group">
             <div class="slider-label"><span>Margin</span><span id="margin-val">—</span></div>
             <input type="range" id="margin" min="0" max="500" step="10">
           </div>
-          <div class="slider-group">
+          <div class="slider-group" id="bgop-group">
             <div class="slider-label"><span>Background</span><span id="bgop-val">—</span></div>
             <input type="range" id="bgop" min="20" max="100" step="5">
           </div>
@@ -482,15 +504,16 @@ body.stage-window #connected-frame{display:none !important}
           <button class="icon-btn" id="prev-para-btn" aria-label="Previous paragraph">
             <svg viewBox="0 0 24 24"><path d="M6 6h2v12H6zm3.5 6l8.5 6V6z"/></svg>
           </button>
-          <div class="slider-group">
+          <div class="slider-group" id="speed-group">
             <div class="slider-label"><span>Speed</span><span id="speed-val">—</span></div>
             <input type="range" id="speed" min="8" max="220" step="2">
           </div>
-          <div class="slider-group">
+          <div class="slider-group" id="size-group">
             <div class="slider-label"><span>Text size</span><span id="size-val">—</span></div>
             <input type="range" id="size" min="22" max="110" step="2">
           </div>
         </div>
+        <div class="row-break" aria-hidden="true"></div>
       </div>
       <div id="display-fallback">
         <div class="s">Couldn't open a new window automatically. Copy this link and open it manually in a new window (File → New Window), then drag that window to your external display:</div>
@@ -945,7 +968,7 @@ body.stage-window #connected-frame{display:none !important}
   });
 
   // ---- Build/version indicator (control window top bar) ----
-  var APP_VERSION = 'v1.5.1';
+  var APP_VERSION = 'v1.5.2';
   if(buildMeta && !isStageWindow){
     buildMeta.textContent = APP_VERSION;
   }
