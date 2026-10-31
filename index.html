@@ -1,0 +1,696 @@
+<meta charset="UTF-8">
+<title>MGD Teleprompter</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="claude:viewport-fit-sides" content="cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@600;700&family=Public+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+/* Glass Prompter — a single studio-dark theme by design: a teleprompter is
+   always read as bright text on black through the beamsplitter glass, so a
+   light mode would work against the thing it's built to do. */
+:root{
+  --bg:#0a0a0b;
+  --stage:#000000;
+  --surface:#17171a;
+  --surface-2:#1f1f24;
+  --fg:#f4f4f0;
+  --fg-dim:#8a8a90;
+  --accent:#ff3b1f;
+  --accent-fg:#0a0a0b;
+  --border:#2a2a2f;
+  color-scheme: dark;
+}
+*{box-sizing:border-box}
+html,body{height:100%;margin:0}
+body{
+  background:var(--bg);
+  color:var(--fg);
+  font-family:'Public Sans',system-ui,-apple-system,sans-serif;
+  overflow:hidden;
+  -webkit-tap-highlight-color:transparent;
+}
+button{font-family:inherit;color:inherit}
+.eyebrow{
+  font-family:'Archivo',system-ui,sans-serif;
+  font-weight:600;
+  font-size:11px;
+  letter-spacing:.14em;
+  text-transform:uppercase;
+  color:var(--fg-dim);
+}
+
+/* ---------- Setup overlay ---------- */
+#setup{
+  position:fixed;inset:0;
+  background:var(--bg);
+  display:flex;
+  flex-direction:column;
+  padding-block:max(28px, env(safe-area-inset-top,0px)) max(24px, env(safe-area-inset-bottom,0px));
+  padding-left:max(20px, env(safe-area-inset-left,0px));
+  padding-right:max(20px, env(safe-area-inset-right,0px));
+  z-index:30;
+}
+#setup.hidden{display:none}
+#setup .brand{
+  font-family:'Archivo',system-ui,sans-serif;
+  font-weight:700;
+  font-size:20px;
+  letter-spacing:-.01em;
+  margin:2px 0 2px;
+}
+#setup .sub{color:var(--fg-dim);font-size:14px;margin-bottom:22px;max-width:52ch}
+#script-input{
+  flex:1;
+  width:100%;
+  resize:none;
+  background:var(--surface);
+  border:1px solid var(--border);
+  border-radius:10px;
+  color:var(--fg);
+  font-family:'Public Sans',system-ui,sans-serif;
+  font-size:16px;
+  line-height:1.6;
+  padding:16px;
+  min-height:0;
+}
+#script-input:focus{outline:2px solid var(--accent);outline-offset:-2px}
+#script-input::placeholder{color:var(--fg-dim)}
+.setup-row{display:flex;gap:10px;margin-top:16px;flex-wrap:wrap}
+.btn{
+  font-family:'Archivo',system-ui,sans-serif;
+  font-weight:600;
+  font-size:13px;
+  letter-spacing:.02em;
+  border:1px solid var(--border);
+  background:var(--surface);
+  color:var(--fg);
+  border-radius:9px;
+  padding:13px 18px;
+  cursor:pointer;
+}
+.btn:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
+.btn.primary{
+  background:var(--accent);
+  color:var(--accent-fg);
+  border-color:var(--accent);
+  flex:1;
+  min-width:160px;
+}
+.btn.ghost{background:transparent}
+
+/* ---------- Stage ---------- */
+#stage{
+  position:fixed;inset:0;
+  background:var(--stage);
+}
+#stage.hidden{display:none}
+#scroller{
+  position:absolute;inset:0;
+  overflow-y:auto;
+  overflow-x:hidden;
+  scrollbar-width:none;
+}
+#scroller::-webkit-scrollbar{display:none}
+#script-text{
+  padding-left:max(28px, env(safe-area-inset-left,0px));
+  padding-right:max(28px, env(safe-area-inset-right,0px));
+  padding-top:min(70vh, 520px);
+  padding-bottom:min(70vh, 520px);
+  font-family:'Public Sans',system-ui,sans-serif;
+  font-weight:600;
+  white-space:pre-wrap;
+  word-break:break-word;
+  color:var(--fg);
+  transform-origin:center;
+}
+
+/* centerline guide, like a prompter rig's reading mark */
+#guide{
+  position:absolute;
+  left:0;right:0;
+  top:50%;
+  height:1px;
+  background:linear-gradient(90deg, transparent, var(--accent) 18%, var(--accent) 82%, transparent);
+  opacity:.35;
+  pointer-events:none;
+}
+
+/* ---------- Controls ---------- */
+#bar{
+  position:absolute;
+  left:0;right:0;bottom:0;
+  padding-left:max(14px, env(safe-area-inset-left,0px));
+  padding-right:max(14px, env(safe-area-inset-right,0px));
+  padding-block:12px max(12px, env(safe-area-inset-bottom,0px));
+  background:linear-gradient(180deg, transparent, rgba(0,0,0,.92) 40%);
+  transition:opacity .25s ease, transform .25s ease;
+}
+#bar.faded{opacity:0;transform:translateY(8px);pointer-events:none}
+#bar-inner{
+  background:var(--surface);
+  border:1px solid var(--border);
+  border-radius:14px;
+  padding:12px 14px;
+  display:flex;
+  flex-direction:column;
+  gap:10px;
+}
+.row{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.row + .row{border-top:1px solid var(--border);padding-top:10px}
+#play{
+  width:50px;height:50px;
+  border-radius:50%;
+  border:1px solid var(--border);
+  background:var(--surface-2);
+  display:flex;align-items:center;justify-content:center;
+  flex:none;
+  cursor:pointer;
+}
+#play.active{background:var(--accent);border-color:var(--accent)}
+#play svg{width:18px;height:18px;fill:var(--fg)}
+#play.active svg{fill:var(--accent-fg)}
+.tally{
+  width:8px;height:8px;border-radius:50%;
+  background:var(--border);
+  flex:none;
+}
+.tally.live{background:var(--accent);box-shadow:0 0 8px var(--accent)}
+.slider-group{flex:1;min-width:140px;display:flex;flex-direction:column;gap:4px}
+.slider-label{display:flex;justify-content:space-between;font-size:11px;color:var(--fg-dim);font-variant-numeric:tabular-nums}
+input[type=range]{
+  -webkit-appearance:none;appearance:none;
+  width:100%;height:4px;border-radius:2px;
+  background:var(--border);
+  outline:none;
+}
+input[type=range]::-webkit-slider-thumb{
+  -webkit-appearance:none;appearance:none;
+  width:18px;height:18px;border-radius:50%;
+  background:var(--accent);
+  border:2px solid var(--stage);
+  cursor:pointer;
+}
+input[type=range]::-moz-range-thumb{
+  width:18px;height:18px;border-radius:50%;
+  background:var(--accent);border:2px solid var(--stage);cursor:pointer;
+}
+.icon-btn{
+  width:38px;height:38px;
+  border-radius:9px;
+  border:1px solid var(--border);
+  background:var(--surface-2);
+  display:flex;align-items:center;justify-content:center;
+  flex:none;cursor:pointer;
+}
+.icon-btn[aria-pressed="true"]{background:var(--accent);border-color:var(--accent)}
+.icon-btn[aria-pressed="true"] svg{fill:var(--accent-fg)}
+.icon-btn svg{width:17px;height:17px;fill:var(--fg)}
+.hint{font-size:10.5px;color:var(--fg-dim);text-align:center;margin-top:2px}
+kbd{
+  font-family:'Archivo',monospace;
+  background:var(--surface-2);
+  border:1px solid var(--border);
+  border-radius:4px;
+  padding:1px 5px;
+  font-size:10px;
+}
+
+@media (max-width: 420px){
+  .slider-group{min-width:100%}
+  .row{gap:10px}
+}
+
+/* ---------- Stage window (popped out to external display) ---------- */
+body.stage-window #setup,
+body.stage-window #bar{display:none !important}
+#stage-hint{
+  position:absolute;inset:0;
+  display:flex;align-items:center;justify-content:center;
+  background:rgba(0,0,0,.72);
+  cursor:pointer;
+  z-index:10;
+}
+#stage-hint.hidden{display:none}
+#stage-hint-card{
+  background:var(--surface);
+  border:1px solid var(--border);
+  border-radius:12px;
+  padding:20px 24px;
+  max-width:360px;
+  text-align:center;
+}
+#stage-hint-card .t{font-family:'Archivo',sans-serif;font-weight:700;font-size:15px;margin-bottom:6px}
+#stage-hint-card .s{color:var(--fg-dim);font-size:13px;line-height:1.5}
+
+/* ---------- Control panel extras ---------- */
+.status-dot{width:7px;height:7px;border-radius:50%;background:var(--border);flex:none}
+.status-dot.on{background:#3ddc6f;box-shadow:0 0 6px #3ddc6f}
+#display-fallback{
+  display:none;
+  flex-direction:column;
+  gap:8px;
+  background:var(--surface-2);
+  border:1px solid var(--border);
+  border-radius:9px;
+  padding:10px;
+  margin-top:4px;
+}
+#display-fallback.show{display:flex}
+#display-fallback .s{font-size:11.5px;color:var(--fg-dim);line-height:1.4}
+#display-fallback-row{display:flex;gap:6px}
+#display-fallback-url{
+  flex:1;min-width:0;
+  background:var(--stage);
+  border:1px solid var(--border);
+  border-radius:6px;
+  color:var(--fg);
+  font-size:11px;
+  padding:7px 8px;
+}
+</style>
+
+<div id="setup">
+  <div class="eyebrow">MGD Teleprompter</div>
+  <div class="brand">Paste your script</div>
+  <div class="sub">Plain text, or anything copied from a Google Doc. It's saved on this device so you can reopen straight to the stage next time.</div>
+  <textarea id="script-input" placeholder="Paste or type your script here&#10;&#10;Line breaks become paragraph breaks on the prompter."></textarea>
+  <div class="setup-row">
+    <button class="btn primary" id="start-btn">Start prompting</button>
+    <button class="btn ghost" id="cancel-edit" style="display:none">Back to stage</button>
+  </div>
+</div>
+
+<div id="stage" class="hidden">
+  <div id="scroller">
+    <div id="script-text"></div>
+  </div>
+  <div id="guide"></div>
+  <div id="stage-hint" class="hidden">
+    <div id="stage-hint-card">
+      <div class="t">External display</div>
+      <div class="s">Drag this window onto your other monitor, then click anywhere (or press F) to go fullscreen. Control everything from the main window.</div>
+    </div>
+  </div>
+
+  <div id="bar">
+    <div id="bar-inner">
+      <div class="row">
+        <button id="play" aria-label="Play or pause">
+          <svg id="play-icon" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+        </button>
+        <div class="slider-group">
+          <div class="slider-label"><span>Speed</span><span id="speed-val">—</span></div>
+          <input type="range" id="speed" min="8" max="220" step="2">
+        </div>
+        <div class="slider-group">
+          <div class="slider-label"><span>Text size</span><span id="size-val">—</span></div>
+          <input type="range" id="size" min="22" max="110" step="2">
+        </div>
+        <div class="slider-group">
+          <div class="slider-label"><span>Margin</span><span id="margin-val">—</span></div>
+          <input type="range" id="margin" min="0" max="500" step="10">
+        </div>
+      </div>
+      <div class="row">
+        <button class="icon-btn" id="mirror-btn" aria-pressed="false" aria-label="Mirror (horizontal flip) — key H">
+          <svg viewBox="0 0 24 24"><path d="M11 3h2v18h-2zM4 7l5 5-5 5zM20 7l-5 5 5 5z"/></svg>
+        </button>
+        <button class="icon-btn" id="flip-btn" aria-pressed="false" aria-label="Flip vertical — key B">
+          <svg viewBox="0 0 24 24" style="transform:rotate(90deg)"><path d="M11 3h2v18h-2zM4 7l5 5-5 5zM20 7l-5 5 5 5z"/></svg>
+        </button>
+        <button class="icon-btn" id="fullscreen-btn" aria-label="Fullscreen">
+          <svg viewBox="0 0 24 24"><path d="M7 14H5v5h5v-2H7zM5 10h2V7h3V5H5zm12 9h-3v2h5v-5h-2zM14 5v2h3v3h2V5z"/></svg>
+        </button>
+        <button class="icon-btn" id="top-btn" aria-label="Back to top">
+          <svg viewBox="0 0 24 24"><path d="M12 5l7 7h-4v7h-6v-7H5z"/></svg>
+        </button>
+        <button class="icon-btn" id="edit-btn" aria-label="Edit script">
+          <svg viewBox="0 0 24 24"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75zM20.71 7.04a1 1 0 000-1.41l-2.34-2.34a1 1 0 00-1.41 0l-1.83 1.83 3.75 3.75z"/></svg>
+        </button>
+        <div style="flex:1"></div>
+        <div class="status-dot" id="status-dot" title="External display connection"></div>
+        <button class="icon-btn" id="display-btn" aria-label="Open external display">
+          <svg viewBox="0 0 24 24"><path d="M21 3H3c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h7l-2 3v1h8v-1l-2-3h7c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 14H3V5h18v12z"/></svg>
+        </button>
+      </div>
+      <div id="display-fallback">
+        <div class="s">Couldn't open a new window automatically. Copy this link and open it manually in a new window (File → New Window), then drag that window to your external display:</div>
+        <div id="display-fallback-row">
+          <input id="display-fallback-url" readonly>
+          <button class="btn" id="display-fallback-copy" style="padding:7px 10px">Copy</button>
+        </div>
+      </div>
+      <div class="hint"><kbd>Space</kbd> play/pause · <kbd>↑↓</kbd> speed · <kbd>V/C</kbd> size · <kbd>M/N</kbd> margin · <kbd>H</kbd> mirror · <kbd>B</kbd> flip · <kbd>F</kbd> fullscreen</div>
+    </div>
+  </div>
+</div>
+
+<script>
+(function(){
+  var STORE_KEY = 'glassPrompterState';
+  // Self-hosted on a plain domain (not the Claude artifact sandbox), so the
+  // page's own address is the real, publicly-openable link — safe to use directly.
+  var PUBLIC_URL = location.origin + location.pathname;
+  var isStageWindow = location.hash === '#stage';
+  if(isStageWindow) document.body.classList.add('stage-window');
+
+  var bc = null;
+  try{ bc = new BroadcastChannel('mgdTeleprompterSync'); }catch(e){}
+  var applyingRemote = false; // guards against echo loops when applying an incoming message
+
+  var state = {
+    text: '',
+    mirrored: false,  // horizontal flip
+    flipped: false,   // vertical flip
+    speed: 40,        // px/sec
+    fontSize: 48,     // px
+    marginPx: 0,       // extra left/right margin, px per side
+  };
+
+  function load(){
+    try{
+      var raw = localStorage.getItem(STORE_KEY);
+      if(raw){
+        var saved = JSON.parse(raw);
+        if(saved && typeof saved === 'object') Object.assign(state, saved);
+      }
+    }catch(e){}
+  }
+  function save(){
+    try{ localStorage.setItem(STORE_KEY, JSON.stringify(state)); }catch(e){}
+    broadcastState();
+  }
+  function broadcastState(){
+    if(!bc || applyingRemote) return;
+    bc.postMessage({ type:'state', state: state, fromStage: isStageWindow });
+  }
+  load();
+
+  var setup = document.getElementById('setup');
+  var stage = document.getElementById('stage');
+  var input = document.getElementById('script-input');
+  var startBtn = document.getElementById('start-btn');
+  var cancelEdit = document.getElementById('cancel-edit');
+  var scroller = document.getElementById('scroller');
+  var scriptText = document.getElementById('script-text');
+  var playBtn = document.getElementById('play');
+  var playIcon = document.getElementById('play-icon');
+  var speedSlider = document.getElementById('speed');
+  var speedVal = document.getElementById('speed-val');
+  var sizeSlider = document.getElementById('size');
+  var sizeVal = document.getElementById('size-val');
+  var marginSlider = document.getElementById('margin');
+  var marginVal = document.getElementById('margin-val');
+  var mirrorBtn = document.getElementById('mirror-btn');
+  var flipBtn = document.getElementById('flip-btn');
+  var fullscreenBtn = document.getElementById('fullscreen-btn');
+  var topBtn = document.getElementById('top-btn');
+  var editBtn = document.getElementById('edit-btn');
+  var bar = document.getElementById('bar');
+  var displayBtn = document.getElementById('display-btn');
+  var statusDot = document.getElementById('status-dot');
+  var displayFallback = document.getElementById('display-fallback');
+  var displayFallbackUrl = document.getElementById('display-fallback-url');
+  var displayFallbackCopy = document.getElementById('display-fallback-copy');
+  var stageHint = document.getElementById('stage-hint');
+
+  var playing = false;
+  var rafId = null;
+  var lastT = 0;
+  var hideTimer = null;
+  var wakeLock = null;
+
+  function applyText(){
+    scriptText.textContent = state.text || (isStageWindow ? 'Waiting for script from the control window…' : '');
+  }
+  function applyFlip(){
+    var sx = state.mirrored ? -1 : 1;
+    var sy = state.flipped ? -1 : 1;
+    scriptText.style.transform = 'scale(' + sx + ',' + sy + ')';
+    mirrorBtn.setAttribute('aria-pressed', state.mirrored ? 'true' : 'false');
+    flipBtn.setAttribute('aria-pressed', state.flipped ? 'true' : 'false');
+  }
+  function applyMargin(){
+    var l = 'calc(max(28px, env(safe-area-inset-left,0px)) + ' + state.marginPx + 'px)';
+    var r = 'calc(max(28px, env(safe-area-inset-right,0px)) + ' + state.marginPx + 'px)';
+    scriptText.style.paddingLeft = l;
+    scriptText.style.paddingRight = r;
+    marginSlider.value = state.marginPx;
+    marginVal.textContent = state.marginPx + 'px';
+  }
+  function applySize(){
+    scriptText.style.fontSize = state.fontSize + 'px';
+    scriptText.style.lineHeight = '1.5';
+    sizeSlider.value = state.fontSize;
+    sizeVal.textContent = state.fontSize + 'px';
+  }
+  function applySpeed(){
+    speedSlider.value = state.speed;
+    speedVal.textContent = state.speed + ' px/s';
+  }
+
+  function showStage(){
+    setup.classList.add('hidden');
+    stage.classList.remove('hidden');
+    cancelEdit.style.display = '';
+  }
+  function showSetup(editing){
+    pause();
+    input.value = state.text;
+    setup.classList.remove('hidden');
+    stage.classList.add('hidden');
+    cancelEdit.style.display = editing ? '' : 'none';
+  }
+
+  startBtn.addEventListener('click', function(){
+    var v = input.value;
+    if(!v.trim()) return;
+    state.text = v;
+    save();
+    applyText();
+    showStage();
+    scroller.scrollTop = 0;
+  });
+  cancelEdit.addEventListener('click', function(){
+    showStage();
+  });
+  editBtn.addEventListener('click', function(){
+    showSetup(true);
+  });
+
+  function requestWake(){
+    try{
+      if('wakeLock' in navigator){
+        navigator.wakeLock.request('screen').then(function(wl){ wakeLock = wl; }).catch(function(){});
+      }
+    }catch(e){}
+  }
+  function releaseWake(){
+    try{ if(wakeLock){ wakeLock.release(); wakeLock = null; } }catch(e){}
+  }
+
+  function tick(t){
+    if(!playing) return;
+    if(!lastT) lastT = t;
+    var dt = (t - lastT) / 1000;
+    lastT = t;
+    scroller.scrollTop += state.speed * dt;
+    var atBottom = scroller.scrollTop + scroller.clientHeight >= scroller.scrollHeight - 2;
+    if(atBottom){
+      pause();
+      return;
+    }
+    rafId = requestAnimationFrame(tick);
+  }
+
+  function play(){
+    if(playing) return;
+    playing = true;
+    lastT = 0;
+    playIcon.innerHTML = '<rect x="6" y="5" width="4" height="14" rx="1"/><rect x="14" y="5" width="4" height="14" rx="1"/>';
+    playBtn.classList.add('active');
+    requestWake();
+    scheduleHide();
+    rafId = requestAnimationFrame(tick);
+    if(bc && !applyingRemote) bc.postMessage({type:'playing', value:true});
+  }
+  function pause(){
+    playing = false;
+    if(rafId) cancelAnimationFrame(rafId);
+    playIcon.innerHTML = '<path d="M8 5v14l11-7z"/>';
+    playBtn.classList.remove('active');
+    releaseWake();
+    showBar();
+    if(bc && !applyingRemote) bc.postMessage({type:'playing', value:false});
+  }
+  function toggle(){ playing ? pause() : play(); }
+
+  playBtn.addEventListener('click', toggle);
+
+  function showBar(){
+    bar.classList.remove('faded');
+    clearTimeout(hideTimer);
+    if(playing) scheduleHide();
+  }
+  function scheduleHide(){
+    clearTimeout(hideTimer);
+    hideTimer = setTimeout(function(){ bar.classList.add('faded'); }, 2600);
+  }
+  scroller.addEventListener('pointerdown', function(e){
+    if(e.target.closest('#bar')) return;
+    showBar();
+  });
+  bar.addEventListener('pointerenter', showBar);
+  bar.addEventListener('pointermove', showBar);
+
+  speedSlider.addEventListener('input', function(){
+    state.speed = Number(speedSlider.value);
+    speedVal.textContent = state.speed + ' px/s';
+    save();
+  });
+  sizeSlider.addEventListener('input', function(){
+    state.fontSize = Number(sizeSlider.value);
+    scriptText.style.fontSize = state.fontSize + 'px';
+    sizeVal.textContent = state.fontSize + 'px';
+    save();
+  });
+  marginSlider.addEventListener('input', function(){
+    state.marginPx = Number(marginSlider.value);
+    applyMargin();
+    save();
+  });
+  mirrorBtn.addEventListener('click', function(){
+    state.mirrored = !state.mirrored;
+    applyFlip();
+    save();
+  });
+  flipBtn.addEventListener('click', function(){
+    state.flipped = !state.flipped;
+    applyFlip();
+    save();
+  });
+  topBtn.addEventListener('click', function(){
+    scroller.scrollTop = 0;
+    if(bc) bc.postMessage({type:'seek', ratio:0});
+  });
+  fullscreenBtn.addEventListener('click', function(){
+    try{
+      if(!document.fullscreenElement){
+        stage.requestFullscreen && stage.requestFullscreen().catch(function(){});
+      }else{
+        document.exitFullscreen && document.exitFullscreen().catch(function(){});
+      }
+    }catch(e){}
+  });
+
+  // ---- External display window (control window only) ----
+  if(!isStageWindow){
+    displayBtn.addEventListener('click', function(){
+      var url = PUBLIC_URL + '#stage';
+      var w = null;
+      try{
+        w = window.open(url, 'mgdTeleprompterStage', 'width=1280,height=800,menubar=no,toolbar=no,location=no,status=no');
+      }catch(e){}
+      if(!w){
+        displayFallbackUrl.value = url;
+        displayFallback.classList.add('show');
+      }else{
+        displayFallback.classList.remove('show');
+      }
+    });
+    displayFallbackCopy.addEventListener('click', function(){
+      displayFallbackUrl.select();
+      try{
+        navigator.clipboard.writeText(displayFallbackUrl.value).catch(function(){ document.execCommand('copy'); });
+      }catch(e){ try{ document.execCommand('copy'); }catch(e2){} }
+    });
+
+    // Ping the stage window every few seconds; a reply flips the status dot green.
+    var lastHello = 0;
+    setInterval(function(){
+      if(bc) bc.postMessage({type:'ping'});
+      statusDot.classList.toggle('on', Date.now() - lastHello < 4000);
+    }, 2000);
+  }
+
+  // ---- Stage window: one-time "drag me, then click to fullscreen" hint ----
+  if(isStageWindow){
+    stageHint.classList.remove('hidden');
+    stageHint.addEventListener('click', function(){
+      stageHint.classList.add('hidden');
+      try{ stage.requestFullscreen && stage.requestFullscreen().catch(function(){}); }catch(e){}
+    });
+    if(bc) bc.postMessage({type:'hello'});
+  }
+
+  // ---- Cross-window sync ----
+  if(bc){
+    bc.onmessage = function(ev){
+      var msg = ev.data;
+      if(!msg) return;
+      if(msg.type === 'state'){
+        applyingRemote = true;
+        Object.assign(state, msg.state);
+        applyText(); applyFlip(); applySize(); applyMargin(); applySpeed();
+        applyingRemote = false;
+      }else if(msg.type === 'playing'){
+        applyingRemote = true;
+        if(msg.value) play(); else pause();
+        applyingRemote = false;
+      }else if(msg.type === 'seek'){
+        scroller.scrollTop = msg.ratio * Math.max(0, scroller.scrollHeight - scroller.clientHeight);
+      }else if(msg.type === 'ping' && isStageWindow){
+        bc.postMessage({type:'hello'});
+      }else if(msg.type === 'hello' && !isStageWindow){
+        lastHello = Date.now();
+        statusDot.classList.add('on');
+      }
+    };
+  }
+
+  document.addEventListener('keydown', function(e){
+    if(isStageWindow) return;
+    if(stage.classList.contains('hidden')) return;
+    var k = e.key.toLowerCase();
+
+    if(e.code === 'Space'){ e.preventDefault(); toggle(); showBar(); return; }
+    if(e.code === 'ArrowUp'){ e.preventDefault(); state.speed = Math.min(220, state.speed + 6); applySpeed(); save(); showBar(); return; }
+    if(e.code === 'ArrowDown'){ e.preventDefault(); state.speed = Math.max(8, state.speed - 6); applySpeed(); save(); showBar(); return; }
+
+    if(k === 'v'){ state.fontSize = Math.min(110, state.fontSize + 4); applySize(); save(); showBar(); }
+    else if(k === 'c'){ state.fontSize = Math.max(22, state.fontSize - 4); applySize(); save(); showBar(); }
+    else if(k === 'm'){ state.marginPx = Math.min(500, state.marginPx + 20); applyMargin(); save(); showBar(); }
+    else if(k === 'n'){ state.marginPx = Math.max(0, state.marginPx - 20); applyMargin(); save(); showBar(); }
+    else if(k === 'h'){ state.mirrored = !state.mirrored; applyFlip(); save(); showBar(); }
+    else if(k === 'b'){ state.flipped = !state.flipped; applyFlip(); save(); showBar(); }
+    else if(k === 'f'){ fullscreenBtn.click(); }
+    else if(k === 'e'){ showSetup(true); }
+  });
+
+  // boot
+  applySpeed();
+  applySize();
+  applyMargin();
+  applyFlip();
+  applyText();
+  if(isStageWindow){
+    showStage();
+  }else if(state.text && state.text.trim()){
+    showStage();
+  }else{
+    showSetup(false);
+  }
+
+  window.claude = window.claude || {};
+  if(window.claude.hot){
+    window.claude.hot.snapshot(function(){ return { state: state }; });
+    var boot = function(data){
+      if(data && data.state) Object.assign(state, data.state);
+    };
+    window.claude.hot.ready ? window.claude.hot.ready(boot) : boot(window.claude.hot.data);
+  }
+})();
+</script>
