@@ -283,6 +283,18 @@ kbd{
   .cluster{gap:8px}
 }
 
+/* Wide desktop: icons row and sliders row sit on one single line instead
+   of stacking. The two .row children become auto-width flex items side by
+   side; .hint/#display-fallback force onto their own line via flex-basis. */
+@media (min-width: 900px){
+  #bar-inner{flex-direction:row; flex-wrap:wrap; align-items:center}
+  .row.icons-row{flex:none}
+  .row.sliders-row{flex:1; flex-wrap:nowrap; min-width:0}
+  .row.sliders-row .slider-group{min-width:0}
+  .row+.row{border-top:none; border-left:1px solid var(--border); padding-top:0; padding-left:16px; margin-left:4px}
+  .hint,#display-fallback{flex-basis:100%}
+}
+
 /* ---------- Top bar (control window only) ---------- */
 #topbar{
   position:absolute;
@@ -938,7 +950,7 @@ body.stage-window #connected-frame{display:none !important}
   });
 
   // ---- Build/version indicator (control window top bar) ----
-  var APP_VERSION = 'v1.2.1';
+  var APP_VERSION = 'v1.3.0';
   if(buildMeta && !isStageWindow){
     buildMeta.textContent = APP_VERSION;
   }
