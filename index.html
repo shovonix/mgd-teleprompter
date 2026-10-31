@@ -541,6 +541,12 @@ body.stage-window #bar{display:none !important}
 
   function play(){
     if(playing) return;
+    // Pressing Play from the control window is the trigger for staging:
+    // if no stage window is already connected, open one now (this runs
+    // inside the same click/keypress, so it won't get popup-blocked).
+    // If one's already connected, leave it alone rather than re-opening
+    // and resetting its position.
+    if(!isStageWindow && !applyingRemote && !isStageConnected()) openStageWindow();
     playing = true;
     lastT = 0;
     playIcon.innerHTML = '<rect x="6" y="5" width="4" height="14" rx="1"/><rect x="14" y="5" width="4" height="14" rx="1"/>';
@@ -620,20 +626,23 @@ body.stage-window #bar{display:none !important}
   });
 
   // ---- External display window (control window only) ----
+  var lastHello = 0;
+  function isStageConnected(){ return Date.now() - lastHello < 4000; }
+  function openStageWindow(){
+    var url = PUBLIC_URL + '#stage';
+    var w = null;
+    try{
+      w = window.open(url, 'mgdTeleprompterStage', 'width=1280,height=800,menubar=no,toolbar=no,location=no,status=no');
+    }catch(e){}
+    if(!w){
+      displayFallbackUrl.value = url;
+      displayFallback.classList.add('show');
+    }else{
+      displayFallback.classList.remove('show');
+    }
+  }
   if(!isStageWindow){
-    displayBtn.addEventListener('click', function(){
-      var url = PUBLIC_URL + '#stage';
-      var w = null;
-      try{
-        w = window.open(url, 'mgdTeleprompterStage', 'width=1280,height=800,menubar=no,toolbar=no,location=no,status=no');
-      }catch(e){}
-      if(!w){
-        displayFallbackUrl.value = url;
-        displayFallback.classList.add('show');
-      }else{
-        displayFallback.classList.remove('show');
-      }
-    });
+    displayBtn.addEventListener('click', openStageWindow);
     displayFallbackCopy.addEventListener('click', function(){
       displayFallbackUrl.select();
       try{
@@ -642,10 +651,9 @@ body.stage-window #bar{display:none !important}
     });
 
     // Ping the stage window every few seconds; a reply flips the status dot green.
-    var lastHello = 0;
     setInterval(function(){
       if(bc) bc.postMessage({type:'ping'});
-      statusDot.classList.toggle('on', Date.now() - lastHello < 4000);
+      statusDot.classList.toggle('on', isStageConnected());
     }, 2000);
   }
 
