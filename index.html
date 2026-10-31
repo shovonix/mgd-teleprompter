@@ -188,15 +188,18 @@ button{font-family:inherit;color:inherit}
    free to pack on their own compact centered line next to Play. Each
    slider-group (also a direct .row child by the same trick, even though
    it's nested inside a cluster in markup) claims flex-basis:100%, so it
-   always gets a full-width line of its own. Net result on phones/tablets:
-   Margin (own line), Background (own line), a tight centered icon+Play
-   row, then Speed (own line), Text size (own line) — real full-width
-   sliders, not half-width ones squeezed into a cluster column.
-   At >=900px (media query below) clusters become real flex:1 boxes again
-   and sliders stop forcing their own line, so the whole bar — icons and
-   sliders on both sides of Play — reads as one single line, with Play
-   staying centered regardless of how much content sits on either side. */
+   always gets a full-width line of its own. `order` puts every icon
+   button and Play ahead of every slider regardless of DOM position, so
+   phones/tablets read: a tight centered icon+Play row first, then all
+   four sliders stacked full-width below it, in Margin/Background/Speed/
+   Text-size order.
+   At >=900px (media query below) clusters become real flex:1 boxes again,
+   order is reset to DOM order, and sliders stop forcing their own line —
+   the whole bar, icons and sliders on both sides of Play, reads as one
+   single line, with Play staying centered regardless of side content. */
 .cluster{display:contents}
+.icon-btn,#play{order:1}
+.slider-group{order:2}
 #play{
   width:50px;height:50px;
   border-radius:50%;
@@ -284,6 +287,7 @@ kbd{
   .cluster{display:flex;align-items:center;gap:12px;flex:1;min-width:0;flex-wrap:nowrap}
   .cluster-left{justify-content:flex-end}
   .cluster-right{justify-content:flex-start}
+  .icon-btn,#play,.slider-group{order:0}
   .slider-group{flex:1 1 auto;min-width:0}
   .hint,#display-fallback{flex-basis:100%}
 }
@@ -941,7 +945,7 @@ body.stage-window #connected-frame{display:none !important}
   });
 
   // ---- Build/version indicator (control window top bar) ----
-  var APP_VERSION = 'v1.5.0';
+  var APP_VERSION = 'v1.5.1';
   if(buildMeta && !isStageWindow){
     buildMeta.textContent = APP_VERSION;
   }
