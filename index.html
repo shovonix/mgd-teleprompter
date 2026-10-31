@@ -134,15 +134,16 @@ button{font-family:inherit;color:inherit}
   transform-origin:center;
 }
 
-/* centerline guide, like a prompter rig's reading mark */
+/* centerline guide, like a prompter rig's reading mark — red, and thick
+   enough to read as a sightline rather than a hairline. */
 #guide{
   position:absolute;
   left:0;right:0;
   top:50%;
-  margin-top:-2px;
-  height:4px;
-  background:linear-gradient(90deg, transparent, var(--accent) 18%, var(--accent) 82%, transparent);
-  opacity:.5;
+  margin-top:-4px;
+  height:8px;
+  background:linear-gradient(90deg, transparent, #ff3b30 18%, #ff3b30 82%, transparent);
+  opacity:.6;
   pointer-events:none;
 }
 
@@ -182,12 +183,17 @@ button{font-family:inherit;color:inherit}
   z-index:-1;
 }
 .row{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
-.row + .row{border-top:1px solid var(--border);padding-top:10px}
 /* Play sits between two flex:1 clusters so it stays centered regardless
-   of how much content is on either side. */
+   of how much content is on either side. Each cluster now mixes icon
+   buttons with slider-groups: margin + flip icons + stage on the left,
+   edit/top/prev-paragraph icons + speed + text-size on the right. On
+   narrow screens each slider-group claims its own full line within its
+   cluster (see .cluster .slider-group below); at wide widths that's
+   lifted so the whole bar — icons and sliders alike — reads as one line. */
 .cluster{display:flex;align-items:center;gap:12px;flex:1;min-width:0;flex-wrap:wrap}
 .cluster-left{justify-content:flex-end}
 .cluster-right{justify-content:flex-start}
+.cluster .slider-group{flex-basis:100%}
 #play{
   width:50px;height:50px;
   border-radius:50%;
@@ -256,21 +262,13 @@ kbd{
   font-size:10px;
 }
 
-/* Icons row keeps a tight, fixed-size layout so it predictably stays on
-   one line down to narrow phones; sliders row wraps on its own (2-up,
-   then 1-up) independent of the icon row — the two never interleave. */
-.icons-row{flex-wrap:nowrap}
-.sliders-row{flex-wrap:wrap}
-
-/* Narrow phones: instead of letting individual icons wrap into a jagged
-   line, stack the three icon groups as clean centered rows, in their
-   original left/play/right order. */
-@media (max-width: 420px){
-  .icons-row{flex-wrap:wrap; justify-content:center}
-  .cluster{flex:none; flex-wrap:nowrap; width:100%; justify-content:center}
+/* Narrow/medium screens: each cluster's icon buttons wrap onto their own
+   centered line below the (full-width) slider-group ahead of/behind them,
+   since .cluster .slider-group above claims flex-basis:100%. */
+@media (max-width: 899px){
+  .cluster{justify-content:center}
 }
 @media (max-width: 480px){
-  .slider-group{min-width:100%}
   .row{gap:8px}
   #bar-inner,#topbar-inner{padding-left:10px;padding-right:10px}
   #play{width:46px;height:46px}
@@ -283,15 +281,13 @@ kbd{
   .cluster{gap:8px}
 }
 
-/* Wide desktop: icons row and sliders row sit on one single line instead
-   of stacking. The two .row children become auto-width flex items side by
-   side; .hint/#display-fallback force onto their own line via flex-basis. */
+/* Wide desktop: the whole bar — icons and sliders on both sides of Play —
+   sits on one single line. Lifts the narrow-mode "slider gets its own
+   line" rule and stops everything from wrapping. */
 @media (min-width: 900px){
-  #bar-inner{flex-direction:row; flex-wrap:wrap; align-items:center}
-  .row.icons-row{flex:none}
-  .row.sliders-row{flex:1; flex-wrap:nowrap; min-width:0}
-  .row.sliders-row .slider-group{min-width:0}
-  .row+.row{border-top:none; border-left:1px solid var(--border); padding-top:0; padding-left:16px; margin-left:4px}
+  .row{flex-wrap:nowrap}
+  .cluster{flex-wrap:nowrap}
+  .cluster .slider-group{flex-basis:auto; min-width:0}
   .hint,#display-fallback{flex-basis:100%}
 }
 
@@ -450,8 +446,12 @@ body.stage-window #connected-frame{display:none !important}
 
   <div id="bar">
     <div id="bar-inner">
-      <div class="row icons-row">
+      <div class="row controls-row">
         <div class="cluster cluster-left">
+          <div class="slider-group">
+            <div class="slider-label"><span>Margin</span><span id="margin-val">—</span></div>
+            <input type="range" id="margin" min="0" max="500" step="10">
+          </div>
           <button class="icon-btn" id="mirror-btn" aria-pressed="false" aria-label="Horizontal flip">
             <svg viewBox="0 0 24 24"><path d="M11 3h2v18h-2zM4 7l5 5-5 5zM20 7l-5 5 5 5z"/></svg>
           </button>
@@ -477,24 +477,14 @@ body.stage-window #connected-frame{display:none !important}
           <button class="icon-btn" id="prev-para-btn" aria-label="Previous paragraph">
             <svg viewBox="0 0 24 24"><path d="M6 6h2v12H6zm3.5 6l8.5 6V6z"/></svg>
           </button>
-        </div>
-      </div>
-      <div class="row sliders-row">
-        <div class="slider-group">
-          <div class="slider-label"><span>Margin</span><span id="margin-val">—</span></div>
-          <input type="range" id="margin" min="0" max="500" step="10">
-        </div>
-        <div class="slider-group">
-          <div class="slider-label"><span>Background</span><span id="bgop-val">—</span></div>
-          <input type="range" id="bgop" min="20" max="100" step="5">
-        </div>
-        <div class="slider-group">
-          <div class="slider-label"><span>Speed</span><span id="speed-val">—</span></div>
-          <input type="range" id="speed" min="8" max="220" step="2">
-        </div>
-        <div class="slider-group">
-          <div class="slider-label"><span>Text size</span><span id="size-val">—</span></div>
-          <input type="range" id="size" min="22" max="110" step="2">
+          <div class="slider-group">
+            <div class="slider-label"><span>Speed</span><span id="speed-val">—</span></div>
+            <input type="range" id="speed" min="8" max="220" step="2">
+          </div>
+          <div class="slider-group">
+            <div class="slider-label"><span>Text size</span><span id="size-val">—</span></div>
+            <input type="range" id="size" min="22" max="110" step="2">
+          </div>
         </div>
       </div>
       <div id="display-fallback">
@@ -529,7 +519,6 @@ body.stage-window #connected-frame{display:none !important}
     speed: 40,        // px/sec
     fontSize: 48,     // px
     marginPx: 0,       // extra left/right margin, px per side
-    bgOpacity: 100,    // stage background darkness, 100 = solid black
   };
 
   function load(){
@@ -566,8 +555,6 @@ body.stage-window #connected-frame{display:none !important}
   var sizeVal = document.getElementById('size-val');
   var marginSlider = document.getElementById('margin');
   var marginVal = document.getElementById('margin-val');
-  var bgopSlider = document.getElementById('bgop');
-  var bgopVal = document.getElementById('bgop-val');
   var mirrorBtn = document.getElementById('mirror-btn');
   var flipBtn = document.getElementById('flip-btn');
   var fullscreenBtn = document.getElementById('fullscreen-btn');
@@ -646,17 +633,6 @@ body.stage-window #connected-frame{display:none !important}
     scriptText.style.paddingRight = r;
     marginSlider.value = state.marginPx;
     marginVal.textContent = state.marginPx + 'px';
-  }
-  function applyBgOpacity(){
-    // A contrast-preview control, not real window transparency (a web page
-    // can't make a browser window see-through to the desktop behind it).
-    // 100% = solid black; dialing it down blends toward gray so you can
-    // preview how the text reads against a lighter backdrop before a mirror.
-    var v = Math.max(20, Math.min(100, state.bgOpacity));
-    var g = Math.round(255 * (1 - v / 100));
-    stage.style.backgroundColor = 'rgb(' + g + ',' + g + ',' + g + ')';
-    bgopSlider.value = v;
-    bgopVal.textContent = v + '%';
   }
   function applySize(){
     scriptText.style.fontSize = state.fontSize + 'px';
@@ -783,11 +759,6 @@ body.stage-window #connected-frame{display:none !important}
     applyMargin();
     save();
   });
-  bgopSlider.addEventListener('input', function(){
-    state.bgOpacity = Number(bgopSlider.value);
-    applyBgOpacity();
-    save();
-  });
   mirrorBtn.addEventListener('click', function(){
     state.mirrored = !state.mirrored;
     applyFlip();
@@ -869,7 +840,7 @@ body.stage-window #connected-frame{display:none !important}
       if(msg.type === 'state'){
         applyingRemote = true;
         Object.assign(state, msg.state);
-        applyText(); applyFlip(); applySize(); applyMargin(); applyBgOpacity(); applySpeed();
+        applyText(); applyFlip(); applySize(); applyMargin(); applySpeed();
         applyingRemote = false;
       }else if(msg.type === 'playing'){
         applyingRemote = true;
@@ -950,7 +921,7 @@ body.stage-window #connected-frame{display:none !important}
   });
 
   // ---- Build/version indicator (control window top bar) ----
-  var APP_VERSION = 'v1.3.0';
+  var APP_VERSION = 'v1.4.0';
   if(buildMeta && !isStageWindow){
     buildMeta.textContent = APP_VERSION;
   }
@@ -959,7 +930,6 @@ body.stage-window #connected-frame{display:none !important}
   applySpeed();
   applySize();
   applyMargin();
-  applyBgOpacity();
   applyFlip();
   applyText();
   if(isStageWindow){
