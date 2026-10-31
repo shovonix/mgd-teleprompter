@@ -491,7 +491,7 @@ body.stage-window #connected-frame{display:none !important}
           <button class="btn" id="display-fallback-copy" style="padding:7px 10px">Copy</button>
         </div>
       </div>
-      <div class="hint"><kbd>Space</kbd> Play/Pause</div>
+      <div class="hint"><kbd>Space</kbd> Play/Pause &nbsp;·&nbsp; <kbd>Space</kbd><kbd>Space</kbd> Previous paragraph &nbsp;·&nbsp; Hold <kbd>Space</kbd> Jump to start</div>
     </div>
   </div>
 </div>
@@ -873,21 +873,71 @@ body.stage-window #connected-frame{display:none !important}
     };
   }
 
+  // Space is overloaded three ways: a quick tap toggles play/pause, a
+  // second quick tap (double-space) jumps back to the previous paragraph,
+  // and holding it down jumps to the very start. The hold fires on its own
+  // timer while the key is still down; the tap/double-tap distinction is
+  // resolved on keyup by waiting a short window to see if a second tap
+  // follows before committing to a single play/pause toggle.
+  var SPACE_HOLD_MS = 550;
+  var SPACE_DOUBLE_MS = 320;
+  var spaceHoldTimer = null;
+  var spaceHoldFired = false;
+  var lastSpaceTapAt = 0;
+  var pendingSpaceTapTimer = null;
+
+  function clearSpaceHoldTimer(){
+    if(spaceHoldTimer){ clearTimeout(spaceHoldTimer); spaceHoldTimer = null; }
+  }
+
   document.addEventListener('keydown', function(e){
     if(isStageWindow) return;
     if(stage.classList.contains('hidden')) return;
     var k = e.key.toLowerCase();
 
-    if(e.code === 'Space'){ e.preventDefault(); toggle(); showBar(); return; }
+    if(e.code === 'Space'){
+      e.preventDefault();
+      if(e.repeat) return; // ignore OS auto-repeat while the key is held
+      spaceHoldFired = false;
+      clearSpaceHoldTimer();
+      spaceHoldTimer = setTimeout(function(){
+        spaceHoldFired = true;
+        seekTo(0);
+        showBar();
+      }, SPACE_HOLD_MS);
+      return;
+    }
 
-    // Margin, speed, text size, flip, top and previous-paragraph are all
-    // touch/mouse-only now. Fullscreen stays on F, just not advertised.
+    // Margin, speed, text size, flip and fullscreen stay touch/mouse-only
+    // (fullscreen still works on F, just not advertised in the hint).
     if(k === 'f'){ fullscreenBtn.click(); }
     else if(k === 'e'){ showSetup(true); }
   });
 
+  document.addEventListener('keyup', function(e){
+    if(isStageWindow) return;
+    if(e.code !== 'Space') return;
+    e.preventDefault();
+    clearSpaceHoldTimer();
+    if(spaceHoldFired) return; // hold already handled its own action
+    var now = Date.now();
+    if(now - lastSpaceTapAt <= SPACE_DOUBLE_MS){
+      lastSpaceTapAt = 0;
+      if(pendingSpaceTapTimer){ clearTimeout(pendingSpaceTapTimer); pendingSpaceTapTimer = null; }
+      goPrevParagraph();
+      showBar();
+      return;
+    }
+    lastSpaceTapAt = now;
+    pendingSpaceTapTimer = setTimeout(function(){
+      pendingSpaceTapTimer = null;
+      toggle();
+      showBar();
+    }, SPACE_DOUBLE_MS);
+  });
+
   // ---- Build/version indicator (control window top bar) ----
-  var APP_VERSION = 'v1.0.4';
+  var APP_VERSION = 'v1.1.0';
   if(buildMeta && !isStageWindow){
     buildMeta.textContent = APP_VERSION;
   }
