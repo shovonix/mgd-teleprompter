@@ -163,6 +163,7 @@ button{font-family:inherit;color:inherit}
    text with it — those stay on the real box, fully legible. */
 #bar-inner{
   position:relative;
+  z-index:0;
   padding:12px 14px;
   display:flex;
   flex-direction:column;
@@ -296,6 +297,7 @@ kbd{
 body.stage-window #topbar{display:none !important}
 #topbar-inner{
   position:relative;
+  z-index:0;
   padding:10px 14px;
   display:flex;
   align-items:center;
@@ -936,7 +938,7 @@ body.stage-window #connected-frame{display:none !important}
   });
 
   // ---- Build/version indicator (control window top bar) ----
-  var APP_VERSION = 'v1.1.2';
+  var APP_VERSION = 'v1.2.0';
   if(buildMeta && !isStageWindow){
     buildMeta.textContent = APP_VERSION;
   }
