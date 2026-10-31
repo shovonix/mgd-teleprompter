@@ -897,22 +897,10 @@ body.stage-window #connected-frame{display:none !important}
     else if(k === 'e'){ showSetup(true); }
   });
 
-  // ---- Build/last-updated indicator (control window top bar) ----
-  var BUILD_TIME = Date.parse('2026-11-01T03:15:00+06:00');
-  function relativeAgo(ms){
-    var s = Math.floor((Date.now() - ms) / 1000);
-    if(s < 60) return 'Updated just now';
-    var m = Math.floor(s / 60);
-    if(m < 60) return 'Updated ' + m + 'm ago';
-    var h = Math.floor(m / 60);
-    if(h < 24) return 'Updated ' + h + 'h ago';
-    var d = Math.floor(h / 24);
-    return 'Updated ' + d + 'd ago';
-  }
+  // ---- Build/version indicator (control window top bar) ----
+  var APP_VERSION = 'v1.0';
   if(buildMeta && !isStageWindow){
-    var tickBuildMeta = function(){ buildMeta.textContent = relativeAgo(BUILD_TIME); };
-    tickBuildMeta();
-    setInterval(tickBuildMeta, 60000);
+    buildMeta.textContent = APP_VERSION;
   }
 
   // boot
