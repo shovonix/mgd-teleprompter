@@ -170,11 +170,16 @@ button{font-family:inherit;color:inherit}
   position:absolute;
   inset:-1px;
   border-radius:24px;
-  background:rgba(23,23,26,.6);
-  -webkit-backdrop-filter:blur(22px) saturate(160%);
-  backdrop-filter:blur(22px) saturate(160%);
-  border:1px solid rgba(255,255,255,.1);
-  box-shadow:0 10px 34px rgba(0,0,0,.4);
+  background:
+    radial-gradient(ellipse 75% 55% at 50% -12%, rgba(255,255,255,.16), transparent 62%),
+    rgba(26,26,30,.52);
+  -webkit-backdrop-filter:blur(30px) saturate(190%);
+  backdrop-filter:blur(30px) saturate(190%);
+  box-shadow:
+    0 14px 42px rgba(0,0,0,.45),
+    inset 0 1px 0 rgba(255,255,255,.24),
+    inset 0 -1px 0 rgba(255,255,255,.05),
+    inset 0 0 26px rgba(255,255,255,.04);
   -webkit-mask-image:radial-gradient(ellipse 100% 100% at 50% 50%, #000 72%, transparent 100%);
   mask-image:radial-gradient(ellipse 100% 100% at 50% 50%, #000 72%, transparent 100%);
   z-index:-1;
@@ -230,19 +235,20 @@ input[type=range]::-moz-range-thumb{
 .icon-btn{
   width:38px;height:38px;
   border-radius:11px;
-  border:1px solid rgba(255,255,255,.08);
-  background:rgba(255,255,255,.05);
+  border:none;
+  background:rgba(255,255,255,.06);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.14), inset 0 0 0 1px rgba(255,255,255,.03);
   display:flex;align-items:center;justify-content:center;
   flex:none;cursor:pointer;
-  transition:background .2s ease, border-color .2s ease;
+  transition:background .2s ease, box-shadow .2s ease;
 }
 /* Toggle buttons (flip) when active — a light tint, kept well under Play's intensity */
-.icon-btn[aria-pressed="true"]{background:rgba(var(--accent-rgb),.16);border-color:rgba(var(--accent-rgb),.5)}
+.icon-btn[aria-pressed="true"]{background:rgba(var(--accent-rgb),.16);box-shadow:inset 0 0 0 1px rgba(var(--accent-rgb),.5), inset 0 1px 0 rgba(255,255,255,.14)}
 .icon-btn[aria-pressed="true"] svg{fill:var(--accent)}
 .icon-btn svg{width:17px;height:17px;fill:var(--fg)}
 /* Stage / Edit — always carry a touch of accent so they read as the secondary actions,
    but stay well short of Play's solid-fill prominence. */
-.icon-btn.accent{border-color:rgba(var(--accent-rgb),.45)}
+.icon-btn.accent{box-shadow:inset 0 0 0 1px rgba(var(--accent-rgb),.45), inset 0 1px 0 rgba(255,255,255,.14)}
 .icon-btn.accent svg{fill:var(--accent)}
 .hint{font-size:10.5px;color:var(--fg-dim);text-align:center;margin-top:2px}
 kbd{
@@ -306,11 +312,16 @@ body.stage-window #topbar{display:none !important}
   position:absolute;
   inset:-1px;
   border-radius:24px;
-  background:rgba(23,23,26,.6);
-  -webkit-backdrop-filter:blur(22px) saturate(160%);
-  backdrop-filter:blur(22px) saturate(160%);
-  border:1px solid rgba(255,255,255,.1);
-  box-shadow:0 10px 34px rgba(0,0,0,.4);
+  background:
+    radial-gradient(ellipse 75% 55% at 50% -12%, rgba(255,255,255,.16), transparent 62%),
+    rgba(26,26,30,.52);
+  -webkit-backdrop-filter:blur(30px) saturate(190%);
+  backdrop-filter:blur(30px) saturate(190%);
+  box-shadow:
+    0 14px 42px rgba(0,0,0,.45),
+    inset 0 1px 0 rgba(255,255,255,.24),
+    inset 0 -1px 0 rgba(255,255,255,.05),
+    inset 0 0 26px rgba(255,255,255,.04);
   -webkit-mask-image:radial-gradient(ellipse 100% 100% at 50% 50%, #000 72%, transparent 100%);
   mask-image:radial-gradient(ellipse 100% 100% at 50% 50%, #000 72%, transparent 100%);
   z-index:-1;
@@ -887,7 +898,7 @@ body.stage-window #connected-frame{display:none !important}
   });
 
   // ---- Build/last-updated indicator (control window top bar) ----
-  var BUILD_TIME = Date.parse('2026-11-01T02:58:00+06:00');
+  var BUILD_TIME = Date.parse('2026-11-01T03:05:00+06:00');
   function relativeAgo(ms){
     var s = Math.floor((Date.now() - ms) / 1000);
     if(s < 60) return 'Updated just now';
