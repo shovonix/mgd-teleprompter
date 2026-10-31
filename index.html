@@ -236,19 +236,19 @@ input[type=range]::-moz-range-thumb{
   width:38px;height:38px;
   border-radius:11px;
   border:none;
-  background:rgba(255,255,255,.06);
-  box-shadow:inset 0 1px 0 rgba(255,255,255,.14), inset 0 0 0 1px rgba(255,255,255,.03);
+  background:rgba(255,255,255,.13);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.4), inset 0 0 0 1px rgba(255,255,255,.1), inset 0 -8px 10px -8px rgba(0,0,0,.35), 0 1px 3px rgba(0,0,0,.35);
   display:flex;align-items:center;justify-content:center;
   flex:none;cursor:pointer;
   transition:background .2s ease, box-shadow .2s ease;
 }
 /* Toggle buttons (flip) when active — a light tint, kept well under Play's intensity */
-.icon-btn[aria-pressed="true"]{background:rgba(var(--accent-rgb),.16);box-shadow:inset 0 0 0 1px rgba(var(--accent-rgb),.5), inset 0 1px 0 rgba(255,255,255,.14)}
+.icon-btn[aria-pressed="true"]{background:rgba(var(--accent-rgb),.28);box-shadow:inset 0 0 0 1px rgba(var(--accent-rgb),.7), inset 0 1px 0 rgba(255,255,255,.35), 0 1px 3px rgba(0,0,0,.35)}
 .icon-btn[aria-pressed="true"] svg{fill:var(--accent)}
 .icon-btn svg{width:17px;height:17px;fill:var(--fg)}
 /* Stage / Edit — always carry a touch of accent so they read as the secondary actions,
    but stay well short of Play's solid-fill prominence. */
-.icon-btn.accent{box-shadow:inset 0 0 0 1px rgba(var(--accent-rgb),.45), inset 0 1px 0 rgba(255,255,255,.14)}
+.icon-btn.accent{background:rgba(var(--accent-rgb),.16);box-shadow:inset 0 0 0 1px rgba(var(--accent-rgb),.65), inset 0 1px 0 rgba(255,255,255,.35), 0 1px 3px rgba(0,0,0,.35)}
 .icon-btn.accent svg{fill:var(--accent)}
 .hint{font-size:10.5px;color:var(--fg-dim);text-align:center;margin-top:2px}
 kbd{
@@ -898,7 +898,7 @@ body.stage-window #connected-frame{display:none !important}
   });
 
   // ---- Build/last-updated indicator (control window top bar) ----
-  var BUILD_TIME = Date.parse('2026-11-01T03:05:00+06:00');
+  var BUILD_TIME = Date.parse('2026-11-01T03:10:00+06:00');
   function relativeAgo(ms){
     var s = Math.floor((Date.now() - ms) / 1000);
     if(s < 60) return 'Updated just now';
