@@ -174,7 +174,7 @@ button{font-family:inherit;color:inherit}
   position:absolute;
   inset:-1px;
   border-radius:24px;
-  background:rgba(14,14,16,.82);
+  background:rgba(14,14,16,.5);
   -webkit-backdrop-filter:blur(28px) saturate(160%);
   backdrop-filter:blur(28px) saturate(160%);
   border:1px solid rgba(255,255,255,.1);
@@ -309,7 +309,7 @@ body.stage-window #topbar{display:none !important}
   position:absolute;
   inset:-1px;
   border-radius:24px;
-  background:rgba(14,14,16,.82);
+  background:rgba(14,14,16,.5);
   -webkit-backdrop-filter:blur(28px) saturate(160%);
   backdrop-filter:blur(28px) saturate(160%);
   border:1px solid rgba(255,255,255,.1);
@@ -938,7 +938,7 @@ body.stage-window #connected-frame{display:none !important}
   });
 
   // ---- Build/version indicator (control window top bar) ----
-  var APP_VERSION = 'v1.2.0';
+  var APP_VERSION = 'v1.2.1';
   if(buildMeta && !isStageWindow){
     buildMeta.textContent = APP_VERSION;
   }
