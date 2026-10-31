@@ -452,6 +452,10 @@ body.stage-window #connected-frame{display:none !important}
             <div class="slider-label"><span>Margin</span><span id="margin-val">—</span></div>
             <input type="range" id="margin" min="0" max="500" step="10">
           </div>
+          <div class="slider-group">
+            <div class="slider-label"><span>Background</span><span id="bgop-val">—</span></div>
+            <input type="range" id="bgop" min="20" max="100" step="5">
+          </div>
           <button class="icon-btn" id="mirror-btn" aria-pressed="false" aria-label="Horizontal flip">
             <svg viewBox="0 0 24 24"><path d="M11 3h2v18h-2zM4 7l5 5-5 5zM20 7l-5 5 5 5z"/></svg>
           </button>
@@ -519,6 +523,7 @@ body.stage-window #connected-frame{display:none !important}
     speed: 40,        // px/sec
     fontSize: 48,     // px
     marginPx: 0,       // extra left/right margin, px per side
+    bgOpacity: 100,    // stage background darkness, 100 = solid black
   };
 
   function load(){
@@ -555,6 +560,8 @@ body.stage-window #connected-frame{display:none !important}
   var sizeVal = document.getElementById('size-val');
   var marginSlider = document.getElementById('margin');
   var marginVal = document.getElementById('margin-val');
+  var bgopSlider = document.getElementById('bgop');
+  var bgopVal = document.getElementById('bgop-val');
   var mirrorBtn = document.getElementById('mirror-btn');
   var flipBtn = document.getElementById('flip-btn');
   var fullscreenBtn = document.getElementById('fullscreen-btn');
@@ -633,6 +640,17 @@ body.stage-window #connected-frame{display:none !important}
     scriptText.style.paddingRight = r;
     marginSlider.value = state.marginPx;
     marginVal.textContent = state.marginPx + 'px';
+  }
+  function applyBgOpacity(){
+    // A contrast-preview control, not real window transparency (a web page
+    // can't make a browser window see-through to the desktop behind it).
+    // 100% = solid black; dialing it down blends toward gray so you can
+    // preview how the text reads against a lighter backdrop before a mirror.
+    var v = Math.max(20, Math.min(100, state.bgOpacity));
+    var g = Math.round(255 * (1 - v / 100));
+    stage.style.backgroundColor = 'rgb(' + g + ',' + g + ',' + g + ')';
+    bgopSlider.value = v;
+    bgopVal.textContent = v + '%';
   }
   function applySize(){
     scriptText.style.fontSize = state.fontSize + 'px';
@@ -759,6 +777,11 @@ body.stage-window #connected-frame{display:none !important}
     applyMargin();
     save();
   });
+  bgopSlider.addEventListener('input', function(){
+    state.bgOpacity = Number(bgopSlider.value);
+    applyBgOpacity();
+    save();
+  });
   mirrorBtn.addEventListener('click', function(){
     state.mirrored = !state.mirrored;
     applyFlip();
@@ -840,7 +863,7 @@ body.stage-window #connected-frame{display:none !important}
       if(msg.type === 'state'){
         applyingRemote = true;
         Object.assign(state, msg.state);
-        applyText(); applyFlip(); applySize(); applyMargin(); applySpeed();
+        applyText(); applyFlip(); applySize(); applyMargin(); applyBgOpacity(); applySpeed();
         applyingRemote = false;
       }else if(msg.type === 'playing'){
         applyingRemote = true;
@@ -921,7 +944,7 @@ body.stage-window #connected-frame{display:none !important}
   });
 
   // ---- Build/version indicator (control window top bar) ----
-  var APP_VERSION = 'v1.4.0';
+  var APP_VERSION = 'v1.4.1';
   if(buildMeta && !isStageWindow){
     buildMeta.textContent = APP_VERSION;
   }
@@ -930,6 +953,7 @@ body.stage-window #connected-frame{display:none !important}
   applySpeed();
   applySize();
   applyMargin();
+  applyBgOpacity();
   applyFlip();
   applyText();
   if(isStageWindow){
