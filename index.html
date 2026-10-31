@@ -182,18 +182,21 @@ button{font-family:inherit;color:inherit}
   box-shadow:0 10px 34px rgba(0,0,0,.4);
   z-index:-1;
 }
-.row{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
-/* Play sits between two flex:1 clusters so it stays centered regardless
-   of how much content is on either side. Each cluster now mixes icon
-   buttons with slider-groups: margin + flip icons + stage on the left,
-   edit/top/prev-paragraph icons + speed + text-size on the right. On
-   narrow screens each slider-group claims its own full line within its
-   cluster (see .cluster .slider-group below); at wide widths that's
-   lifted so the whole bar — icons and sliders alike — reads as one line. */
-.cluster{display:flex;align-items:center;gap:12px;flex:1;min-width:0;flex-wrap:wrap}
-.cluster-left{justify-content:flex-end}
-.cluster-right{justify-content:flex-start}
-.cluster .slider-group{flex-basis:100%}
+.row{display:flex;align-items:center;gap:12px;flex-wrap:wrap;justify-content:center}
+/* Mobile-first: .cluster is display:contents below 900px, so it adds no
+   box of its own — its icon buttons become direct children of .row,
+   free to pack on their own compact centered line next to Play. Each
+   slider-group (also a direct .row child by the same trick, even though
+   it's nested inside a cluster in markup) claims flex-basis:100%, so it
+   always gets a full-width line of its own. Net result on phones/tablets:
+   Margin (own line), Background (own line), a tight centered icon+Play
+   row, then Speed (own line), Text size (own line) — real full-width
+   sliders, not half-width ones squeezed into a cluster column.
+   At >=900px (media query below) clusters become real flex:1 boxes again
+   and sliders stop forcing their own line, so the whole bar — icons and
+   sliders on both sides of Play — reads as one single line, with Play
+   staying centered regardless of how much content sits on either side. */
+.cluster{display:contents}
 #play{
   width:50px;height:50px;
   border-radius:50%;
@@ -216,7 +219,7 @@ button{font-family:inherit;color:inherit}
   flex:none;
 }
 .tally.live{background:var(--accent);box-shadow:0 0 8px var(--accent)}
-.slider-group{flex:1;min-width:140px;display:flex;flex-direction:column;gap:4px}
+.slider-group{flex:1 1 100%;min-width:0;display:flex;flex-direction:column;gap:4px}
 .slider-label{display:flex;justify-content:space-between;font-size:11px;color:var(--fg-dim);font-variant-numeric:tabular-nums}
 input[type=range]{
   -webkit-appearance:none;appearance:none;
@@ -262,12 +265,6 @@ kbd{
   font-size:10px;
 }
 
-/* Narrow/medium screens: each cluster's icon buttons wrap onto their own
-   centered line below the (full-width) slider-group ahead of/behind them,
-   since .cluster .slider-group above claims flex-basis:100%. */
-@media (max-width: 899px){
-  .cluster{justify-content:center}
-}
 @media (max-width: 480px){
   .row{gap:8px}
   #bar-inner,#topbar-inner{padding-left:10px;padding-right:10px}
@@ -277,17 +274,17 @@ kbd{
   .brand-logo{height:30px}
   .brand-text .name{font-size:12px}
 }
-@media (max-width: 360px){
-  .cluster{gap:8px}
-}
 
-/* Wide desktop: the whole bar — icons and sliders on both sides of Play —
-   sits on one single line. Lifts the narrow-mode "slider gets its own
-   line" rule and stops everything from wrapping. */
+/* Wide desktop: clusters become real flex:1 boxes again (so Play stays
+   centered regardless of side content), sliders stop forcing their own
+   line, and the row stops wrapping — the whole bar, icons and sliders on
+   both sides of Play, reads as one single line. */
 @media (min-width: 900px){
-  .row{flex-wrap:nowrap}
-  .cluster{flex-wrap:nowrap}
-  .cluster .slider-group{flex-basis:auto; min-width:0}
+  .row{flex-wrap:nowrap;justify-content:flex-start}
+  .cluster{display:flex;align-items:center;gap:12px;flex:1;min-width:0;flex-wrap:nowrap}
+  .cluster-left{justify-content:flex-end}
+  .cluster-right{justify-content:flex-start}
+  .slider-group{flex:1 1 auto;min-width:0}
   .hint,#display-fallback{flex-basis:100%}
 }
 
@@ -944,7 +941,7 @@ body.stage-window #connected-frame{display:none !important}
   });
 
   // ---- Build/version indicator (control window top bar) ----
-  var APP_VERSION = 'v1.4.1';
+  var APP_VERSION = 'v1.5.0';
   if(buildMeta && !isStageWindow){
     buildMeta.textContent = APP_VERSION;
   }
