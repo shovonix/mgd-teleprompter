@@ -208,6 +208,22 @@ input[type=range]::-moz-range-thumb{
 .icon-btn[aria-pressed="true"]{background:var(--accent);border-color:var(--accent)}
 .icon-btn[aria-pressed="true"] svg{fill:var(--accent-fg)}
 .icon-btn svg{width:17px;height:17px;fill:var(--fg)}
+.stage-btn{
+  width:auto;
+  padding:0 14px 0 11px;
+  gap:7px;
+  border-color:var(--accent);
+  background:rgba(255,59,31,.14);
+}
+.stage-btn svg{fill:var(--accent)}
+.stage-btn .lbl{
+  font-family:'Archivo',system-ui,sans-serif;
+  font-weight:700;
+  font-size:12px;
+  letter-spacing:.01em;
+  color:var(--accent);
+  white-space:nowrap;
+}
 .hint{font-size:10.5px;color:var(--fg-dim);text-align:center;margin-top:2px}
 kbd{
   font-family:'Archivo',monospace;
@@ -332,8 +348,9 @@ body.stage-window #bar{display:none !important}
         </button>
         <div style="flex:1"></div>
         <div class="status-dot" id="status-dot" title="External display connection"></div>
-        <button class="icon-btn" id="display-btn" aria-label="Open external display">
+        <button class="icon-btn stage-btn" id="display-btn" aria-label="Open external display (staging window)">
           <svg viewBox="0 0 24 24"><path d="M21 3H3c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h7l-2 3v1h8v-1l-2-3h7c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 14H3V5h18v12z"/></svg>
+          <span class="lbl">Stage</span>
         </button>
       </div>
       <div id="display-fallback">
@@ -343,7 +360,7 @@ body.stage-window #bar{display:none !important}
           <button class="btn" id="display-fallback-copy" style="padding:7px 10px">Copy</button>
         </div>
       </div>
-      <div class="hint"><kbd>Space</kbd> play/pause · <kbd>↑↓</kbd> speed · <kbd>V/C</kbd> size · <kbd>M/N</kbd> margin · <kbd>H</kbd> mirror · <kbd>B</kbd> flip · <kbd>F</kbd> fullscreen</div>
+      <div class="hint"><kbd>Space</kbd> Play/Pause · <kbd>↑↓</kbd> Speed · <kbd>I/D</kbd> Size · <kbd>M/N</kbd> Margin · <kbd>H</kbd> Mirror · <kbd>B</kbd> Flip · <kbd>F</kbd> Fullscreen</div>
     </div>
   </div>
 </div>
@@ -427,9 +444,18 @@ body.stage-window #bar{display:none !important}
     scriptText.textContent = state.text || (isStageWindow ? 'Waiting for script from the control window…' : '');
   }
   function applyFlip(){
-    var sx = state.mirrored ? -1 : 1;
-    var sy = state.flipped ? -1 : 1;
-    scriptText.style.transform = 'scale(' + sx + ',' + sy + ')';
+    // Mirror/flip is a stage-rig concern (the beamsplitter glass setup facing
+    // the talent) — the control window always shows normal, readable text so
+    // whoever's operating it isn't reading backwards. Only the stage window
+    // (#stage hash route, on the external display) ever gets transformed;
+    // the control window just reflects the toggle state on its buttons.
+    if(isStageWindow){
+      var sx = state.mirrored ? -1 : 1;
+      var sy = state.flipped ? -1 : 1;
+      scriptText.style.transform = 'scale(' + sx + ',' + sy + ')';
+    }else{
+      scriptText.style.transform = 'none';
+    }
     mirrorBtn.setAttribute('aria-pressed', state.mirrored ? 'true' : 'false');
     flipBtn.setAttribute('aria-pressed', state.flipped ? 'true' : 'false');
   }
@@ -660,8 +686,8 @@ body.stage-window #bar{display:none !important}
     if(e.code === 'ArrowUp'){ e.preventDefault(); state.speed = Math.min(220, state.speed + 6); applySpeed(); save(); showBar(); return; }
     if(e.code === 'ArrowDown'){ e.preventDefault(); state.speed = Math.max(8, state.speed - 6); applySpeed(); save(); showBar(); return; }
 
-    if(k === 'v'){ state.fontSize = Math.min(110, state.fontSize + 4); applySize(); save(); showBar(); }
-    else if(k === 'c'){ state.fontSize = Math.max(22, state.fontSize - 4); applySize(); save(); showBar(); }
+    if(k === 'i'){ state.fontSize = Math.min(110, state.fontSize + 4); applySize(); save(); showBar(); }
+    else if(k === 'd'){ state.fontSize = Math.max(22, state.fontSize - 4); applySize(); save(); showBar(); }
     else if(k === 'm'){ state.marginPx = Math.min(500, state.marginPx + 20); applyMargin(); save(); showBar(); }
     else if(k === 'n'){ state.marginPx = Math.max(0, state.marginPx - 20); applyMargin(); save(); showBar(); }
     else if(k === 'h'){ state.mirrored = !state.mirrored; applyFlip(); save(); showBar(); }
