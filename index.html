@@ -372,6 +372,7 @@ input[type=range]::-moz-range-thumb{
 #add-pedal-btn:hover{background:rgba(var(--accent-rgb),.2)}
 #add-pedal-btn.capturing{color:var(--fg);border-color:rgba(255,255,255,.2);background:rgba(255,255,255,.08)}
 .hint{font-size:10.5px;color:var(--fg-dim);text-align:center;margin-top:2px}
+.hint-sub{opacity:.6;margin-top:0}
 kbd{
   font-family:'Archivo',monospace;
   background:var(--surface-2);
@@ -643,6 +644,7 @@ body.stage-window #connected-frame{display:none !important}
         </div>
       </div>
       <div class="hint"><kbd>Space</kbd> Play/Pause &nbsp;·&nbsp; <kbd>Space</kbd><kbd>Space</kbd> Previous paragraph &nbsp;·&nbsp; Hold <kbd>Space</kbd> Jump to start</div>
+      <div class="hint hint-sub">Mirror &amp; flip only apply on the stage display</div>
     </div>
   </div>
 </div>
@@ -1336,7 +1338,7 @@ body.stage-window #connected-frame{display:none !important}
   });
 
   // ---- Build/version indicator (control window top bar) ----
-  var APP_VERSION = 'v1.7.1';
+  var APP_VERSION = 'v1.7.2';
   if(buildMeta && !isStageWindow){
     buildMeta.textContent = APP_VERSION;
   }
