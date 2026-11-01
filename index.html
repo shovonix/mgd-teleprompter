@@ -326,6 +326,51 @@ input[type=range]::-moz-range-thumb{
    but stay well short of Play's solid-fill prominence. */
 .icon-btn.accent{border-color:rgba(var(--accent-rgb),.45)}
 .icon-btn.accent svg{fill:var(--accent)}
+.topbar-actions{display:flex;align-items:center;gap:8px;flex:none}
+#pedal-panel{
+  display:none;
+  position:absolute;
+  top:100%;right:14px;
+  margin-top:8px;
+  width:260px;max-width:calc(100vw - 28px);
+  background:var(--surface-2);
+  border:1px solid var(--border);
+  border-radius:12px;
+  padding:14px;
+  box-shadow:0 10px 30px rgba(0,0,0,.4);
+  z-index:5;
+}
+#pedal-panel.show{display:block}
+#pedal-panel .t{font-size:13px;font-weight:600;color:var(--fg);margin-bottom:4px}
+#pedal-panel .s{font-size:11.5px;color:var(--fg-dim);line-height:1.4;margin-bottom:10px}
+.pedal-keys-list{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px}
+.pedal-keys-empty{font-size:11.5px;color:var(--fg-dim)}
+.pedal-key-chip{
+  display:flex;align-items:center;gap:6px;
+  background:rgba(255,255,255,.06);
+  border:1px solid rgba(255,255,255,.08);
+  border-radius:8px;
+  padding:4px 6px 4px 10px;
+  font-size:12px;color:var(--fg);
+}
+.pedal-key-chip button{
+  background:none;border:none;color:var(--fg-dim);
+  font-size:15px;line-height:1;cursor:pointer;padding:0 2px;
+}
+.pedal-key-chip button:hover{color:var(--fg)}
+#add-pedal-btn{
+  width:100%;
+  background:rgba(var(--accent-rgb),.12);
+  border:1px solid rgba(var(--accent-rgb),.4);
+  color:var(--accent);
+  border-radius:9px;
+  padding:8px 10px;
+  font-size:12.5px;font-weight:600;
+  cursor:pointer;
+  transition:background .2s ease;
+}
+#add-pedal-btn:hover{background:rgba(var(--accent-rgb),.2)}
+#add-pedal-btn.capturing{color:var(--fg);border-color:rgba(255,255,255,.2);background:rgba(255,255,255,.08)}
 .hint{font-size:10.5px;color:var(--fg-dim);text-align:center;margin-top:2px}
 kbd{
   font-family:'Archivo',monospace;
@@ -525,9 +570,20 @@ body.stage-window #connected-frame{display:none !important}
           <span class="meta" id="build-meta">—</span>
         </div>
       </button>
-      <button class="icon-btn" id="fullscreen-btn" aria-label="Fullscreen — key F">
-        <svg viewBox="0 0 24 24"><path d="M7 14H5v5h5v-2H7zM5 10h2V7h3V5H5zm12 9h-3v2h5v-5h-2zM14 5v2h3v3h2V5z"/></svg>
-      </button>
+      <div class="topbar-actions">
+        <button class="icon-btn" id="pedal-btn" aria-label="Bluetooth pedal setup">
+          <svg viewBox="0 0 24 24"><path d="M17.71 7.71L12 2h-1v7.59L6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 11 14.41V22h1l5.71-5.71-4.3-4.29 4.3-4.29zM13 5.83l1.88 1.88L13 9.59V5.83zm1.88 10.46L13 18.17v-3.76l1.88 1.88z"/></svg>
+        </button>
+        <button class="icon-btn" id="fullscreen-btn" aria-label="Fullscreen — key F">
+          <svg viewBox="0 0 24 24"><path d="M7 14H5v5h5v-2H7zM5 10h2V7h3V5H5zm12 9h-3v2h5v-5h-2zM14 5v2h3v3h2V5z"/></svg>
+        </button>
+      </div>
+      <div id="pedal-panel">
+        <div class="t">Bluetooth pedal</div>
+        <div class="s">Any button you add here acts exactly like Space: tap to Play/Pause, double-tap for previous paragraph, hold to jump to start.</div>
+        <div class="pedal-keys-list" id="pedal-keys-list"></div>
+        <button type="button" id="add-pedal-btn">+ Add pedal button</button>
+      </div>
     </div>
   </div>
 
@@ -613,6 +669,7 @@ body.stage-window #connected-frame{display:none !important}
     fontSize: 48,     // px
     marginPx: 0,       // extra left/right margin, px per side
     bgOpacity: 100,    // stage background darkness, 100 = solid black
+    pedalKeys: [],     // [{code,key}] — any of these behave exactly like Space
   };
 
   function genId(){ return 's' + Date.now().toString(36) + Math.random().toString(36).slice(2, 8); }
@@ -632,6 +689,7 @@ body.stage-window #connected-frame{display:none !important}
   // saved on a device gets lost when this update lands.
   function migrateScripts(){
     if(!Array.isArray(state.scripts)) state.scripts = [];
+    if(!Array.isArray(state.pedalKeys)) state.pedalKeys = [];
     if(state.scripts.length === 0 && typeof state.text === 'string' && state.text.trim()){
       state.scripts.push({ id: genId(), name: 'My Script', text: state.text, updatedAt: Date.now() });
     }
@@ -688,6 +746,10 @@ body.stage-window #connected-frame{display:none !important}
   var prevParaBtn = document.getElementById('prev-para-btn');
   var editBtn = document.getElementById('edit-btn');
   var brandHomeBtn = document.getElementById('brand-home-btn');
+  var pedalBtn = document.getElementById('pedal-btn');
+  var pedalPanel = document.getElementById('pedal-panel');
+  var pedalKeysList = document.getElementById('pedal-keys-list');
+  var addPedalBtn = document.getElementById('add-pedal-btn');
   var bar = document.getElementById('bar');
   var topbar = document.getElementById('topbar');
   var buildMeta = document.getElementById('build-meta');
@@ -1045,6 +1107,82 @@ body.stage-window #connected-frame{display:none !important}
     }catch(e){}
   });
 
+  // ---- Bluetooth pedal learn/capture (control window only) ----
+  // A pedal pairs as a Bluetooth keyboard, so "learning" it is just
+  // listening for the next keydown while capture mode is on. The
+  // document keydown listener above checks pedalCaptureActive first,
+  // so a key pressed during capture is consumed here and never also
+  // falls through to the normal play/pause handling.
+  var pedalCaptureActive = false;
+
+  function renderPedalKeys(){
+    pedalKeysList.innerHTML = '';
+    if(state.pedalKeys.length === 0){
+      var empty = document.createElement('div');
+      empty.className = 'pedal-keys-empty';
+      empty.textContent = 'No pedal buttons added yet.';
+      pedalKeysList.appendChild(empty);
+      return;
+    }
+    state.pedalKeys.forEach(function(pk, idx){
+      var chip = document.createElement('div');
+      chip.className = 'pedal-key-chip';
+      var label = document.createElement('span');
+      label.textContent = pk.key && pk.key.length === 1 ? pk.key.toUpperCase() : (pk.key || pk.code || 'Key');
+      chip.appendChild(label);
+      var rm = document.createElement('button');
+      rm.type = 'button';
+      rm.setAttribute('aria-label', 'Remove pedal button');
+      rm.textContent = '×';
+      rm.addEventListener('click', function(){
+        state.pedalKeys.splice(idx, 1);
+        save();
+        renderPedalKeys();
+      });
+      chip.appendChild(rm);
+      pedalKeysList.appendChild(chip);
+    });
+  }
+
+  function endPedalCapture(added){
+    pedalCaptureActive = false;
+    addPedalBtn.textContent = '+ Add pedal button';
+    addPedalBtn.classList.remove('capturing');
+    if(added) renderPedalKeys();
+  }
+
+  function capturePedalKey(e){
+    e.preventDefault();
+    e.stopPropagation();
+    if(e.key === 'Escape'){ endPedalCapture(false); return; }
+    var dup = state.pedalKeys.some(function(pk){ return pk.code === e.code; });
+    if(!dup){
+      state.pedalKeys.push({ code: e.code, key: e.key });
+      save();
+    }
+    endPedalCapture(true);
+  }
+
+  pedalBtn.addEventListener('click', function(){
+    pedalPanel.classList.toggle('show');
+    if(pedalPanel.classList.contains('show')) renderPedalKeys();
+    else endPedalCapture(false);
+  });
+
+  addPedalBtn.addEventListener('click', function(){
+    if(pedalCaptureActive){ endPedalCapture(false); return; }
+    pedalCaptureActive = true;
+    addPedalBtn.textContent = 'Press the pedal button… (Esc to cancel)';
+    addPedalBtn.classList.add('capturing');
+  });
+
+  document.addEventListener('click', function(e){
+    if(!pedalPanel.classList.contains('show')) return;
+    if(pedalPanel.contains(e.target) || e.target === pedalBtn || pedalBtn.contains(e.target)) return;
+    pedalPanel.classList.remove('show');
+    endPedalCapture(false);
+  });
+
   // ---- External display window (control window only) ----
   if(!isStageWindow){
     displayBtn.addEventListener('click', function(){
@@ -1136,12 +1274,26 @@ body.stage-window #connected-frame{display:none !important}
     if(spaceHoldTimer){ clearTimeout(spaceHoldTimer); spaceHoldTimer = null; }
   }
 
+  // A registered Bluetooth pedal pairs as a plain keyboard and just sends
+  // keydown/keyup on whatever key it was set to send — so any of its keys
+  // is treated exactly like Space, driving the same tap/double-tap/hold logic.
+  function isSpaceOrPedal(e){
+    if(e.code === 'Space') return true;
+    for(var i = 0; i < state.pedalKeys.length; i++){
+      var pk = state.pedalKeys[i];
+      if(pk.code && e.code === pk.code) return true;
+      if(!pk.code && pk.key && e.key === pk.key) return true;
+    }
+    return false;
+  }
+
   document.addEventListener('keydown', function(e){
+    if(pedalCaptureActive){ capturePedalKey(e); return; }
     if(isStageWindow) return;
     if(stage.classList.contains('hidden')) return;
     var k = e.key.toLowerCase();
 
-    if(e.code === 'Space'){
+    if(isSpaceOrPedal(e)){
       e.preventDefault();
       if(e.repeat) return; // ignore OS auto-repeat while the key is held
       spaceHoldFired = false;
@@ -1161,8 +1313,9 @@ body.stage-window #connected-frame{display:none !important}
   });
 
   document.addEventListener('keyup', function(e){
+    if(pedalCaptureActive) return;
     if(isStageWindow) return;
-    if(e.code !== 'Space') return;
+    if(!isSpaceOrPedal(e)) return;
     e.preventDefault();
     clearSpaceHoldTimer();
     if(spaceHoldFired) return; // hold already handled its own action
@@ -1183,7 +1336,7 @@ body.stage-window #connected-frame{display:none !important}
   });
 
   // ---- Build/version indicator (control window top bar) ----
-  var APP_VERSION = 'v1.6.0';
+  var APP_VERSION = 'v1.7.0';
   if(buildMeta && !isStageWindow){
     buildMeta.textContent = APP_VERSION;
   }
