@@ -86,6 +86,52 @@ button{font-family:inherit;color:inherit}
 }
 #script-input:focus{outline:2px solid var(--accent);outline-offset:-2px}
 #script-input::placeholder{color:var(--fg-dim)}
+/* ---------- Saved scripts (setup screen) ---------- */
+.script-bar{display:flex;align-items:center;gap:8px;margin-bottom:12px}
+.script-tabs{
+  display:flex;gap:6px;overflow-x:auto;
+  scrollbar-width:none;
+  flex:1;min-width:0;
+}
+.script-tabs::-webkit-scrollbar{display:none}
+.script-tab{
+  display:flex;align-items:center;gap:6px;
+  flex:none;
+  font-family:'Archivo',system-ui,sans-serif;
+  font-weight:600;font-size:12.5px;
+  background:var(--surface);
+  border:1px solid var(--border);
+  color:var(--fg-dim);
+  border-radius:8px;
+  padding:7px 8px 7px 12px;
+  cursor:pointer;
+  white-space:nowrap;
+}
+.script-tab.active{
+  color:var(--fg);
+  border-color:rgba(var(--accent-rgb),.5);
+  background:rgba(var(--accent-rgb),.1);
+}
+.script-tab-name{max-width:160px;overflow:hidden;text-overflow:ellipsis}
+.script-tab-del{
+  display:flex;align-items:center;justify-content:center;
+  width:17px;height:17px;border-radius:5px;
+  font-size:13px;line-height:1;color:var(--fg-dim);
+}
+.script-tab-del:hover{background:rgba(255,255,255,.1);color:var(--fg)}
+#new-script-btn{
+  flex:none;
+  font-family:'Archivo',system-ui,sans-serif;
+  font-weight:600;font-size:12.5px;
+  background:transparent;
+  border:1px dashed var(--border);
+  color:var(--fg-dim);
+  border-radius:8px;
+  padding:7px 11px;
+  cursor:pointer;
+  white-space:nowrap;
+}
+#new-script-btn:hover{color:var(--fg);border-color:var(--fg-dim)}
 .setup-row{display:flex;gap:10px;margin-top:16px;flex-wrap:wrap}
 .btn{
   font-family:'Archivo',system-ui,sans-serif;
@@ -444,8 +490,13 @@ body.stage-window #connected-frame{display:none !important}
   </div>
   <div class="brand">Paste your script</div>
   <div class="sub">Plain text, or anything copied from a Google Doc. It's saved on this device so you can reopen straight to the stage next time.</div>
+  <div class="script-bar">
+    <div class="script-tabs" id="script-tabs"></div>
+    <button type="button" id="new-script-btn" aria-label="New script">+ New</button>
+  </div>
   <textarea id="script-input" placeholder="Paste or type your script here&#10;&#10;Line breaks become paragraph breaks on the prompter."></textarea>
   <div class="setup-row">
+    <button class="btn ghost" id="save-script-btn">Save</button>
     <button class="btn primary" id="start-btn">Start prompting</button>
     <button class="btn ghost" id="cancel-edit" style="display:none">Back to stage</button>
   </div>
@@ -554,7 +605,8 @@ body.stage-window #connected-frame{display:none !important}
   var applyingRemote = false; // guards against echo loops when applying an incoming message
 
   var state = {
-    text: '',
+    scripts: [],         // [{id, name, text, updatedAt}] — multiple saved scripts
+    activeScriptId: null,
     mirrored: false,  // horizontal flip
     flipped: false,   // vertical flip
     speed: 40,        // px/sec
@@ -562,6 +614,32 @@ body.stage-window #connected-frame{display:none !important}
     marginPx: 0,       // extra left/right margin, px per side
     bgOpacity: 100,    // stage background darkness, 100 = solid black
   };
+
+  function genId(){ return 's' + Date.now().toString(36) + Math.random().toString(36).slice(2, 8); }
+  function findScript(id){
+    for(var i = 0; i < state.scripts.length; i++){ if(state.scripts[i].id === id) return state.scripts[i]; }
+    return null;
+  }
+  function activeScript(){ return findScript(state.activeScriptId); }
+  function nextDefaultName(){
+    var n = state.scripts.length + 1;
+    var name = 'Script ' + n;
+    while(state.scripts.some(function(s){ return s.name === name; })){ n++; name = 'Script ' + n; }
+    return name;
+  }
+  // One-time upgrade from the old single-script format (a bare `text`
+  // string on state) to the new named-scripts list, so nothing already
+  // saved on a device gets lost when this update lands.
+  function migrateScripts(){
+    if(!Array.isArray(state.scripts)) state.scripts = [];
+    if(state.scripts.length === 0 && typeof state.text === 'string' && state.text.trim()){
+      state.scripts.push({ id: genId(), name: 'My Script', text: state.text, updatedAt: Date.now() });
+    }
+    delete state.text;
+    if(!state.activeScriptId || !findScript(state.activeScriptId)){
+      state.activeScriptId = state.scripts.length ? state.scripts[0].id : null;
+    }
+  }
 
   function load(){
     try{
@@ -571,6 +649,7 @@ body.stage-window #connected-frame{display:none !important}
         if(saved && typeof saved === 'object') Object.assign(state, saved);
       }
     }catch(e){}
+    migrateScripts();
   }
   function save(){
     try{ localStorage.setItem(STORE_KEY, JSON.stringify(state)); }catch(e){}
@@ -586,6 +665,9 @@ body.stage-window #connected-frame{display:none !important}
   var stage = document.getElementById('stage');
   var input = document.getElementById('script-input');
   var startBtn = document.getElementById('start-btn');
+  var saveScriptBtn = document.getElementById('save-script-btn');
+  var newScriptBtn = document.getElementById('new-script-btn');
+  var scriptTabs = document.getElementById('script-tabs');
   var cancelEdit = document.getElementById('cancel-edit');
   var scroller = document.getElementById('scroller');
   var scriptText = document.getElementById('script-text');
@@ -623,7 +705,8 @@ body.stage-window #connected-frame{display:none !important}
   var wakeLock = null;
 
   function applyText(){
-    var text = state.text || (isStageWindow ? 'Waiting for script from the control window…' : '');
+    var activeS = activeScript();
+    var text = (activeS && activeS.text) || (isStageWindow ? 'Waiting for script from the control window…' : '');
     // Split on blank lines into paragraph blocks (not just one text node) so
     // "previous paragraph" has real boundaries to jump between.
     var paras = text.split(/\n[ \t]*\n+/);
@@ -708,22 +791,134 @@ body.stage-window #connected-frame{display:none !important}
   }
   function showSetup(editing){
     pause();
-    input.value = state.text;
+    var activeS = activeScript();
+    input.value = activeS ? activeS.text : '';
     setup.classList.remove('hidden');
     stage.classList.add('hidden');
     cancelEdit.style.display = editing ? '' : 'none';
+    renderScriptTabs();
+  }
+
+  // ---- Saved scripts (setup screen) ----
+  // Textarea content only ever lands back in state via an explicit commit
+  // (Save, or Start prompting) — same "nothing autosaves on keystroke"
+  // model the app already used for the single-script version, just now
+  // aware of which named script is the one being edited.
+  function hasUnsavedChanges(){
+    var activeS = activeScript();
+    return input.value !== (activeS ? activeS.text : '');
+  }
+  function confirmDiscard(){
+    if(!hasUnsavedChanges()) return true;
+    var activeS = activeScript();
+    return confirm('Discard unsaved changes to "' + (activeS ? activeS.name : 'this script') + '"?');
+  }
+  function commitActiveScriptText(v){
+    var s = activeScript();
+    if(!s){
+      s = { id: genId(), name: nextDefaultName(), text: '', updatedAt: Date.now() };
+      state.scripts.push(s);
+      state.activeScriptId = s.id;
+    }
+    s.text = v;
+    s.updatedAt = Date.now();
+    save();
+    renderScriptTabs();
+  }
+  function selectScript(id){
+    if(id === state.activeScriptId) return;
+    if(!confirmDiscard()) return;
+    state.activeScriptId = id;
+    save();
+    var activeS = activeScript();
+    input.value = activeS ? activeS.text : '';
+    renderScriptTabs();
+  }
+  function renameScript(id, evt){
+    if(evt) evt.stopPropagation();
+    var s = findScript(id);
+    if(!s) return;
+    var name = prompt('Rename script:', s.name);
+    if(name === null) return;
+    name = name.trim();
+    if(!name) return;
+    s.name = name;
+    save();
+    renderScriptTabs();
+  }
+  function deleteScript(id, evt){
+    if(evt) evt.stopPropagation();
+    var s = findScript(id);
+    if(!s) return;
+    if(!confirm('Delete "' + s.name + '"? This can\'t be undone.')) return;
+    state.scripts = state.scripts.filter(function(x){ return x.id !== id; });
+    if(state.activeScriptId === id){
+      state.activeScriptId = state.scripts.length ? state.scripts[0].id : null;
+      var activeS = activeScript();
+      input.value = activeS ? activeS.text : '';
+    }
+    save();
+    renderScriptTabs();
+  }
+  function renderScriptTabs(){
+    scriptTabs.innerHTML = '';
+    state.scripts.forEach(function(s){
+      var tab = document.createElement('button');
+      tab.type = 'button';
+      tab.className = 'script-tab' + (s.id === state.activeScriptId ? ' active' : '');
+      tab.title = 'Double-click to rename';
+      var nameSpan = document.createElement('span');
+      nameSpan.className = 'script-tab-name';
+      nameSpan.textContent = s.name;
+      var delBtn = document.createElement('span');
+      delBtn.className = 'script-tab-del';
+      delBtn.setAttribute('role', 'button');
+      delBtn.setAttribute('aria-label', 'Delete ' + s.name);
+      delBtn.textContent = '×';
+      delBtn.addEventListener('click', function(e){ deleteScript(s.id, e); });
+      tab.appendChild(nameSpan);
+      tab.appendChild(delBtn);
+      tab.addEventListener('click', function(){ selectScript(s.id); });
+      tab.addEventListener('dblclick', function(e){ renameScript(s.id, e); });
+      scriptTabs.appendChild(tab);
+    });
+  }
+  function flashButton(btn, text){
+    var orig = btn.textContent;
+    btn.textContent = text;
+    btn.disabled = true;
+    setTimeout(function(){ btn.textContent = orig; btn.disabled = false; }, 1100);
   }
 
   startBtn.addEventListener('click', function(){
     var v = input.value;
     if(!v.trim()) return;
-    state.text = v;
-    save();
+    commitActiveScriptText(v);
     applyText();
     showStage();
     scroller.scrollTop = 0;
   });
+  saveScriptBtn.addEventListener('click', function(){
+    var v = input.value;
+    if(!v.trim()) return;
+    commitActiveScriptText(v);
+    flashButton(saveScriptBtn, 'Saved');
+  });
+  newScriptBtn.addEventListener('click', function(){
+    if(!confirmDiscard()) return;
+    var name = prompt('Name this script:', nextDefaultName());
+    if(name === null) return;
+    name = name.trim() || nextDefaultName();
+    var s = { id: genId(), name: name, text: '', updatedAt: Date.now() };
+    state.scripts.push(s);
+    state.activeScriptId = s.id;
+    save();
+    input.value = '';
+    renderScriptTabs();
+    input.focus();
+  });
   cancelEdit.addEventListener('click', function(){
+    if(!confirmDiscard()) return;
     showStage();
   });
   editBtn.addEventListener('click', function(){
@@ -988,7 +1183,7 @@ body.stage-window #connected-frame{display:none !important}
   });
 
   // ---- Build/version indicator (control window top bar) ----
-  var APP_VERSION = 'v1.5.4';
+  var APP_VERSION = 'v1.6.0';
   if(buildMeta && !isStageWindow){
     buildMeta.textContent = APP_VERSION;
   }
@@ -1002,7 +1197,7 @@ body.stage-window #connected-frame{display:none !important}
   applyText();
   if(isStageWindow){
     showStage();
-  }else if(state.text && state.text.trim()){
+  }else if(activeScript() && activeScript().text && activeScript().text.trim()){
     showStage();
   }else{
     showSetup(false);
