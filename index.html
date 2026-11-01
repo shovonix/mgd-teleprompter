@@ -599,10 +599,10 @@ body.stage-window #connected-frame{display:none !important}
             <div class="slider-label"><span>Background</span><span id="bgop-val">—</span></div>
             <input type="range" id="bgop" min="20" max="100" step="5">
           </div>
-          <button class="icon-btn" id="mirror-btn" aria-pressed="false" aria-label="Horizontal flip">
+          <button class="icon-btn" id="mirror-btn" aria-pressed="false" aria-label="Horizontal flip — applies on the stage display only" title="Applies on the stage display only">
             <svg viewBox="0 0 24 24"><path d="M11 3h2v18h-2zM4 7l5 5-5 5zM20 7l-5 5 5 5z"/></svg>
           </button>
-          <button class="icon-btn" id="flip-btn" aria-pressed="false" aria-label="Vertical flip">
+          <button class="icon-btn" id="flip-btn" aria-pressed="false" aria-label="Vertical flip — applies on the stage display only" title="Applies on the stage display only">
             <svg viewBox="0 0 24 24" style="transform:rotate(90deg)"><path d="M11 3h2v18h-2zM4 7l5 5-5 5zM20 7l-5 5 5 5z"/></svg>
           </button>
           <button class="icon-btn accent" id="display-btn" aria-label="Open external display (staging window)">
@@ -1336,7 +1336,7 @@ body.stage-window #connected-frame{display:none !important}
   });
 
   // ---- Build/version indicator (control window top bar) ----
-  var APP_VERSION = 'v1.7.0';
+  var APP_VERSION = 'v1.7.1';
   if(buildMeta && !isStageWindow){
     buildMeta.textContent = APP_VERSION;
   }
