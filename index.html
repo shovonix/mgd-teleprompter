@@ -478,31 +478,76 @@ body:not(.prompting):not(.stage-window) #setup{right:0}
 #right-rail .dev-tile svg{width:19px;height:19px}
 
 /* ---------- Single Monitor mode ---------- */
-.only-single{display:none !important}
+.only-single,.only-solo,.only-touch{display:none !important}
 body[data-mode="single"] .only-single{display:inline-flex !important}
-body[data-mode="single"] .only-dual{display:none !important}
+body.solo .only-solo{display:inline-flex !important}
+body[data-mode="mobile"] .only-touch,body[data-mode="tablet"] .only-touch{display:flex !important}
+body.solo .only-dual{display:none !important}
+body[data-mode="single"] .no-single{display:none !important}
 .rail-close{
   display:none;position:absolute;top:14px;right:14px;z-index:2;
   width:30px;height:30px;border-radius:9px;border:1px solid var(--hair);
   background:var(--raised);color:var(--fg-dim);font-size:13px;line-height:1;cursor:pointer;
 }
 .rail-close:hover{color:var(--fg);border-color:#4a4a50}
-body[data-mode="single"].prompting .rail-close{display:block}
-body[data-mode="single"]:not(.stage-window) #stage{left:0;right:0}
-body[data-mode="single"]:not(.stage-window) #setup{left:var(--rail)}
-body[data-mode="single"] #script-text{max-width:none}
-body[data-mode="single"].prompting .rail{z-index:20;box-shadow:0 0 60px rgba(0,0,0,.75);transition:transform .25s ease}
-body[data-mode="single"].prompting #left-rail{transform:translateX(-102%)}
-body[data-mode="single"].prompting #right-rail{transform:translateX(102%)}
-body[data-mode="single"].prompting #left-rail.open,
-body[data-mode="single"].prompting #right-rail.open{transform:none}
+body.solo.prompting .rail-close{display:block}
+body.solo:not(.stage-window) #stage{left:0;right:0}
+body.solo:not(.stage-window) #setup{left:var(--rail)}
+body.solo #script-text{max-width:none}
+body.solo.prompting .rail{z-index:20;box-shadow:0 0 60px rgba(0,0,0,.75);transition:transform .25s ease}
+body.solo.prompting #left-rail{transform:translateX(-102%)}
+body.solo.prompting #right-rail{transform:translateX(102%)}
+body.solo.prompting #left-rail.open,
+body.solo.prompting #right-rail.open{transform:none}
 #left-rail .rail-close{right:12px}
 #utility{padding-right:36px}
 /* While playing: the bottom bar and progress fade out and return on mouse move */
 #bottombar,#progress-wrap{transition:opacity .3s ease}
-body[data-mode="single"].ui-hidden #bottombar,
-body[data-mode="single"].ui-hidden #progress-wrap{opacity:0;pointer-events:none}
-body[data-mode="single"].ui-hidden #stage{cursor:none}
+body.solo.ui-hidden #bottombar,
+body.solo.ui-hidden #progress-wrap{opacity:0;pointer-events:none}
+body.solo.ui-hidden #stage{cursor:none}
+
+/* ---------- Mobile + Tablet (touch) ---------- */
+body.touch #stage{touch-action:manipulation;-webkit-tap-highlight-color:transparent}
+body.touch #script-text{-webkit-user-select:none;user-select:none}
+body.touch:not(.stage-window) #setup{left:0}
+/* panels slide in over the text; scripts/controls closed by default, even on page 1 */
+body.touch .rail{z-index:20;box-shadow:0 0 60px rgba(0,0,0,.75);transition:transform .25s ease;padding-top:max(18px,env(safe-area-inset-top))}
+body.touch #left-rail{transform:translateX(-102%)}
+body.touch #right-rail{transform:translateX(102%)}
+body.touch #left-rail.open,body.touch #right-rail.open{transform:none}
+body.touch #right-rail{display:flex}
+body.touch:not(.prompting) #right-rail{display:none}
+body.touch .rail-close{display:block;width:38px;height:38px}
+body[data-mode="mobile"] .rail{width:50vw;min-width:260px}
+body[data-mode="tablet"] .rail{width:min(340px,46vw)}
+@media (orientation:portrait){
+  body[data-mode="mobile"] .rail{width:100vw}
+  body[data-mode="tablet"] .rail{width:min(380px,72vw)}
+}
+body.touch #bottombar{bottom:max(22px,env(safe-area-inset-bottom))}
+body.touch .cap-side{width:auto;min-width:52px;padding:0 18px;height:52px}
+body[data-mode="mobile"] .cap-side span{display:none}
+body[data-mode="mobile"] .cap-side{width:56px;padding:0}
+body.touch .cap-side svg{width:20px;height:20px}
+body.touch #play{width:64px;height:64px}
+body.touch #progress-wrap{left:16px;right:16px}
+body.touch .navbtn .navbtn-key{display:none}
+body.touch #shortcuts-hint{display:none}
+#edit-text-btn{height:30px;padding:0 12px;border-radius:9px;border:1px solid var(--hair);background:transparent;color:var(--fg-dim);font:600 11.5px 'Archivo',system-ui,sans-serif;cursor:pointer}
+.scripts-head{gap:8px}
+#edit-text-btn{margin-left:auto}
+#menu-btn{display:none;position:absolute;top:max(14px,env(safe-area-inset-top));left:14px;height:38px;padding:0 14px;border-radius:10px;
+  border:1px solid var(--hair);background:var(--raised);color:var(--fg-dim);font:600 12.5px 'Archivo',system-ui,sans-serif;cursor:pointer;gap:8px;align-items:center}
+body.touch #menu-btn{display:inline-flex}
+body.touch .setup-inner{padding-top:34px}
+@media (max-width:700px){
+  body.touch #setup{padding:60px 16px 20px}
+  body.touch .setup-device{flex-wrap:wrap}
+  body.touch .setup-device .dev-tile{padding:0 12px}
+  body.touch .setup-device .dev-tile span{display:none}
+  body.touch .setup-device .device-picker{flex-wrap:nowrap}
+}
 </style>
 
 <aside id="left-rail" class="rail">
@@ -517,6 +562,7 @@ body[data-mode="single"].ui-hidden #stage{cursor:none}
   <div class="scripts-head">
     <div class="sec-title">Scripts</div>
     <button type="button" id="new-script-btn" aria-label="New script">+ New</button>
+    <button type="button" id="edit-text-btn" class="only-touch" aria-label="Edit this script's text">Edit text</button>
   </div>
   <div class="script-tabs" id="script-tabs"></div>
   <div class="rail-spacer"></div>
@@ -524,6 +570,7 @@ body[data-mode="single"].ui-hidden #stage{cursor:none}
 </aside>
 
 <div id="setup">
+  <button type="button" id="menu-btn" aria-label="Open scripts">☰ Scripts</button>
   <div class="setup-inner">
     <div class="setup-device">
       <div class="sec-title">Device type</div>
@@ -584,8 +631,8 @@ body[data-mode="single"].ui-hidden #stage{cursor:none}
       <svg viewBox="0 0 24 24"><path d="M21 3H3c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h7l-2 3v1h8v-1l-2-3h7c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 14H3V5h18v12z"/></svg>
       <span id="display-label">Connect stage</span>
     </button>
-    <span class="cap-div only-single"></span>
-    <button class="cap-side only-single" id="controls-btn" aria-label="Open controls">
+    <span class="cap-div only-solo"></span>
+    <button class="cap-side only-solo" id="controls-btn" aria-label="Open controls">
       <svg viewBox="0 0 24 24"><path d="M3 17v2h6v-2H3zM3 5v2h10V5H3zm10 16v-2h8v-2h-8v-2h-2v6h2zM7 9v2H3v2h4v2h2V9H7zm14 4v-2H11v2h10zm-6-4h2V7h4V5h-4V3h-2v6z"/></svg>
       <span>Controls</span>
     </button>
@@ -634,6 +681,8 @@ body[data-mode="single"].ui-hidden #stage{cursor:none}
       <div class="slider-label"><span>Speed <kbd class="only-single">↑ ↓</kbd></span><span id="speed-val">—</span></div>
       <input type="range" id="speed" min="8" max="220" step="2">
     </div>
+    <button class="navbtn only-touch" id="top-btn" type="button"><svg viewBox="0 0 24 24"><path d="M12 5l7 7h-4v7h-6v-7H5z"/></svg><span>Jump to top</span></button>
+    <button class="navbtn only-touch" id="prev-para-btn" type="button"><svg viewBox="0 0 24 24"><path d="M6 6h2v12H6zm3.5 6l8.5 6V6z"/></svg><span>Previous paragraph</span></button>
   </div>
 
   <div class="sec">
@@ -650,11 +699,11 @@ body[data-mode="single"].ui-hidden #stage{cursor:none}
       <div class="slider-label"><span>Text size</span><span id="size-val">—</span></div>
       <input type="range" id="size" min="22" max="110" step="2">
     </div>
-    <button class="tbtn only-dual" id="mirror-btn" aria-pressed="false" aria-label="Mirror — horizontal flip, stage window only" title="Stage window only">
+    <button class="tbtn no-single" id="mirror-btn" aria-pressed="false" aria-label="Mirror — horizontal flip, stage window only" title="Stage window only">
       <span>Mirror</span>
       <svg viewBox="0 0 24 24"><path d="M11 3h2v18h-2zM4 7l5 5-5 5zM20 7l-5 5 5 5z"/></svg>
     </button>
-    <button class="tbtn only-dual" id="flip-btn" aria-pressed="false" aria-label="Flip — vertical flip, stage window only" title="Stage window only">
+    <button class="tbtn no-single" id="flip-btn" aria-pressed="false" aria-label="Flip — vertical flip, stage window only" title="Stage window only">
       <span>Flip</span>
       <svg viewBox="0 0 24 24" style="transform:rotate(90deg)"><path d="M11 3h2v18h-2zM4 7l5 5-5 5zM20 7l-5 5 5 5z"/></svg>
     </button>
@@ -892,6 +941,9 @@ body[data-mode="single"].ui-hidden #stage{cursor:none}
   // under the guide line, in unscaled text px, so they mean the same line in
   // every window whatever its own size, scale or padding.
   function isSingle(){ return state.deviceType === 'single'; }
+  function isTouch(){ return state.deviceType === 'mobile' || state.deviceType === 'tablet'; }
+  function isSolo(){ return state.deviceType !== 'dual'; } // no Stage window in these modes
+  var applyEditable = function(){};
   var leftRail = document.getElementById('left-rail');
   var rightRail = document.getElementById('right-rail');
   var controlsBtn = document.getElementById('controls-btn');
@@ -912,7 +964,7 @@ body[data-mode="single"].ui-hidden #stage{cursor:none}
     if(isStageWindow) return;
     var col = scroller.clientWidth;
     var sw = state.stageWidth;
-    var k = (!isSingle() && sw && col && sw > col) ? col / sw : 1;
+    var k = (!isSolo() && sw && col && sw > col) ? col / sw : 1;
     var g = (stage.classList.contains('hidden') ? null : getG());
     viewK = k;
     if(k < 1){
@@ -961,7 +1013,7 @@ body[data-mode="single"].ui-hidden #stage{cursor:none}
     // whoever's operating it isn't reading backwards. Only the stage window
     // (#stage hash route, on the external display) ever gets transformed;
     // the control window just reflects the toggle state on its buttons.
-    if(isStageWindow){
+    if(isStageWindow || isTouch()){
       var sx = state.mirrored ? -1 : 1;
       var sy = state.flipped ? -1 : 1;
       // Transform the scroll viewport (not the text block): it flips around
@@ -1053,7 +1105,7 @@ body[data-mode="single"].ui-hidden #stage{cursor:none}
     stage.classList.remove('hidden');
     cancelEdit.style.display = '';
     document.body.classList.add('prompting');
-    if(isSingle() && !isStageWindow) closeRails();
+    if(isSolo() && !isStageWindow) closeRails();
     applyPreviewVisibility();
     applyViewScale();
     updateProgress();
@@ -1218,7 +1270,7 @@ body[data-mode="single"].ui-hidden #stage{cursor:none}
     showStage();
   });
   editBtn.addEventListener('click', function(){
-    if(isSingle()) toggleRail('left'); // Single Monitor: Edit script opens the scripts panel
+    if(isSolo()) toggleRail('left'); // Single/Mobile/Tablet: Edit script opens the scripts panel
     else showSetup(true);
   });
   controlsBtn.addEventListener('click', function(){ toggleRail('right'); });
@@ -1279,7 +1331,7 @@ body[data-mode="single"].ui-hidden #stage{cursor:none}
     lastT = 0;
     playIcon.innerHTML = '<rect x="6" y="5" width="4" height="14" rx="1"/><rect x="14" y="5" width="4" height="14" rx="1"/>';
     playBtn.classList.add('active');
-    if(isSingle() && !isStageWindow){ closeRails(); scheduleHide(); }
+    if(isSolo() && !isStageWindow){ closeRails(); if(isTouch()) document.body.classList.add('ui-hidden'); else scheduleHide(); }
     requestWake();
     // Stage/preview windows don't drive their own scroll — see tick()'s
     // comment above. They still flip `playing` and update wake-lock/UI
@@ -1324,6 +1376,7 @@ body[data-mode="single"].ui-hidden #stage{cursor:none}
   // there is nothing to fade; kept as no-ops because play()/pause() and the
   // keyboard handlers still call them (single-monitor mode will reuse them).
   function showBar(){
+    if(isTouch() && playing) return; // touch: only a tap on the text brings the bar back while playing
     document.body.classList.remove('ui-hidden');
     clearTimeout(hideTimer);
     if(playing && isSingle()) scheduleHide();
@@ -1334,7 +1387,7 @@ body[data-mode="single"].ui-hidden #stage{cursor:none}
       if(playing && isSingle()) document.body.classList.add('ui-hidden');
     }, 2500);
   }
-  document.addEventListener('pointermove', function(){ if(playing && !isStageWindow) showBar(); });
+  document.addEventListener('pointermove', function(){ if(playing && !isStageWindow && isSingle()) showBar(); });
 
   speedSlider.addEventListener('input', function(){
     state.speed = Number(speedSlider.value);
@@ -1375,7 +1428,7 @@ body[data-mode="single"].ui-hidden #stage{cursor:none}
   fullscreenBtn.addEventListener('click', function(){
     try{
       if(!document.fullscreenElement){
-        var fsTarget = isSingle() ? document.documentElement : stage;
+        var fsTarget = isSolo() ? document.documentElement : stage;
         fsTarget.requestFullscreen && fsTarget.requestFullscreen().catch(function(){});
       }else{
         document.exitFullscreen && document.exitFullscreen().catch(function(){});
@@ -1583,12 +1636,28 @@ body[data-mode="single"].ui-hidden #stage{cursor:none}
     });
   }
 
+  // ---- Touch (Mobile / Tablet) tap flow ----
+  // playing: tap text = pause + bar. paused: tap text = hide everything
+  // (panels too), tap again = bar only.
+  scroller.addEventListener('click', function(){
+    if(isStageWindow || !isTouch()) return;
+    if(playing){ pause(); showBar(); return; }
+    if(leftRail.classList.contains('open') || rightRail.classList.contains('open')){
+      closeRails(); document.body.classList.add('ui-hidden'); return;
+    }
+    document.body.classList.toggle('ui-hidden');
+  });
+  document.getElementById('top-btn').addEventListener('click', function(){ seekTo(0); });
+  document.getElementById('prev-para-btn').addEventListener('click', function(){ goPrevParagraph(); });
+  document.getElementById('menu-btn').addEventListener('click', function(){ toggleRail('left'); });
+  document.getElementById('edit-text-btn').addEventListener('click', function(){ closeRails(); showSetup(true); });
+
   // ---- Device type (control window only) ----
   // Only Dual Monitor has its layout built so far; the others are shown
   // disabled until their versions land (flip a flag to enable each).
   var MODES = [
-    {id:'mobile', label:'Mobile', icon:'M7 2h10a2 2 0 012 2v16a2 2 0 01-2 2H7a2 2 0 01-2-2V4a2 2 0 012-2zm0 3v13h10V5H7zm5 14.2a1 1 0 100 2 1 1 0 000-2z', enabled:false},
-    {id:'tablet', label:'Tablet', icon:'M5 3h14a2 2 0 012 2v14a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2zm0 3v11h14V6H5zm7 12.2a1 1 0 100 2 1 1 0 000-2z', enabled:false},
+    {id:'mobile', label:'Mobile', icon:'M7 2h10a2 2 0 012 2v16a2 2 0 01-2 2H7a2 2 0 01-2-2V4a2 2 0 012-2zm0 3v13h10V5H7zm5 14.2a1 1 0 100 2 1 1 0 000-2z', enabled:true},
+    {id:'tablet', label:'Tablet', icon:'M5 3h14a2 2 0 012 2v14a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2zm0 3v11h14V6H5zm7 12.2a1 1 0 100 2 1 1 0 000-2z', enabled:true},
     {id:'single', label:'Single Monitor', icon:'M3 4h18a1 1 0 011 1v11a1 1 0 01-1 1h-7v2h3v2H7v-2h3v-2H3a1 1 0 01-1-1V5a1 1 0 011-1zm1 2v9h16V6H4z', enabled:true},
     {id:'dual', label:'Dual Monitor', icon:'M1 6a1 1 0 011-1h10a1 1 0 011 1v8a1 1 0 01-1 1H8v2h2v2H4v-2h2v-2H2a1 1 0 01-1-1V6zm2 1v6h8V7H3zm11 .5h7a1 1 0 011 1V19a1 1 0 01-1 1h-7a1 1 0 01-1-1V8.5a1 1 0 011-1zm1 2V18h5V9.5h-5z', enabled:true}
   ];
@@ -1629,7 +1698,11 @@ body[data-mode="single"].ui-hidden #stage{cursor:none}
   function applyDeviceType(){
     if(isStageWindow) return;
     document.body.setAttribute('data-mode', state.deviceType || 'dual');
+    document.body.classList.toggle('solo', isSolo());
+    document.body.classList.toggle('touch', isTouch());
     closeRails();
+    applyEditable();
+    applyFlip();
     document.body.classList.remove('ui-hidden');
     applyViewScale();
     renderDevicePickers();
@@ -1668,8 +1741,12 @@ body[data-mode="single"].ui-hidden #stage{cursor:none}
   // edits auto-save (debounced) and propagate to the stage + preview.
   if(!isStageWindow){
     var editSaveTimer = null;
-    try{ scriptText.contentEditable = 'plaintext-only'; }catch(e){}
-    if(scriptText.contentEditable !== 'plaintext-only') scriptText.contentEditable = 'true';
+    applyEditable = function(){
+      if(isTouch()){ scriptText.contentEditable = 'false'; return; }
+      try{ scriptText.contentEditable = 'plaintext-only'; }catch(e){}
+      if(scriptText.contentEditable !== 'plaintext-only') scriptText.contentEditable = 'true';
+    };
+    applyEditable();
     scriptText.setAttribute('spellcheck', 'false');
     scriptText.setAttribute('aria-label', 'Script — click to edit');
     function readEditedText(){
