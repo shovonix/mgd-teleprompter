@@ -505,7 +505,7 @@ body.stage-window #bar{display:none !important}
   right:14px;
   bottom:100%;
   margin-bottom:10px;
-  width:360px;
+  width:240px;
   border-radius:10px;
   overflow:hidden;
   border:1px solid var(--border);
@@ -524,13 +524,13 @@ body.stage-window #stage-preview-box{display:none !important}
   border-bottom:1px solid rgba(255,255,255,.08);
 }
 #stage-preview-frame-wrap{
-  width:360px;height:225px;
+  width:240px;height:150px;
   overflow:hidden;
 }
 #stage-preview-frame{
   width:1280px;height:800px;
   border:0;
-  transform:scale(0.28125);
+  transform:scale(0.1875);
   transform-origin:top left;
   pointer-events:none;
   display:block;
@@ -1559,7 +1559,7 @@ body.stage-window #connected-frame{display:none !important}
   });
 
   // ---- Build/version indicator (control window top bar) ----
-  var APP_VERSION = 'v1.12.0';
+  var APP_VERSION = 'v1.12.1';
   if(buildMeta && !isStageWindow){
     buildMeta.textContent = APP_VERSION;
   }
