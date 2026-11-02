@@ -1230,7 +1230,14 @@ body.stage-window #connected-frame{display:none !important}
         // alone are no longer enough and the browser falls back to a tab.
         // Safari/Firefox mostly honor width/height regardless, and still
         // respect popup=1 where supported, so it's harmless to include.
-        w = window.open(url, 'mgdTeleprompterStage', 'popup=1,width=1280,height=800,menubar=no,toolbar=no,location=no,status=no');
+        // Window features are only applied when window.open() creates a
+        // brand-new browsing context — if a window/tab already exists under
+        // this target name (e.g. one opened as a tab before popup=1 was
+        // added), the browser just navigates that one and silently ignores
+        // popup=1 and every other feature. Using a fresh name guarantees a
+        // new context every time, so the popup request is never swallowed
+        // by some old tab left over from testing an earlier version.
+        w = window.open(url, 'mgdTeleprompterStageV2', 'popup=1,width=1280,height=800,menubar=no,toolbar=no,location=no,status=no');
       }catch(e){}
       stageWin = w;
       if(!w){
@@ -1402,7 +1409,7 @@ body.stage-window #connected-frame{display:none !important}
   });
 
   // ---- Build/version indicator (control window top bar) ----
-  var APP_VERSION = 'v1.9.1';
+  var APP_VERSION = 'v1.9.2';
   if(buildMeta && !isStageWindow){
     buildMeta.textContent = APP_VERSION;
   }
