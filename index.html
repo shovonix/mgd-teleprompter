@@ -491,6 +491,58 @@ body.stage-window #bar{display:none !important}
 #stage-hint-card .t{font-family:'Archivo',sans-serif;font-weight:700;font-size:15px;margin-bottom:6px}
 #stage-hint-card .s{color:var(--fg-dim);font-size:13px;line-height:1.5}
 
+/* ---------- Mini stage preview (control window only) ----------
+   Shows what the real stage display looks like — including mirror/flip,
+   which the control window's own in-place preview deliberately skips so
+   whoever's operating it isn't reading backwards. Built from an iframe of
+   this same page loaded at #stage-preview, scaled down: it rides the exact
+   same BroadcastChannel/localStorage sync as a real external stage window,
+   so it needs no custom update logic of its own. */
+#stage-preview-box{
+  position:fixed;
+  right:16px;bottom:16px;
+  width:240px;
+  border-radius:10px;
+  overflow:hidden;
+  border:1px solid var(--border);
+  box-shadow:0 10px 30px rgba(0,0,0,.5);
+  z-index:50;
+  background:#000;
+}
+#stage-preview-box.hidden{display:none}
+body.stage-window #stage-preview-box{display:none !important}
+#stage-preview-label{
+  position:relative;
+  padding:6px 30px 6px 8px;
+  font-size:9px;letter-spacing:.06em;text-transform:uppercase;
+  color:rgba(255,255,255,.6);
+  background:rgba(255,255,255,.04);
+  border-bottom:1px solid rgba(255,255,255,.08);
+}
+#stage-preview-toggle{
+  position:absolute;top:2px;right:2px;
+  width:22px;height:22px;
+  border:none;border-radius:6px;
+  background:rgba(255,255,255,.08);
+  color:rgba(255,255,255,.7);
+  font-size:14px;line-height:1;
+  cursor:pointer;
+}
+#stage-preview-toggle:hover{background:rgba(255,255,255,.16);color:#fff}
+#stage-preview-box.collapsed #stage-preview-frame-wrap{display:none}
+#stage-preview-frame-wrap{
+  width:240px;height:150px;
+  overflow:hidden;
+}
+#stage-preview-frame{
+  width:1280px;height:800px;
+  border:0;
+  transform:scale(0.1875);
+  transform-origin:top left;
+  pointer-events:none;
+  display:block;
+}
+
 /* ---------- Control panel extras ---------- */
 /* Whole-window glow frame — replaces the old status dot. Fades in/out so the
    "staging window is connected" signal is ambient rather than a thing you
@@ -559,8 +611,8 @@ body.stage-window #connected-frame{display:none !important}
   <div id="connected-frame"></div>
   <div id="stage-hint" class="hidden">
     <div id="stage-hint-card">
-      <div class="t">Staging Teleprompter Preview</div>
-      <div class="s">Drag this window onto your external display, then click anywhere (or press F) to go fullscreen. Press Play in the control window to start scrolling here. Press <kbd>Esc</kbd> anytime to return to this screen.</div>
+      <div class="t" id="stage-hint-title">Staging Teleprompter Preview</div>
+      <div class="s" id="stage-hint-body">Drag this window onto your external display, then click anywhere (or press F) to go fullscreen. Press Play in the control window to start scrolling here. Press <kbd>Esc</kbd> anytime to return to this screen.</div>
     </div>
   </div>
 
@@ -654,13 +706,29 @@ body.stage-window #connected-frame{display:none !important}
   </div>
 </div>
 
+<div id="stage-preview-box" class="hidden">
+  <div id="stage-preview-label">
+    Stage preview
+    <button type="button" id="stage-preview-toggle" aria-label="Collapse stage preview">–</button>
+  </div>
+  <div id="stage-preview-frame-wrap">
+    <iframe id="stage-preview-frame" tabindex="-1" aria-hidden="true"></iframe>
+  </div>
+</div>
+
 <script>
 (function(){
   var STORE_KEY = 'glassPrompterState';
   // Self-hosted on a plain domain (not the Claude artifact sandbox), so the
   // page's own address is the real, publicly-openable link — safe to use directly.
   var PUBLIC_URL = location.origin + location.pathname;
-  var isStageWindow = location.hash === '#stage';
+  // #stage-preview is the scaled-down mini preview embedded in the control
+  // window (an iframe of this same page) — it renders exactly like the real
+  // stage (mirror/flip, synced text/scroll) but shouldn't show the "drag me"
+  // hint, answer the ping/hello connection-status handshake, or respond to
+  // F/Esc, since it's not an actual external display.
+  var isPreviewFrame = location.hash === '#stage-preview';
+  var isStageWindow = location.hash === '#stage' || isPreviewFrame;
   if(isStageWindow) document.body.classList.add('stage-window');
 
   var bc = null;
@@ -771,6 +839,11 @@ body.stage-window #connected-frame{display:none !important}
   var displayFallbackUrl = document.getElementById('display-fallback-url');
   var displayFallbackCopy = document.getElementById('display-fallback-copy');
   var stageHint = document.getElementById('stage-hint');
+  var stageHintTitle = document.getElementById('stage-hint-title');
+  var stageHintBody = document.getElementById('stage-hint-body');
+  var stagePreviewBox = document.getElementById('stage-preview-box');
+  var stagePreviewFrame = document.getElementById('stage-preview-frame');
+  var stagePreviewToggle = document.getElementById('stage-preview-toggle');
 
   var playing = false;
   var rafId = null;
@@ -869,6 +942,14 @@ body.stage-window #connected-frame{display:none !important}
     setup.classList.add('hidden');
     stage.classList.remove('hidden');
     cancelEdit.style.display = '';
+    if(!isStageWindow && stagePreviewBox){
+      stagePreviewBox.classList.remove('hidden');
+      // Load the preview iframe once, lazily — no point spinning up a
+      // second full copy of the app before there's any script to show.
+      if(!stagePreviewFrame.getAttribute('src')){
+        stagePreviewFrame.setAttribute('src', location.pathname + location.search + '#stage-preview');
+      }
+    }
   }
   function showSetup(editing){
     pause();
@@ -878,6 +959,9 @@ body.stage-window #connected-frame{display:none !important}
     stage.classList.add('hidden');
     cancelEdit.style.display = editing ? '' : 'none';
     renderScriptTabs();
+    if(!isStageWindow && stagePreviewBox){
+      stagePreviewBox.classList.add('hidden');
+    }
   }
 
   // ---- Saved scripts (setup screen) ----
@@ -1254,6 +1338,13 @@ body.stage-window #connected-frame{display:none !important}
         navigator.clipboard.writeText(displayFallbackUrl.value).catch(function(){ document.execCommand('copy'); });
       }catch(e){ try{ document.execCommand('copy'); }catch(e2){} }
     });
+    if(stagePreviewToggle){
+      stagePreviewToggle.addEventListener('click', function(){
+        var collapsed = stagePreviewBox.classList.toggle('collapsed');
+        stagePreviewToggle.textContent = collapsed ? '+' : '–';
+        stagePreviewToggle.setAttribute('aria-label', collapsed ? 'Expand stage preview' : 'Collapse stage preview');
+      });
+    }
 
     // Ping the stage window every few seconds; a reply flips the status dot green.
     var lastHello = 0;
@@ -1284,7 +1375,19 @@ body.stage-window #connected-frame{display:none !important}
   }
 
   // ---- Stage window: one-time "drag me, then click to fullscreen" hint ----
-  if(isStageWindow){
+  if(isStageWindow && !isPreviewFrame){
+    // If this loaded as a plain tab instead of a separate popup window,
+    // window.toolbar.visible is true (Chrome reports it false only for a
+    // genuine popup) — some browser extension is converting popup=1 to a
+    // tab, which no amount of app-side code can force past, so instead of
+    // fighting it, tell the person how to pop it out themselves: dragging
+    // a tab into its own window always works, regardless of extensions.
+    var openedAsTab = false;
+    try{ openedAsTab = !!(window.opener && window.toolbar && window.toolbar.visible === true); }catch(e0){}
+    if(openedAsTab && stageHintTitle && stageHintBody){
+      stageHintTitle.textContent = 'This opened as a tab, not a window';
+      stageHintBody.textContent = 'Drag this tab out of Chrome’s tab bar (or right-click it → "Move Tab to New Window") so it’s its own window you can place on your external display. Then click anywhere (or press F) to go fullscreen.';
+    }
     stageHint.classList.remove('hidden');
     stageHint.addEventListener('click', function(){
       stageHint.classList.add('hidden');
@@ -1294,11 +1397,24 @@ body.stage-window #connected-frame{display:none !important}
 
     // Esc = "return": stop scrolling, drop out of fullscreen, bring the
     // explainer card back so the window is ready to be handed off again.
+    // F = fullscreen/un-fullscreen — the hint text has always advertised
+    // this, but nothing actually listened for F in the real stage window
+    // (the F handler further down only runs in the control window, where
+    // it fullscreens the control's own in-place preview, not this one).
     document.addEventListener('keydown', function(e){
-      if(e.key !== 'Escape') return;
-      pause();
-      try{ if(document.fullscreenElement) document.exitFullscreen().catch(function(){}); }catch(e2){}
-      stageHint.classList.remove('hidden');
+      if(e.key === 'Escape'){
+        pause();
+        try{ if(document.fullscreenElement) document.exitFullscreen().catch(function(){}); }catch(e2){}
+        stageHint.classList.remove('hidden');
+        return;
+      }
+      if(e.key.toLowerCase() === 'f'){
+        stageHint.classList.add('hidden');
+        try{
+          if(document.fullscreenElement){ document.exitFullscreen().catch(function(){}); }
+          else if(stage.requestFullscreen){ stage.requestFullscreen().catch(function(){}); }
+        }catch(e3){}
+      }
     });
   }
 
@@ -1321,7 +1437,7 @@ body.stage-window #connected-frame{display:none !important}
         clearTimeout(suppressScrollSyncTimer);
         suppressScrollSyncTimer = setTimeout(function(){ suppressScrollSync = false; }, 120);
         scroller.scrollTop = msg.ratio * Math.max(0, scroller.scrollHeight - scroller.clientHeight);
-      }else if(msg.type === 'ping' && isStageWindow){
+      }else if(msg.type === 'ping' && isStageWindow && !isPreviewFrame){
         bc.postMessage({type:'hello'});
       }else if(msg.type === 'hello' && !isStageWindow){
         lastHello = Date.now();
@@ -1409,7 +1525,7 @@ body.stage-window #connected-frame{display:none !important}
   });
 
   // ---- Build/version indicator (control window top bar) ----
-  var APP_VERSION = 'v1.9.2';
+  var APP_VERSION = 'v1.10.0';
   if(buildMeta && !isStageWindow){
     buildMeta.textContent = APP_VERSION;
   }
