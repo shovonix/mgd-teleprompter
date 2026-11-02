@@ -1196,7 +1196,7 @@ body.touch #screen-note{order:5;margin-top:12px;padding:10px 12px;font-size:12px
     try{ if(sessionStorage.getItem(key)) return; sessionStorage.setItem(key, '1'); }catch(e){}
     var el = document.getElementById('mode-toast');
     if(!el) return;
-    el.textContent = 'Works best on a dual-monitor setup or a tablet.';
+    el.textContent = 'For the best experience, use Space Prompter with a dual-monitor setup or a tablet.';
     clearTimeout(toastTimer);
     setTimeout(function(){ el.classList.add('show'); }, 350);
     toastTimer = setTimeout(function(){ el.classList.remove('show'); }, 5500);
