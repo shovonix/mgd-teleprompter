@@ -499,10 +499,16 @@ body.stage-window #bar{display:none !important}
    same BroadcastChannel/localStorage sync as a real external stage window,
    so it needs no custom update logic of its own. */
 #stage-preview-box{
-  /* Docked as the first row inside the control bar itself (#bar-inner is a
-     flex column), right-aligned above the buttons/sliders — not floating
-     over the script text, so it can never cover other controls. */
-  align-self:flex-end;
+  /* Floats over the script text (that's the point — see what the mirrored
+     stage looks like while reading), but pinned to sit right above the
+     control bar rather than anywhere else: bottom:100% of #bar-inner (its
+     positioned parent) puts its bottom edge exactly at the bar's top edge,
+     so it can never drift down and cover the buttons/sliders, however
+     tall the bar gets on a given screen size. */
+  position:absolute;
+  right:14px;
+  bottom:100%;
+  margin-bottom:10px;
   width:240px;
   border-radius:10px;
   overflow:hidden;
@@ -515,24 +521,12 @@ body.stage-window #bar{display:none !important}
    this too — kept explicit in case that markup ever moves again. */
 body.stage-window #stage-preview-box{display:none !important}
 #stage-preview-label{
-  position:relative;
-  padding:6px 30px 6px 8px;
+  padding:6px 8px;
   font-size:9px;letter-spacing:.06em;text-transform:uppercase;
   color:rgba(255,255,255,.6);
   background:rgba(255,255,255,.04);
   border-bottom:1px solid rgba(255,255,255,.08);
 }
-#stage-preview-toggle{
-  position:absolute;top:2px;right:2px;
-  width:22px;height:22px;
-  border:none;border-radius:6px;
-  background:rgba(255,255,255,.08);
-  color:rgba(255,255,255,.7);
-  font-size:14px;line-height:1;
-  cursor:pointer;
-}
-#stage-preview-toggle:hover{background:rgba(255,255,255,.16);color:#fff}
-#stage-preview-box.collapsed #stage-preview-frame-wrap{display:none}
 #stage-preview-frame-wrap{
   width:240px;height:150px;
   overflow:hidden;
@@ -632,6 +626,9 @@ body.stage-window #connected-frame{display:none !important}
         <button class="icon-btn" id="pedal-btn" aria-label="Bluetooth pedal setup">
           <svg viewBox="0 0 24 24"><path d="M17.71 7.71L12 2h-1v7.59L6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 11 14.41V22h1l5.71-5.71-4.3-4.29 4.3-4.29zM13 5.83l1.88 1.88L13 9.59V5.83zm1.88 10.46L13 18.17v-3.76l1.88 1.88z"/></svg>
         </button>
+        <button class="icon-btn" id="preview-btn" aria-pressed="true" aria-label="Stage preview panel" title="Show/hide stage preview">
+          <svg viewBox="0 0 24 24"><path fill-rule="evenodd" clip-rule="evenodd" d="M3 5h18v14H3V5zm2 2v10h14V7H5z"/><rect x="13" y="12" width="6" height="5"/></svg>
+        </button>
         <button class="icon-btn" id="guide-btn" aria-pressed="true" aria-label="Reading guide line" title="Reading guide line">
           <svg viewBox="0 0 24 24"><path fill-rule="evenodd" clip-rule="evenodd" d="M3 5h18v14H3V5zm2 2v10h14V7H5z"/><rect x="5" y="11" width="14" height="2"/></svg>
         </button>
@@ -651,10 +648,7 @@ body.stage-window #connected-frame{display:none !important}
   <div id="bar">
     <div id="bar-inner">
       <div id="stage-preview-box" class="hidden">
-        <div id="stage-preview-label">
-          Stage preview
-          <button type="button" id="stage-preview-toggle" aria-label="Collapse stage preview">–</button>
-        </div>
+        <div id="stage-preview-label">Stage preview</div>
         <div id="stage-preview-frame-wrap">
           <iframe id="stage-preview-frame" tabindex="-1" aria-hidden="true"></iframe>
         </div>
@@ -750,6 +744,7 @@ body.stage-window #connected-frame{display:none !important}
     bgOpacity: 100,    // stage background darkness, 100 = solid black
     pedalKeys: [],     // [{code,key}] — any of these behave exactly like Space
     guideVisible: true, // red reading-guide line across the middle of the stage
+    previewVisible: true, // mini stage preview in the control bar — open by default
   };
 
   function genId(){ return 's' + Date.now().toString(36) + Math.random().toString(36).slice(2, 8); }
@@ -845,7 +840,7 @@ body.stage-window #connected-frame{display:none !important}
   var stageHintBody = document.getElementById('stage-hint-body');
   var stagePreviewBox = document.getElementById('stage-preview-box');
   var stagePreviewFrame = document.getElementById('stage-preview-frame');
-  var stagePreviewToggle = document.getElementById('stage-preview-toggle');
+  var previewBtn = document.getElementById('preview-btn');
 
   var playing = false;
   var rafId = null;
@@ -910,6 +905,18 @@ body.stage-window #connected-frame{display:none !important}
     guideEl.classList.toggle('off', !state.guideVisible);
     guideBtn.setAttribute('aria-pressed', state.guideVisible ? 'true' : 'false');
   }
+  function applyPreviewVisibility(){
+    if(!stagePreviewBox) return;
+    var shouldShow = !isStageWindow && state.previewVisible && !stage.classList.contains('hidden');
+    stagePreviewBox.classList.toggle('hidden', !shouldShow);
+    // Lazy-load the preview iframe the first time it's actually shown —
+    // no point spinning up a second full copy of the app before there's a
+    // script to display, or while the panel's toggled off.
+    if(shouldShow && stagePreviewFrame && !stagePreviewFrame.getAttribute('src')){
+      stagePreviewFrame.setAttribute('src', location.pathname + location.search + '#stage-preview');
+    }
+    if(previewBtn) previewBtn.setAttribute('aria-pressed', state.previewVisible ? 'true' : 'false');
+  }
   function applyMargin(){
     var l = 'calc(max(28px, env(safe-area-inset-left,0px)) + ' + state.marginPx + 'px)';
     var r = 'calc(max(28px, env(safe-area-inset-right,0px)) + ' + state.marginPx + 'px)';
@@ -944,14 +951,7 @@ body.stage-window #connected-frame{display:none !important}
     setup.classList.add('hidden');
     stage.classList.remove('hidden');
     cancelEdit.style.display = '';
-    if(!isStageWindow && stagePreviewBox){
-      stagePreviewBox.classList.remove('hidden');
-      // Load the preview iframe once, lazily — no point spinning up a
-      // second full copy of the app before there's any script to show.
-      if(!stagePreviewFrame.getAttribute('src')){
-        stagePreviewFrame.setAttribute('src', location.pathname + location.search + '#stage-preview');
-      }
-    }
+    applyPreviewVisibility();
   }
   function showSetup(editing){
     pause();
@@ -961,9 +961,7 @@ body.stage-window #connected-frame{display:none !important}
     stage.classList.add('hidden');
     cancelEdit.style.display = editing ? '' : 'none';
     renderScriptTabs();
-    if(!isStageWindow && stagePreviewBox){
-      stagePreviewBox.classList.add('hidden');
-    }
+    applyPreviewVisibility();
   }
 
   // ---- Saved scripts (setup screen) ----
@@ -1340,11 +1338,11 @@ body.stage-window #connected-frame{display:none !important}
         navigator.clipboard.writeText(displayFallbackUrl.value).catch(function(){ document.execCommand('copy'); });
       }catch(e){ try{ document.execCommand('copy'); }catch(e2){} }
     });
-    if(stagePreviewToggle){
-      stagePreviewToggle.addEventListener('click', function(){
-        var collapsed = stagePreviewBox.classList.toggle('collapsed');
-        stagePreviewToggle.textContent = collapsed ? '+' : '–';
-        stagePreviewToggle.setAttribute('aria-label', collapsed ? 'Expand stage preview' : 'Collapse stage preview');
+    if(previewBtn){
+      previewBtn.addEventListener('click', function(){
+        state.previewVisible = !state.previewVisible;
+        applyPreviewVisibility();
+        save();
       });
     }
 
@@ -1428,7 +1426,7 @@ body.stage-window #connected-frame{display:none !important}
       if(msg.type === 'state'){
         applyingRemote = true;
         Object.assign(state, msg.state);
-        applyText(); applyFlip(); applyGuide(); applySize(); applyMargin(); applyBgOpacity(); applySpeed();
+        applyText(); applyFlip(); applyGuide(); applyPreviewVisibility(); applySize(); applyMargin(); applyBgOpacity(); applySpeed();
         applyingRemote = false;
       }else if(msg.type === 'playing'){
         applyingRemote = true;
@@ -1527,7 +1525,7 @@ body.stage-window #connected-frame{display:none !important}
   });
 
   // ---- Build/version indicator (control window top bar) ----
-  var APP_VERSION = 'v1.10.1';
+  var APP_VERSION = 'v1.11.0';
   if(buildMeta && !isStageWindow){
     buildMeta.textContent = APP_VERSION;
   }
