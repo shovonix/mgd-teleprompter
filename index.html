@@ -11,20 +11,28 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Archivo:wght@600;700&family=Public+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
-/* Glass Prompter — a single studio-dark theme by design: a teleprompter is
-   always read as bright text on black through the beamsplitter glass, so a
-   light mode would work against the thing it's built to do. */
+/* MGD Teleprompter v2.0 — control window is a one-page 3-column layout
+   (Scripts rail / prompter / Controls rail) in a monochrome "Limbo" theme.
+   The real stage window (body.stage-window) stays the plain full-screen
+   text view: bright text on black through the beamsplitter glass. Red is
+   deliberately kept for the reading guide line and the stage-connected dot. */
 :root{
-  --bg:#0a0a0b;
+  --bg:#070707;
   --stage:#000000;
-  --surface:#17171a;
-  --surface-2:#1f1f24;
-  --fg:#f4f4f0;
-  --fg-dim:#8a8a90;
-  --accent:#30d158;
-  --accent-rgb:48,209,88;
-  --accent-fg:#0a0a0b;
-  --border:#2a2a2f;
+  --panel:#0E0E0F;
+  --surface:#0E0E0F;
+  --surface-2:#1A1A1B;
+  --raised:#1A1A1B;
+  --hair:#2A2A2C;
+  --border:#2A2A2C;
+  --fg:#F0F0EE;
+  --fg-dim:#7A7A7D;
+  --accent:#F0F0EE;
+  --accent-rgb:240,240,238;
+  --accent-fg:#070707;
+  --red:#E8463A;
+  --rail:300px;
+  --mono:ui-monospace,'SF Mono',Menlo,Consolas,monospace;
   color-scheme: dark;
 }
 *{box-sizing:border-box}
@@ -36,137 +44,148 @@ body{
   overflow:hidden;
   -webkit-tap-highlight-color:transparent;
 }
+body:not(.stage-window)::before{
+  content:"";position:fixed;inset:0;pointer-events:none;z-index:0;
+  background:radial-gradient(60% 55% at 50% 38%, rgba(255,255,255,.05), transparent 72%);
+}
 button{font-family:inherit;color:inherit}
 .eyebrow{
   font-family:'Archivo',system-ui,sans-serif;
-  font-weight:600;
-  font-size:11px;
-  letter-spacing:.14em;
-  text-transform:uppercase;
+  font-weight:600;font-size:11px;letter-spacing:.14em;text-transform:uppercase;
   color:var(--fg-dim);
 }
-.brand-mark{display:flex;align-items:center;gap:7px}
-.brand-mark svg{width:15px;height:15px;fill:var(--accent);flex:none}
-.brand-mark img{height:20px;width:auto;flex:none;display:block}
-.copyright{font-size:9.5px;color:var(--fg-dim);opacity:.55;text-align:center;margin-top:10px}
+kbd{
+  font-family:var(--mono);
+  background:var(--raised);
+  border:1px solid var(--hair);
+  border-radius:4px;
+  padding:1px 6px;
+  font-size:10.5px;
+  color:var(--fg);
+}
 
-/* ---------- Setup overlay ---------- */
-#setup{
-  position:fixed;inset:0;
-  background:var(--bg);
-  display:flex;
-  flex-direction:column;
-  padding-block:max(28px, env(safe-area-inset-top,0px)) max(24px, env(safe-area-inset-bottom,0px));
-  padding-left:max(20px, env(safe-area-inset-left,0px));
-  padding-right:max(20px, env(safe-area-inset-right,0px));
-  z-index:30;
+/* ---------- Rails (control window only) ---------- */
+.rail{
+  position:fixed;top:0;bottom:0;
+  width:var(--rail);
+  background:var(--panel);
+  z-index:5;
+  display:flex;flex-direction:column;
+  padding:20px 18px 16px;
+  overflow-y:auto;overflow-x:hidden;
+  scrollbar-width:thin;scrollbar-color:var(--hair) transparent;
 }
-#setup.hidden{display:none}
-#setup .brand{
+#left-rail{left:0;border-right:1px solid var(--hair)}
+#right-rail{right:0;border-left:1px solid var(--hair)}
+body.stage-window .rail{display:none !important}
+
+.sec{margin-top:22px}
+.sec:first-child{margin-top:0}
+.sec-title{
+  display:flex;align-items:center;justify-content:space-between;gap:8px;
   font-family:'Archivo',system-ui,sans-serif;
-  font-weight:700;
-  font-size:20px;
-  letter-spacing:-.01em;
-  margin:2px 0 2px;
-}
-#setup .sub{color:var(--fg-dim);font-size:14px;margin-bottom:22px;max-width:52ch}
-#script-input{
-  flex:1;
-  width:100%;
-  resize:none;
-  background:var(--surface);
-  border:1px solid var(--border);
-  border-radius:10px;
-  color:var(--fg);
-  font-family:'Public Sans',system-ui,sans-serif;
-  font-size:16px;
-  line-height:1.6;
-  padding:16px;
-  min-height:0;
-}
-#script-input:focus{outline:2px solid var(--accent);outline-offset:-2px}
-#script-input::placeholder{color:var(--fg-dim)}
-/* ---------- Saved scripts (setup screen) ---------- */
-.script-bar{display:flex;align-items:center;gap:8px;margin-bottom:12px}
-.script-tabs{
-  display:flex;gap:6px;overflow-x:auto;
-  scrollbar-width:none;
-  flex:1;min-width:0;
-}
-.script-tabs::-webkit-scrollbar{display:none}
-.script-tab{
-  display:flex;align-items:center;gap:6px;
-  flex:none;
-  font-family:'Archivo',system-ui,sans-serif;
-  font-weight:600;font-size:12.5px;
-  background:var(--surface);
-  border:1px solid var(--border);
+  font-weight:600;font-size:11px;letter-spacing:.14em;text-transform:uppercase;
   color:var(--fg-dim);
-  border-radius:8px;
-  padding:7px 8px 7px 12px;
-  cursor:pointer;
-  white-space:nowrap;
+  margin-bottom:12px;
 }
-.script-tab.active{
-  color:var(--fg);
-  border-color:rgba(var(--accent-rgb),.5);
-  background:rgba(var(--accent-rgb),.1);
+
+/* ---- Left rail: brand + scripts ---- */
+.brand-live{
+  display:flex;align-items:center;gap:11px;min-width:0;
+  background:none;border:none;padding:6px;margin:-6px -6px 0;
+  border-radius:10px;cursor:pointer;text-align:left;
+  transition:background .2s ease;
 }
-.script-tab-name{max-width:160px;overflow:hidden;text-overflow:ellipsis}
-.script-tab-del{
-  display:flex;align-items:center;justify-content:center;
-  width:17px;height:17px;border-radius:5px;
-  font-size:13px;line-height:1;color:var(--fg-dim);
-}
-.script-tab-del:hover{background:rgba(255,255,255,.1);color:var(--fg)}
+.brand-live:hover{background:rgba(255,255,255,.05)}
+.brand-logo{height:34px;width:auto;flex:none;display:block;filter:grayscale(1) brightness(1.15)}
+.brand-text{display:flex;flex-direction:column;min-width:0;line-height:1.3}
+.brand-text .name{font-family:'Archivo',system-ui,sans-serif;font-weight:700;font-size:14px;white-space:nowrap}
+.brand-text .meta{font-family:var(--mono);font-size:10.5px;color:var(--fg-dim)}
+.scripts-head{display:flex;align-items:center;justify-content:space-between;margin:26px 0 10px}
+.scripts-head .sec-title{margin:0}
 #new-script-btn{
-  flex:none;
-  font-family:'Archivo',system-ui,sans-serif;
-  font-weight:600;font-size:12.5px;
-  background:transparent;
-  border:1px dashed var(--border);
-  color:var(--fg-dim);
-  border-radius:8px;
-  padding:7px 11px;
-  cursor:pointer;
-  white-space:nowrap;
+  font-family:'Archivo',system-ui,sans-serif;font-weight:600;font-size:12px;
+  background:transparent;border:1px dashed var(--hair);color:var(--fg-dim);
+  border-radius:8px;padding:5px 10px;cursor:pointer;white-space:nowrap;
 }
 #new-script-btn:hover{color:var(--fg);border-color:var(--fg-dim)}
+.script-tabs{display:flex;flex-direction:column;gap:7px}
+.script-tab{
+  display:flex;align-items:center;justify-content:space-between;gap:8px;width:100%;
+  font-family:'Archivo',system-ui,sans-serif;font-weight:600;font-size:13px;text-align:left;
+  background:var(--raised);border:1px solid var(--hair);color:var(--fg-dim);
+  border-radius:10px;padding:11px 10px 11px 13px;cursor:pointer;
+  transition:border-color .15s ease, background .15s ease;
+}
+.script-tab:hover{border-color:#44444a;color:var(--fg)}
+.script-tab.active{
+  color:var(--fg);border-color:rgba(255,255,255,.45);
+  background:rgba(255,255,255,.07);
+  box-shadow:0 0 18px rgba(255,255,255,.06);
+}
+.script-tab-name{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.script-tab-del{
+  display:flex;align-items:center;justify-content:center;flex:none;
+  width:20px;height:20px;border-radius:6px;font-size:14px;line-height:1;color:var(--fg-dim);
+}
+.script-tab-del:hover{background:rgba(255,255,255,.12);color:var(--fg)}
+.scripts-empty{font-size:12px;color:var(--fg-dim);line-height:1.5;padding:4px 2px}
+.rail-spacer{flex:1}
+.scripts-tip{font-size:11px;color:var(--fg-dim);opacity:.8;margin-top:10px;line-height:1.5}
+.copyright{font-size:10px;color:var(--fg-dim);opacity:.55;margin-top:14px}
+
+/* ---------- Setup (paste) state, centre column ---------- */
+#setup{
+  position:fixed;top:0;bottom:0;left:0;right:0;
+  display:flex;flex-direction:column;align-items:center;
+  padding:48px 32px 28px;
+  z-index:3;
+  overflow-y:auto;
+}
+body:not(.stage-window) #setup{left:var(--rail);right:var(--rail)}
+#setup.hidden{display:none}
+.setup-inner{width:min(920px,100%);display:flex;flex-direction:column}
+#setup .brand{font-family:'Archivo',system-ui,sans-serif;font-weight:700;font-size:26px;letter-spacing:-.01em;margin:0 0 4px}
+#setup .sub{color:var(--fg-dim);font-size:13.5px;margin-bottom:18px;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+#script-input{
+  width:100%;height:min(420px, 52vh);
+  resize:none;
+  background:var(--panel);
+  border:1px solid var(--hair);
+  border-radius:14px;
+  color:var(--fg);
+  font-family:'Public Sans',system-ui,sans-serif;
+  font-size:16px;line-height:1.6;padding:20px;
+  box-shadow:0 0 40px rgba(255,255,255,.035);
+}
+#script-input:focus{outline:1px solid rgba(255,255,255,.55);outline-offset:-1px}
+#script-input::placeholder{color:var(--fg-dim)}
 .setup-row{display:flex;gap:10px;margin-top:16px;flex-wrap:wrap}
 .btn{
-  font-family:'Archivo',system-ui,sans-serif;
-  font-weight:600;
-  font-size:13px;
-  letter-spacing:.02em;
-  border:1px solid var(--border);
-  background:var(--surface);
-  color:var(--fg);
-  border-radius:9px;
-  padding:13px 18px;
-  cursor:pointer;
+  font-family:'Archivo',system-ui,sans-serif;font-weight:600;font-size:13px;letter-spacing:.02em;
+  border:1px solid var(--hair);background:var(--raised);color:var(--fg);
+  border-radius:10px;padding:13px 20px;cursor:pointer;
 }
 .btn:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
-.btn.primary{
-  background:var(--accent);
-  color:var(--accent-fg);
-  border-color:var(--accent);
-  flex:1;
-  min-width:160px;
-}
+.btn.primary{background:var(--accent);color:var(--accent-fg);border-color:var(--accent);flex:1;min-width:160px;box-shadow:0 0 22px rgba(255,255,255,.18)}
 .btn.ghost{background:transparent}
+.btn:disabled{opacity:.6;cursor:default}
+/* Paste-state-only explainer: gone as soon as prompting starts (the rail
+   carries a compact version while prompting). */
+#screen-note{
+  margin-top:20px;
+  border:1px dashed #3a3a3d;border-radius:12px;
+  padding:14px 18px;
+  font-size:13px;line-height:1.6;color:#b5b5b8;
+}
+#screen-note b{color:var(--fg);font-weight:600}
+#screen-note .nb{display:block;margin-top:6px}
 
-/* ---------- Stage ---------- */
-#stage{
-  position:fixed;inset:0;
-  background:var(--stage);
-}
+/* ---------- Stage (centre column in control; full screen in the real stage window) ---------- */
+#stage{position:fixed;inset:0;background:var(--stage);z-index:2}
+body:not(.stage-window) #stage{left:var(--rail);right:var(--rail);background-clip:padding-box}
 #stage.hidden{display:none}
-#scroller{
-  position:absolute;inset:0;
-  overflow-y:auto;
-  overflow-x:hidden;
-  scrollbar-width:none;
-}
+#scroller{position:absolute;inset:0;overflow-y:auto;overflow-x:hidden;scrollbar-width:none}
 #scroller::-webkit-scrollbar{display:none}
 #script-text{
   padding-left:max(28px, env(safe-area-inset-left,0px));
@@ -179,178 +198,103 @@ button{font-family:inherit;color:inherit}
   word-break:break-word;
   color:var(--fg);
   transform-origin:center;
-  /* Fixed at the REAL external stage window's actual width, in EVERY
-     context — control, the real stage, and the mini preview — not a
-     guessed constant. A guide line (or the mini preview) only means
-     anything if "the same scroll position" also means "the same line
-     of text," which requires identical word-wrap everywhere, and the
-     stage window can be opened at literally any size. --mgd-stage-width
-     is set once the real stage window reports its own width (see the
-     'stageWidth' broadcast handler in the script below) and persists
-     from then on. Until a stage has ever connected, there's nothing to
-     match yet, so this is intentionally uncapped (full width) rather
-     than defaulting to an arbitrary number. */
+  /* Fixed at the REAL external stage window's actual width, in every
+     context (control, real stage, mini preview) so "same scroll position"
+     also means "same line of text". --mgd-stage-width is set once a stage
+     window reports its width and persists from then on; until then it is
+     uncapped. */
   max-width:var(--mgd-stage-width, none);
-  margin-left:auto;
-  margin-right:auto;
+  margin-left:auto;margin-right:auto;
+  outline:none;
+  caret-color:#fff;
 }
+body:not(.stage-window) #script-text{cursor:text}
 
-/* centerline guide, like a prompter rig's reading mark — red, and thick
-   enough to read as a sightline rather than a hairline. */
 #guide{
-  position:absolute;
-  left:0;right:0;
-  top:50%;
-  margin-top:-3px;
-  height:6px;
-  background:linear-gradient(90deg, transparent, #ff3b30 18%, #ff3b30 82%, transparent);
-  opacity:.28;
-  pointer-events:none;
-  transition:opacity .15s ease;
+  position:absolute;left:0;right:0;top:50%;
+  margin-top:-3px;height:6px;
+  background:linear-gradient(90deg, transparent, var(--red) 18%, var(--red) 82%, transparent);
+  opacity:.34;pointer-events:none;transition:opacity .15s ease;
 }
 #guide.off{opacity:0}
 
-/* ---------- Controls ---------- */
-#bar{
-  position:absolute;
-  left:0;right:0;bottom:0;
-  padding-left:max(14px, env(safe-area-inset-left,0px));
-  padding-right:max(14px, env(safe-area-inset-right,0px));
-  padding-block:12px max(12px, env(safe-area-inset-bottom,0px));
-  background:linear-gradient(180deg, transparent, rgba(0,0,0,.65) 40%);
-  transition:opacity .25s ease, transform .25s ease;
+.para{margin-bottom:1.1em}
+.para:last-child{margin-bottom:0}
+
+body:not(.stage-window) #stage::after{
+  content:"";position:absolute;left:0;right:0;bottom:0;height:180px;
+  background:linear-gradient(transparent, rgba(0,0,0,.88));pointer-events:none;z-index:3;
 }
-#bar.faded{opacity:0;transform:translateY(8px);pointer-events:none}
-/* Apple-style glass: translucent + blurred, soft rounded edge, hairline border
-   instead of a hard outline. The tinted/blurred backdrop lives on ::before so
-   it can fade out at the rim (mask-image) without taking the buttons and
-   text with it — those stay on the real box, fully legible. */
-#bar-inner{
-  position:relative;
-  z-index:0;
-  padding:12px 14px;
-  display:flex;
-  flex-direction:column;
-  gap:10px;
+/* ---- Reading progress + bottom capsule (control only) ---- */
+#progress-wrap{
+  position:absolute;left:50%;transform:translateX(-50%);
+  bottom:104px;width:min(520px,70%);
+  display:flex;align-items:center;gap:12px;
+  pointer-events:none;z-index:4;
 }
-#bar-inner::before{
-  content:"";
-  position:absolute;
-  inset:-1px;
-  border-radius:24px;
-  background:rgba(14,14,16,.5);
-  -webkit-backdrop-filter:blur(28px) saturate(160%);
-  backdrop-filter:blur(28px) saturate(160%);
-  border:1px solid rgba(255,255,255,.1);
-  box-shadow:0 10px 34px rgba(0,0,0,.4);
-  z-index:-1;
+#progress{flex:1;height:2px;background:rgba(255,255,255,.12);border-radius:2px;overflow:hidden}
+#progress-fill{display:block;height:100%;width:0;background:rgba(255,255,255,.75)}
+#progress-label{font-family:var(--mono);font-size:11px;color:var(--fg-dim);white-space:nowrap;min-width:64px;text-align:right}
+#bottombar{
+  position:absolute;left:50%;transform:translateX(-50%);bottom:28px;
+  display:flex;align-items:center;
+  background:rgba(14,14,15,.82);
+  -webkit-backdrop-filter:blur(20px);backdrop-filter:blur(20px);
+  border:1px solid var(--hair);border-radius:999px;
+  padding:7px;
+  box-shadow:0 10px 40px rgba(0,0,0,.55), 0 0 30px rgba(255,255,255,.04);
+  z-index:5;
 }
-.row{display:flex;align-items:center;gap:12px;flex-wrap:wrap;justify-content:center}
-/* Mobile-first: .cluster is display:contents below 900px, so it adds no
-   box of its own — its icon buttons become direct children of .row,
-   free to pack on their own compact centered line next to Play. Each
-   slider-group is a direct .row child the same way (even though nested
-   in a cluster in markup), and sits ~calc(50% - 8px) wide so two sit side
-   by side per line (wrapping to one column only if the screen is too
-   narrow for that). A .row-break spacer (flex-basis:100%) right after the
-   icons forces a hard line break there, so every slider line always starts
-   with the full row width on offer — the pairing doesn't drift with how
-   much space the icon row happened to leave over. `order` puts every icon
-   button and Play first, then the break, then Speed and Text size (the
-   two most-used during a read), then Margin and Background — so
-   phones/tablets read: a tight centered icon+Play row, then a Speed/
-   Text-size pair, then a Margin/Background pair below it.
-   At >=900px (media query below) clusters become real flex:1 boxes again,
-   order is reset to DOM order, the break is hidden, and sliders stop
-   forcing a fixed width — the whole bar, icons and sliders on both sides
-   of Play, reads as one single line, with Play staying centered regardless
-   of side content. */
-.cluster{display:contents}
-.icon-btn,#play{order:1}
-/* Forces a hard line break after the icon+Play row: flex-basis:100% means
-   this invisible item always claims the rest of its line by itself, so
-   whatever's left over after the icons (which varies by icon count/width)
-   never bleeds into the slider pairing below. Every slider group then
-   always starts counting from a fresh, full-width line — which is what
-   makes the 2-up pairing below land the same way every time instead of
-   drifting with how much space the icons happened to leave over. */
-.row-break{flex-basis:100%;width:0;height:0;order:2;margin:0;padding:0}
-#speed-group{order:3}
-#size-group{order:4}
-#margin-group{order:5}
-#bgop-group{order:6}
+.cap-side{
+  width:180px;white-space:nowrap;
+  display:flex;align-items:center;justify-content:center;gap:9px;
+  height:46px;border-radius:999px;
+  background:transparent;border:1px solid transparent;
+  font-family:'Archivo',system-ui,sans-serif;font-weight:600;font-size:13px;color:#cfcfd2;
+  cursor:pointer;transition:background .2s ease, color .2s ease, box-shadow .2s ease;
+}
+.cap-side:hover{background:rgba(255,255,255,.06);color:var(--fg)}
+.cap-side svg{width:16px;height:16px;fill:currentColor;flex:none}
+.cap-div{width:1px;height:26px;background:var(--hair);margin:0 6px;flex:none}
 #play{
-  width:50px;height:50px;
-  border-radius:50%;
-  border:2px solid var(--accent);
-  background:var(--surface-2);
-  display:flex;align-items:center;justify-content:center;
-  flex:none;
-  cursor:pointer;
+  width:58px;height:58px;border-radius:50%;
+  border:2px solid var(--accent);background:var(--raised);
+  display:flex;align-items:center;justify-content:center;flex:none;cursor:pointer;
   transition:background .2s ease, box-shadow .2s ease;
+  box-shadow:0 0 18px rgba(255,255,255,.12);
 }
-#play svg{width:18px;height:18px;fill:var(--accent)}
-#play.active{
-  background:var(--accent);
-  box-shadow:0 0 0 5px rgba(var(--accent-rgb),.18), 0 0 18px rgba(var(--accent-rgb),.45);
-}
+#play svg{width:20px;height:20px;fill:var(--accent)}
+#play.active{background:var(--accent);box-shadow:0 0 0 5px rgba(255,255,255,.12), 0 0 26px rgba(255,255,255,.4)}
 #play.active svg{fill:var(--accent-fg)}
-.tally{
-  width:8px;height:8px;border-radius:50%;
-  background:var(--border);
-  flex:none;
+/* Stage toggle: idle = ghost outline, connected = solid white + glow. */
+#display-btn{border-color:#3a3a3d}
+#display-btn.connected{
+  background:#f4f4f2;color:#0a0a0b;border-color:#f4f4f2;
+  box-shadow:0 0 22px rgba(255,255,255,.45);
 }
-.tally.live{background:var(--accent);box-shadow:0 0 8px var(--accent)}
-/* calc(50% - 8px) rather than -6px deliberately leaves a few px of slack
-   below the true half-width (two of these plus the 12px gap land a little
-   under 100%, not flush against it) — floating-point/box rounding can
-   otherwise tip a pair just over 100% and bump the second one to its own
-   line, which is what was happening before the .row-break fix above. */
-.slider-group{flex:1 1 calc(50% - 8px);min-width:140px;display:flex;flex-direction:column;gap:4px}
-.slider-label{display:flex;justify-content:space-between;font-size:11px;color:var(--fg-dim);font-variant-numeric:tabular-nums}
-input[type=range]{
-  -webkit-appearance:none;appearance:none;
-  width:100%;height:4px;border-radius:2px;
-  background:var(--border);
-  outline:none;
-}
-input[type=range]::-webkit-slider-thumb{
-  -webkit-appearance:none;appearance:none;
-  width:18px;height:18px;border-radius:50%;
-  background:var(--accent);
-  border:2px solid var(--stage);
-  cursor:pointer;
-}
-input[type=range]::-moz-range-thumb{
-  width:18px;height:18px;border-radius:50%;
-  background:var(--accent);border:2px solid var(--stage);cursor:pointer;
-}
+#display-btn.connected:hover{background:#fff;color:#0a0a0b}
+
+/* ---- Right rail: controls ---- */
+#utility{display:flex;align-items:center;gap:8px;position:relative}
 .icon-btn{
-  width:38px;height:38px;
-  border-radius:11px;
-  border:1px solid rgba(255,255,255,.08);
-  background:rgba(255,255,255,.05);
-  display:flex;align-items:center;justify-content:center;
-  flex:none;cursor:pointer;
+  position:relative;
+  width:38px;height:38px;border-radius:11px;
+  border:1px solid var(--hair);background:var(--raised);
+  display:flex;align-items:center;justify-content:center;flex:none;cursor:pointer;
   transition:background .2s ease, border-color .2s ease;
 }
-/* Toggle buttons (flip) when active — a light tint, kept well under Play's intensity */
-.icon-btn[aria-pressed="true"]{background:rgba(var(--accent-rgb),.16);border-color:rgba(var(--accent-rgb),.5)}
-.icon-btn[aria-pressed="true"] svg{fill:var(--accent)}
+.icon-btn:hover{border-color:#4a4a50}
 .icon-btn svg{width:17px;height:17px;fill:var(--fg)}
-.topbar-actions{display:flex;align-items:center;gap:8px;flex:none}
+.icon-btn[aria-pressed="true"]{background:rgba(255,255,255,.12);border-color:rgba(255,255,255,.4)}
+.key-badge{
+  position:absolute;right:-5px;bottom:-5px;
+  font-family:var(--mono);font-size:9px;line-height:1;
+  background:var(--fg);color:#0a0a0b;border-radius:4px;padding:2px 3px;font-weight:700;
+}
 #pedal-panel{
-  display:none;
-  position:absolute;
-  top:100%;right:14px;
-  margin-top:8px;
-  width:260px;max-width:calc(100vw - 28px);
-  background:var(--surface-2);
-  border:1px solid var(--border);
-  border-radius:12px;
-  padding:14px;
-  box-shadow:0 10px 30px rgba(0,0,0,.4);
-  z-index:5;
+  display:none;position:absolute;top:100%;left:0;margin-top:8px;
+  width:264px;background:var(--raised);border:1px solid var(--hair);border-radius:12px;
+  padding:14px;box-shadow:0 10px 30px rgba(0,0,0,.5);z-index:20;
 }
 #pedal-panel.show{display:block}
 #pedal-panel .t{font-size:13px;font-weight:600;color:var(--fg);margin-bottom:4px}
@@ -358,287 +302,169 @@ input[type=range]::-moz-range-thumb{
 .pedal-keys-list{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px}
 .pedal-keys-empty{font-size:11.5px;color:var(--fg-dim)}
 .pedal-key-chip{
-  display:flex;align-items:center;gap:6px;
-  background:rgba(255,255,255,.06);
-  border:1px solid rgba(255,255,255,.08);
-  border-radius:8px;
-  padding:4px 6px 4px 10px;
-  font-size:12px;color:var(--fg);
+  display:flex;align-items:center;gap:6px;background:rgba(255,255,255,.06);
+  border:1px solid rgba(255,255,255,.08);border-radius:8px;padding:4px 6px 4px 10px;font-size:12px;color:var(--fg);
 }
-.pedal-key-chip button{
-  background:none;border:none;color:var(--fg-dim);
-  font-size:15px;line-height:1;cursor:pointer;padding:0 2px;
-}
+.pedal-key-chip button{background:none;border:none;color:var(--fg-dim);font-size:15px;line-height:1;cursor:pointer;padding:0 2px}
 .pedal-key-chip button:hover{color:var(--fg)}
 #add-pedal-btn{
-  width:100%;
-  background:rgba(var(--accent-rgb),.12);
-  border:1px solid rgba(var(--accent-rgb),.4);
-  color:var(--accent);
-  border-radius:9px;
-  padding:8px 10px;
-  font-size:12.5px;font-weight:600;
-  cursor:pointer;
-  transition:background .2s ease;
+  width:100%;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.25);color:var(--fg);
+  border-radius:9px;padding:8px 10px;font-size:12.5px;font-weight:600;cursor:pointer;
 }
-#add-pedal-btn:hover{background:rgba(var(--accent-rgb),.2)}
-#add-pedal-btn.capturing{color:var(--fg);border-color:rgba(255,255,255,.2);background:rgba(255,255,255,.08)}
-.hint{font-size:10.5px;color:var(--fg-dim);text-align:center;margin-top:2px}
-.hint-sub{opacity:.6;margin-top:0}
-kbd{
-  font-family:'Archivo',monospace;
-  background:var(--surface-2);
-  border:1px solid var(--border);
-  border-radius:4px;
-  padding:1px 5px;
-  font-size:10px;
-}
+#add-pedal-btn:hover{background:rgba(255,255,255,.14)}
+#add-pedal-btn.capturing{border-color:rgba(255,255,255,.5)}
 
-@media (max-width: 480px){
-  .row{gap:8px}
-  #bar-inner,#topbar-inner{padding-left:10px;padding-right:10px}
-  #play{width:46px;height:46px}
-  .icon-btn{width:34px;height:34px}
-  .icon-btn svg{width:15px;height:15px}
-  .brand-logo{height:30px}
-  .brand-text .name{font-size:12px}
-}
-
-/* Wide desktop: clusters become real flex:1 boxes again (so Play stays
-   centered regardless of side content), sliders stop forcing their own
-   line, and the row stops wrapping — the whole bar, icons and sliders on
-   both sides of Play, reads as one single line. */
-@media (min-width: 900px){
-  .row{flex-wrap:nowrap;justify-content:flex-start}
-  .cluster{display:flex;align-items:center;gap:12px;flex:1;min-width:0;flex-wrap:nowrap}
-  .cluster-left{justify-content:flex-end}
-  .cluster-right{justify-content:flex-start}
-  .icon-btn,#play,.slider-group,#speed-group,#size-group,#margin-group,#bgop-group{order:0}
-  .row-break{display:none}
-  .slider-group{flex:1 1 auto;min-width:0}
-  .hint,#display-fallback{flex-basis:100%}
-}
-
-/* ---------- Top bar (control window only) ---------- */
-#topbar{
-  position:absolute;
-  left:0;right:0;top:0;
-  padding-left:max(14px, env(safe-area-inset-left,0px));
-  padding-right:max(14px, env(safe-area-inset-right,0px));
-  padding-block:max(12px, env(safe-area-inset-top,0px)) 12px;
-  background:linear-gradient(0deg, transparent, rgba(0,0,0,.65) 40%);
-  transition:opacity .25s ease, transform .25s ease;
-}
-#topbar.faded{opacity:0;transform:translateY(-8px);pointer-events:none}
-body.stage-window #topbar{display:none !important}
-#topbar-inner{
-  position:relative;
-  z-index:0;
-  padding:10px 14px;
-  display:flex;
-  align-items:center;
-  justify-content:space-between;
-  gap:12px;
-}
-#topbar-inner::before{
-  content:"";
-  position:absolute;
-  inset:-1px;
-  border-radius:24px;
-  background:rgba(14,14,16,.5);
-  -webkit-backdrop-filter:blur(28px) saturate(160%);
-  backdrop-filter:blur(28px) saturate(160%);
-  border:1px solid rgba(255,255,255,.1);
-  box-shadow:0 10px 34px rgba(0,0,0,.4);
-  z-index:-1;
-}
-/* It's a <button> (for native keyboard/focus handling) standing in for the
-   logo+name, so it needs the usual button chrome stripped back to a plain
-   inline cluster, plus its own subtle hover/active affordance since it's
-   not styled like the icon buttons next to it. */
-.brand-live{
-  display:flex;align-items:center;gap:10px;min-width:0;
-  background:none;border:none;padding:4px 6px;margin:-4px -6px;
-  border-radius:9px;
-  cursor:pointer;
-  transition:background .2s ease;
-}
-.brand-live:hover{background:rgba(255,255,255,.06)}
-.brand-live:active{background:rgba(255,255,255,.1)}
-.brand-logo{height:36px;width:auto;flex:none;display:block}
-.brand-text{display:flex;flex-direction:column;min-width:0;line-height:1.3}
-.brand-text .name{
-  font-family:'Archivo',system-ui,sans-serif;
-  font-weight:700;
-  font-size:13px;
-  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
-}
-.brand-text .meta{font-size:10px;color:var(--fg-dim);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-
-/* paragraph blocks, so "previous paragraph" can jump between them */
-.para{margin-bottom:1.1em}
-.para:last-child{margin-bottom:0}
-
-/* ---------- Stage window (popped out to external display) ---------- */
-body.stage-window #setup,
-body.stage-window #bar{display:none !important}
-#stage-hint{
-  position:absolute;inset:0;
-  display:flex;align-items:center;justify-content:center;
-  background:rgba(0,0,0,.72);
-  cursor:pointer;
-  z-index:10;
-}
-#stage-hint.hidden{display:none}
-#stage-hint-card{
-  background:var(--surface);
-  border:1px solid var(--border);
-  border-radius:12px;
-  padding:20px 24px;
-  max-width:360px;
-  text-align:center;
-}
-#stage-hint-card .t{font-family:'Archivo',sans-serif;font-weight:700;font-size:15px;margin-bottom:6px}
-#stage-hint-card .s{color:var(--fg-dim);font-size:13px;line-height:1.5}
-
-/* ---------- Mini stage preview (control window only) ----------
-   Shows what the real stage display looks like — including mirror/flip,
-   which the control window's own in-place preview deliberately skips so
-   whoever's operating it isn't reading backwards. Built from an iframe of
-   this same page loaded at #stage-preview, scaled down: it rides the exact
-   same BroadcastChannel/localStorage sync as a real external stage window,
-   so it needs no custom update logic of its own. */
-#stage-preview-box{
-  /* Floats over the script text (that's the point — see what the mirrored
-     stage looks like while reading), but pinned to sit right above the
-     control bar rather than anywhere else: bottom:100% of #bar-inner (its
-     positioned parent) puts its bottom edge exactly at the bar's top edge,
-     so it can never drift down and cover the buttons/sliders, however
-     tall the bar gets on a given screen size. */
-  position:absolute;
-  right:14px;
-  bottom:100%;
-  margin-bottom:10px;
-  width:240px;
-  border-radius:10px;
-  overflow:hidden;
-  border:1px solid var(--border);
-  box-shadow:0 6px 20px rgba(0,0,0,.4);
-  background:#000;
-}
+/* stage preview */
+#stage-preview-box{margin-top:0}
 #stage-preview-box.hidden{display:none}
-/* #bar is already hidden entirely in the real stage window, which covers
-   this too — kept explicit in case that markup ever moves again. */
 body.stage-window #stage-preview-box{display:none !important}
-#stage-preview-label{
-  padding:6px 8px;
-  font-size:9px;letter-spacing:.06em;text-transform:uppercase;
-  color:rgba(255,255,255,.6);
-  background:rgba(255,255,255,.04);
-  border-bottom:1px solid rgba(255,255,255,.08);
+#stage-preview-label{display:flex;align-items:center;justify-content:space-between}
+#preview-dot{
+  width:9px;height:9px;border-radius:50%;
+  background:#38383b;flex:none;transition:background .3s ease, box-shadow .3s ease;
 }
+#preview-dot.on{background:var(--red);box-shadow:0 0 10px 2px rgba(232,70,58,.7)}
 #stage-preview-frame-wrap{
-  width:240px;height:150px;
-  overflow:hidden;
+  position:relative;width:100%;aspect-ratio:1.6;
+  overflow:hidden;background:#000;
+  border:1px solid var(--hair);border-radius:10px;
+  box-shadow:0 0 24px rgba(255,255,255,.05);
 }
 #stage-preview-frame{
-  /* 1280/800 and this scale are only the bootstrap default, shown before
-     any real stage window has ever reported its actual width. Once one
-     does, applyStageWidth() in the script below sets this element's width
-     and transform inline (so its #script-text — which obeys the same
-     --mgd-stage-width var as control and the real stage — fills this
-     frame edge-to-edge instead of showing its own letterbox), replacing
-     these values. */
-  width:1280px;height:800px;
-  border:0;
-  transform:scale(0.1875);
-  transform-origin:top left;
-  pointer-events:none;
-  display:block;
+  width:1280px;height:800px;border:0;
+  transform:scale(0.2);transform-origin:top left;
+  pointer-events:none;display:block;
 }
-/* Mobile: the bar-inner anchor (bottom:100%, right-aligned over the
-   control bar) ends up overlapping the sliders on a short phone screen,
-   so dock it under the topbar instead (viewport-fixed, not tied to
-   #bar-inner), well under half its desktop size since there's much
-   less width to spare. Placed after the base rules above so it wins
-   the cascade at equal specificity regardless of source order. */
-@media (max-width: 480px){
-  #stage-preview-box{
-    position:fixed;
-    top:calc(env(safe-area-inset-top, 0px) + 88px);
-    right:10px;
-    bottom:auto;
-    margin-bottom:0;
-    width:144px;
-  }
-  #stage-preview-frame-wrap{width:144px;height:90px}
-  #stage-preview-frame{transform:scale(0.1125)}
+#preview-empty{
+  position:absolute;inset:0;display:none;align-items:center;justify-content:center;
+  font-size:12px;color:var(--fg-dim);background:#000;
 }
+#stage-preview-box.empty #preview-empty{display:flex}
+#stage-preview-box.empty #stage-preview-frame{visibility:hidden}
 
-/* ---------- Control panel extras ---------- */
-/* Whole-window glow frame — replaces the old status dot. Fades in/out so the
-   "staging window is connected" signal is ambient rather than a thing you
-   have to go looking for. Control window only (see body.stage-window rule). */
-#connected-frame{
-  position:absolute;inset:0;
-  pointer-events:none;
-  opacity:0;
-  transition:opacity .9s ease;
-  box-shadow:
-    inset 0 0 0 2px rgba(var(--accent-rgb),.55),
-    inset 0 0 90px 10px rgba(var(--accent-rgb),.16);
-  z-index:1;
+/* controls */
+.slider-group{display:flex;flex-direction:column;gap:8px;margin-bottom:15px}
+.slider-label{display:flex;justify-content:space-between;align-items:baseline;font-size:12.5px;color:#cfcfd2}
+.slider-label span:last-child{font-family:var(--mono);font-size:11.5px;color:var(--fg-dim)}
+input[type=range]{
+  -webkit-appearance:none;appearance:none;
+  width:100%;height:4px;border-radius:2px;background:var(--hair);outline:none;margin:0;
 }
-#connected-frame.on{opacity:1}
-body.stage-window #connected-frame{display:none !important}
-/* Belt-and-suspenders alongside the document-level wheel/touchmove block
-   above: stops any native rubber-band/overscroll bounce on html/body
-   too, so there's nothing left that can visibly move before snapping
-   back on its own. */
-body.stage-window{overscroll-behavior:none}
-html:has(body.stage-window){overscroll-behavior:none}
+input[type=range]::-webkit-slider-thumb{
+  -webkit-appearance:none;appearance:none;
+  width:16px;height:16px;border-radius:50%;background:var(--accent);
+  border:2px solid var(--bg);cursor:pointer;box-shadow:0 0 8px rgba(255,255,255,.35);
+}
+input[type=range]::-moz-range-thumb{
+  width:16px;height:16px;border-radius:50%;background:var(--accent);border:2px solid var(--bg);cursor:pointer;
+}
+#color{
+  background:linear-gradient(90deg,#fff 0%,#ff3b30 10%,#ff9500 22%,#ffd60a 34%,#34c759 50%,#30b0c7 62%,#0a84ff 74%,#5e5ce6 86%,#ff2d95 96%,#fff 100%);
+  height:6px;
+}
+.navbtn{
+  width:100%;display:flex;align-items:center;gap:10px;
+  background:var(--raised);border:1px solid var(--hair);border-radius:10px;
+  padding:10px 12px;margin-bottom:8px;cursor:pointer;
+  font-size:13px;color:#dcdcde;text-align:left;
+}
+.navbtn:hover{border-color:#4a4a50}
+.navbtn svg{width:16px;height:16px;fill:currentColor;flex:none}
+.navbtn .navbtn-key{margin-left:auto;font-family:var(--mono);font-size:10.5px;color:var(--fg-dim)}
+.tbtn{
+  width:100%;display:flex;align-items:center;justify-content:space-between;gap:10px;
+  background:var(--raised);border:1px solid var(--hair);border-radius:10px;
+  padding:10px 12px;margin-bottom:8px;cursor:pointer;font-size:13px;color:#dcdcde;
+  transition:background .2s ease, border-color .2s ease;
+}
+.tbtn:hover{border-color:#4a4a50}
+.tbtn svg{width:16px;height:16px;fill:currentColor;flex:none;opacity:.8}
+.tbtn[aria-pressed="true"]{background:rgba(255,255,255,.1);border-color:rgba(255,255,255,.4);color:var(--fg)}
+.tbtn.guide[aria-pressed="true"]{background:rgba(232,70,58,.14);border-color:rgba(232,70,58,.6)}
+.tbtn.guide[aria-pressed="true"] svg{fill:var(--red);opacity:1}
+.caption{font-size:11px;color:var(--fg-dim);line-height:1.5;margin-top:4px}
+
+/* compact two-screen note — only while prompting, never dismissible */
+#screen-note-mini{
+  display:none;margin-top:20px;
+  border:1px dashed #3a3a3d;border-radius:10px;padding:10px 12px;
+  font-size:11.5px;line-height:1.55;color:#a5a5a8;
+}
+#screen-note-mini b{color:var(--fg);font-weight:600}
+body.prompting #screen-note-mini{display:block}
+body.prompting #screen-note{display:none}
+#shortcuts-hint{display:flex;flex-direction:column;gap:7px;margin-top:18px;font-size:11.5px;color:var(--fg-dim);text-align:left}
+#shortcuts-hint span{display:flex;align-items:center;gap:8px}
+
 #display-fallback{
-  display:none;
-  flex-direction:column;
-  gap:8px;
-  background:var(--surface-2);
-  border:1px solid var(--border);
-  border-radius:9px;
-  padding:10px;
-  margin-top:4px;
+  display:none;flex-direction:column;gap:8px;
+  background:var(--raised);border:1px solid var(--hair);border-radius:9px;padding:10px;margin-top:12px;
 }
 #display-fallback.show{display:flex}
 #display-fallback .s{font-size:11.5px;color:var(--fg-dim);line-height:1.4}
 #display-fallback-row{display:flex;gap:6px}
 #display-fallback-url{
-  flex:1;min-width:0;
-  background:var(--stage);
-  border:1px solid var(--border);
-  border-radius:6px;
-  color:var(--fg);
-  font-size:11px;
-  padding:7px 8px;
+  flex:1;min-width:0;background:var(--stage);border:1px solid var(--hair);border-radius:6px;
+  color:var(--fg);font-size:11px;padding:7px 8px;
 }
+
+/* ---------- Stage window (popped out to external display) ---------- */
+body.stage-window #setup,
+body.stage-window #bottombar,
+body.stage-window #progress-wrap{display:none !important}
+#stage-hint{
+  position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
+  background:rgba(0,0,0,.72);cursor:pointer;z-index:10;
+}
+#stage-hint.hidden{display:none}
+#stage-hint-card{
+  background:var(--surface);border:1px solid var(--border);border-radius:12px;
+  padding:20px 24px;max-width:360px;text-align:center;
+}
+#stage-hint-card .t{font-family:'Archivo',sans-serif;font-weight:700;font-size:15px;margin-bottom:6px}
+#stage-hint-card .s{color:var(--fg-dim);font-size:13px;line-height:1.5}
+
+/* The whole-window glow frame is replaced by the stage toggle + red dot. */
+#connected-frame{display:none !important}
+body.stage-window{overscroll-behavior:none}
+html:has(body.stage-window){overscroll-behavior:none}
 </style>
 
-<div id="setup">
-  <div class="brand-mark">
-    <img alt="MGD" src="data:image/png;base64,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">
-    <div class="eyebrow">MGD Teleprompter</div>
-  </div>
-  <div class="brand">Paste your script</div>
-  <div class="sub">Plain text, or anything copied from a Google Doc. It's saved on this device so you can reopen straight to the stage next time.</div>
-  <div class="script-bar">
-    <div class="script-tabs" id="script-tabs"></div>
+<aside id="left-rail" class="rail">
+  <button type="button" class="brand-live" id="brand-home-btn" aria-label="Back to main page">
+    <img class="brand-logo" alt="MGD" src="data:image/png;base64,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">
+    <span class="brand-text">
+      <span class="name">MGD Teleprompter</span>
+      <span class="meta" id="build-meta">—</span>
+    </span>
+  </button>
+  <div class="scripts-head">
+    <div class="sec-title">Scripts</div>
     <button type="button" id="new-script-btn" aria-label="New script">+ New</button>
   </div>
-  <textarea id="script-input" placeholder="Paste or type your script here&#10;&#10;Line breaks become paragraph breaks on the prompter."></textarea>
-  <div class="setup-row">
-    <button class="btn ghost" id="save-script-btn">Save</button>
-    <button class="btn primary" id="start-btn">Start prompting</button>
-    <button class="btn ghost" id="cancel-edit" style="display:none">Back to stage</button>
-  </div>
+  <div class="script-tabs" id="script-tabs"></div>
+  <div class="rail-spacer"></div>
+  <div class="scripts-tip">Double-click a script to rename it.</div>
   <div class="copyright">© shovonix</div>
+</aside>
+
+<div id="setup">
+  <div class="setup-inner">
+    <div class="brand">Paste your script</div>
+    <div class="sub"><span>Plain text, or anything copied from a Google Doc. Saved on this device.</span><span><kbd>⌘S</kbd> / <kbd>Ctrl S</kbd> to save</span></div>
+    <textarea id="script-input" placeholder="Paste or type your script here&#10;&#10;Line breaks become paragraph breaks on the prompter."></textarea>
+    <div class="setup-row">
+      <button class="btn ghost" id="save-script-btn">Save</button>
+      <button class="btn primary" id="start-btn">Start prompting</button>
+      <button class="btn ghost" id="cancel-edit" style="display:none">Back to stage</button>
+    </div>
+    <div id="screen-note">
+      This teleprompter runs across <b>two screens</b>.
+      <span class="nb"><b>Control window</b> — the one you're looking at now. Paste, edit and press play here.</span>
+      <span class="nb"><b>Stage window</b> — your second (extended) display. It shows the mirrored view the camera reads.</span>
+      <span class="nb">Mirror and Flip only change the Stage window — this control view always stays readable.</span>
+    </div>
+  </div>
 </div>
 
 <div id="stage" class="hidden">
@@ -650,108 +476,129 @@ html:has(body.stage-window){overscroll-behavior:none}
   <div id="stage-hint" class="hidden">
     <div id="stage-hint-card">
       <div class="t" id="stage-hint-title">Staging Teleprompter Preview</div>
-      <div class="s" id="stage-hint-body">Drag this window onto your external display, then click anywhere (or press F) to go fullscreen. Press Play in the control window to start scrolling here. Press <kbd>Esc</kbd> anytime to return to this screen.</div>
+      <div class="s" id="stage-hint-body">Drag this window onto your external display, then click anywhere (or press F) to go fullscreen. Press Play in the control window to start scrolling here. Press <kbd>Esc</kbd> any time to drop out of fullscreen and bring this card back.</div>
     </div>
   </div>
 
-  <div id="topbar">
-    <div id="topbar-inner">
-      <button type="button" class="brand-live" id="brand-home-btn" aria-label="Back to main page">
-        <img class="brand-logo" alt="MGD" src="data:image/png;base64,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">
-        <div class="brand-text">
-          <span class="name">MGD Teleprompter</span>
-          <span class="meta" id="build-meta">—</span>
-        </div>
-      </button>
-      <div class="topbar-actions">
-        <button class="icon-btn" id="pedal-btn" aria-label="Bluetooth pedal setup">
-          <svg viewBox="0 0 24 24"><path d="M17.71 7.71L12 2h-1v7.59L6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 11 14.41V22h1l5.71-5.71-4.3-4.29 4.3-4.29zM13 5.83l1.88 1.88L13 9.59V5.83zm1.88 10.46L13 18.17v-3.76l1.88 1.88z"/></svg>
-        </button>
-        <button class="icon-btn" id="preview-btn" aria-pressed="true" aria-label="Stage preview panel" title="Show/hide stage preview">
-          <svg viewBox="0 0 24 24"><path fill-rule="evenodd" clip-rule="evenodd" d="M3 5h18v14H3V5zm2 2v10h14V7H5z"/><rect x="13" y="12" width="6" height="5"/></svg>
-        </button>
-        <button class="icon-btn" id="guide-btn" aria-pressed="true" aria-label="Reading guide line" title="Reading guide line">
-          <svg viewBox="0 0 24 24"><path fill-rule="evenodd" clip-rule="evenodd" d="M3 5h18v14H3V5zm2 2v10h14V7H5z"/><rect x="5" y="11" width="14" height="2"/></svg>
-        </button>
-        <button class="icon-btn" id="fullscreen-btn" aria-label="Fullscreen — key F">
-          <svg viewBox="0 0 24 24"><path d="M7 14H5v5h5v-2H7zM5 10h2V7h3V5H5zm12 9h-3v2h5v-5h-2zM14 5v2h3v3h2V5z"/></svg>
-        </button>
-      </div>
-      <div id="pedal-panel">
-        <div class="t">Bluetooth pedal</div>
-        <div class="s">Any button you add here acts exactly like Space: tap to Play/Pause, double-tap for previous paragraph, hold to jump to start.</div>
-        <div class="pedal-keys-list" id="pedal-keys-list"></div>
-        <button type="button" id="add-pedal-btn">+ Add pedal button</button>
-      </div>
-    </div>
+  <div id="progress-wrap">
+    <div id="progress"><i id="progress-fill"></i></div>
+    <span id="progress-label">0% read</span>
   </div>
 
-  <div id="bar">
-    <div id="bar-inner">
-      <div id="stage-preview-box" class="hidden">
-        <div id="stage-preview-label">Stage preview</div>
-        <div id="stage-preview-frame-wrap">
-          <iframe id="stage-preview-frame" tabindex="-1" aria-hidden="true"></iframe>
-        </div>
-      </div>
-      <div class="row controls-row">
-        <div class="cluster cluster-left">
-          <div class="slider-group" id="margin-group">
-            <div class="slider-label"><span>Margin</span><span id="margin-val">—</span></div>
-            <input type="range" id="margin" min="0" max="500" step="10">
-          </div>
-          <div class="slider-group" id="bgop-group">
-            <div class="slider-label"><span>Background</span><span id="bgop-val">—</span></div>
-            <input type="range" id="bgop" min="20" max="100" step="5">
-          </div>
-          <button class="icon-btn" id="mirror-btn" aria-pressed="false" aria-label="Horizontal flip — applies on the stage display only" title="Applies on the stage display only">
-            <svg viewBox="0 0 24 24"><path d="M11 3h2v18h-2zM4 7l5 5-5 5zM20 7l-5 5 5 5z"/></svg>
-          </button>
-          <button class="icon-btn" id="flip-btn" aria-pressed="false" aria-label="Vertical flip — applies on the stage display only" title="Applies on the stage display only">
-            <svg viewBox="0 0 24 24" style="transform:rotate(90deg)"><path d="M11 3h2v18h-2zM4 7l5 5-5 5zM20 7l-5 5 5 5z"/></svg>
-          </button>
-          <button class="icon-btn" id="display-btn" aria-pressed="false" aria-label="Open external display (staging window)" title="Open/close the staging window">
-            <svg viewBox="0 0 24 24"><path d="M21 3H3c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h7l-2 3v1h8v-1l-2-3h7c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 14H3V5h18v12z"/></svg>
-          </button>
-        </div>
-
-        <button id="play" aria-label="Play or pause — key Space">
-          <svg id="play-icon" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
-        </button>
-
-        <div class="cluster cluster-right">
-          <button class="icon-btn" id="edit-btn" aria-label="Edit script — key E">
-            <svg viewBox="0 0 24 24"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75zM20.71 7.04a1 1 0 000-1.41l-2.34-2.34a1 1 0 00-1.41 0l-1.83 1.83 3.75 3.75z"/></svg>
-          </button>
-          <button class="icon-btn" id="top-btn" aria-label="Back to top">
-            <svg viewBox="0 0 24 24"><path d="M12 5l7 7h-4v7h-6v-7H5z"/></svg>
-          </button>
-          <button class="icon-btn" id="prev-para-btn" aria-label="Previous paragraph">
-            <svg viewBox="0 0 24 24"><path d="M6 6h2v12H6zm3.5 6l8.5 6V6z"/></svg>
-          </button>
-          <div class="slider-group" id="speed-group">
-            <div class="slider-label"><span>Speed</span><span id="speed-val">—</span></div>
-            <input type="range" id="speed" min="8" max="220" step="2">
-          </div>
-          <div class="slider-group" id="size-group">
-            <div class="slider-label"><span>Text size</span><span id="size-val">—</span></div>
-            <input type="range" id="size" min="22" max="110" step="2">
-          </div>
-        </div>
-        <div class="row-break" aria-hidden="true"></div>
-      </div>
-      <div id="display-fallback">
-        <div class="s">Couldn't open a new window automatically. Copy this link and open it manually in a new window (File → New Window), then drag that window to your external display:</div>
-        <div id="display-fallback-row">
-          <input id="display-fallback-url" readonly>
-          <button class="btn" id="display-fallback-copy" style="padding:7px 10px">Copy</button>
-        </div>
-      </div>
-      <div class="hint"><kbd>Space</kbd> Play/Pause &nbsp;·&nbsp; <kbd>Space</kbd><kbd>Space</kbd> Previous paragraph &nbsp;·&nbsp; Hold <kbd>Space</kbd> Jump to start</div>
-      <div class="hint hint-sub">Mirror &amp; flip only apply on the stage display</div>
-    </div>
+  <div id="bottombar">
+    <button class="cap-side" id="edit-btn" aria-label="Edit script — key E">
+      <svg viewBox="0 0 24 24"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75zM20.71 7.04a1 1 0 000-1.41l-2.34-2.34a1 1 0 00-1.41 0l-1.83 1.83 3.75 3.75z"/></svg>
+      <span>Edit script</span>
+    </button>
+    <span class="cap-div"></span>
+    <button id="play" aria-label="Play or pause — key Space">
+      <svg id="play-icon" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+    </button>
+    <span class="cap-div"></span>
+    <button class="cap-side" id="display-btn" aria-pressed="false" aria-label="Open or close the Stage window" title="Open/close the Stage window">
+      <svg viewBox="0 0 24 24"><path d="M21 3H3c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h7l-2 3v1h8v-1l-2-3h7c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 14H3V5h18v12z"/></svg>
+      <span id="display-label">Connect stage</span>
+    </button>
   </div>
 </div>
+
+<aside id="right-rail" class="rail">
+  <div id="utility">
+    <button class="icon-btn" id="pedal-btn" aria-label="Bluetooth pedal setup" title="Bluetooth pedal">
+      <svg viewBox="0 0 24 24"><path d="M17.71 7.71L12 2h-1v7.59L6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 11 14.41V22h1l5.71-5.71-4.3-4.29 4.3-4.29zM13 5.83l1.88 1.88L13 9.59V5.83zm1.88 10.46L13 18.17v-3.76l1.88 1.88z"/></svg>
+    </button>
+    <button class="icon-btn" id="preview-btn" aria-pressed="true" aria-label="Stage preview panel" title="Show/hide stage preview">
+      <svg viewBox="0 0 24 24"><path fill-rule="evenodd" clip-rule="evenodd" d="M3 5h18v14H3V5zm2 2v10h14V7H5z"/><rect x="13" y="12" width="6" height="5"/></svg>
+    </button>
+    <button class="icon-btn" id="fullscreen-btn" aria-label="Full screen — key F" title="Full screen (F)">
+      <svg viewBox="0 0 24 24"><path d="M7 14H5v5h5v-2H7zM5 10h2V7h3V5H5zm12 9h-3v2h5v-5h-2zM14 5v2h3v3h2V5z"/></svg>
+      <span class="key-badge">F</span>
+    </button>
+    <div id="pedal-panel">
+      <div class="t">Bluetooth pedal</div>
+      <div class="s">Any button you add here acts exactly like Space: tap to Play/Pause, double-tap for previous paragraph, hold to jump to start.</div>
+      <div class="pedal-keys-list" id="pedal-keys-list"></div>
+      <button type="button" id="add-pedal-btn">+ Add pedal button</button>
+    </div>
+  </div>
+
+  <div class="sec">
+    <div id="stage-preview-box" class="hidden empty">
+      <div class="sec-title" id="stage-preview-label"><span>Stage preview</span><i id="preview-dot" title="Lights up when the Stage window is connected"></i></div>
+      <div id="stage-preview-frame-wrap">
+        <iframe id="stage-preview-frame" tabindex="-1" aria-hidden="true"></iframe>
+        <div id="preview-empty">no script yet</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="sec">
+    <div class="sec-title">Controls</div>
+    <div class="slider-group" id="speed-group">
+      <div class="slider-label"><span>Speed</span><span id="speed-val">—</span></div>
+      <input type="range" id="speed" min="8" max="220" step="2">
+    </div>
+    <button class="navbtn" id="top-btn" aria-label="Jump to top">
+      <svg viewBox="0 0 24 24"><path d="M12 5l7 7h-4v7h-6v-7H5z"/></svg>
+      <span>Jump to top</span><span class="navbtn-key">hold space</span>
+    </button>
+    <button class="navbtn" id="prev-para-btn" aria-label="Previous paragraph">
+      <svg viewBox="0 0 24 24"><path d="M6 6h2v12H6zm3.5 6l8.5 6V6z"/></svg>
+      <span>Previous paragraph</span><span class="navbtn-key">space space</span>
+    </button>
+  </div>
+
+  <div class="sec">
+    <div class="sec-title">Appearance</div>
+    <div class="slider-group" id="margin-group">
+      <div class="slider-label"><span>Margin</span><span id="margin-val">—</span></div>
+      <input type="range" id="margin" min="0" max="500" step="10">
+    </div>
+    <div class="slider-group" id="bgop-group">
+      <div class="slider-label"><span>Opacity</span><span id="bgop-val">—</span></div>
+      <input type="range" id="bgop" min="20" max="100" step="5">
+    </div>
+    <div class="slider-group" id="size-group">
+      <div class="slider-label"><span>Text size</span><span id="size-val">—</span></div>
+      <input type="range" id="size" min="22" max="110" step="2">
+    </div>
+    <div class="slider-group" id="color-group">
+      <div class="slider-label"><span>Text color</span><span id="color-val">#FFFFFF</span></div>
+      <input type="range" id="color" min="0" max="100" step="0.5" aria-label="Text color">
+    </div>
+    <button class="tbtn" id="mirror-btn" aria-pressed="false" aria-label="Mirror — horizontal flip, stage window only" title="Stage window only">
+      <span>Mirror</span>
+      <svg viewBox="0 0 24 24"><path d="M11 3h2v18h-2zM4 7l5 5-5 5zM20 7l-5 5 5 5z"/></svg>
+    </button>
+    <button class="tbtn" id="flip-btn" aria-pressed="false" aria-label="Flip — vertical flip, stage window only" title="Stage window only">
+      <span>Flip</span>
+      <svg viewBox="0 0 24 24" style="transform:rotate(90deg)"><path d="M11 3h2v18h-2zM4 7l5 5-5 5zM20 7l-5 5 5 5z"/></svg>
+    </button>
+    <button class="tbtn guide" id="guide-btn" aria-pressed="true" aria-label="Guide line" title="Reading guide line">
+      <span>Guide line</span>
+      <svg viewBox="0 0 24 24"><path fill-rule="evenodd" clip-rule="evenodd" d="M3 5h18v14H3V5zm2 2v10h14V7H5z"/><rect x="5" y="11" width="14" height="2"/></svg>
+    </button>
+    <div class="caption">Mirror and Flip only change the Stage window — this control view stays readable either way.</div>
+  </div>
+
+  <div id="screen-note-mini">
+    <b>Two screens.</b> Control window = this one. Stage window = your second display, the view the camera reads.
+  </div>
+
+  <div id="display-fallback">
+    <div class="s">Couldn't open a new window automatically. Copy this link and open it manually in a new window (File → New Window), then drag that window to your second display:</div>
+    <div id="display-fallback-row">
+      <input id="display-fallback-url" readonly>
+      <button class="btn" id="display-fallback-copy" style="padding:7px 10px">Copy</button>
+    </div>
+  </div>
+
+  <div class="rail-spacer"></div>
+  <div id="shortcuts-hint">
+    <span><kbd>space</kbd> play / pause</span>
+    <span><kbd>F</kbd> full screen</span>
+  </div>
+</aside>
 
 <script>
 (function(){
@@ -798,6 +645,7 @@ html:has(body.stage-window){overscroll-behavior:none}
     guideVisible: true, // red reading-guide line across the middle of the stage
     previewVisible: true, // mini stage preview in the control bar — open by default
     stageWidth: null, // real external stage window's reported width, px — null until one ever connects
+    textHue: 0,       // 0-100 position on the text-colour slider (0 = white)
   };
 
   function genId(){ return 's' + Date.now().toString(36) + Math.random().toString(36).slice(2, 8); }
@@ -902,8 +750,12 @@ html:has(body.stage-window){overscroll-behavior:none}
   var pedalPanel = document.getElementById('pedal-panel');
   var pedalKeysList = document.getElementById('pedal-keys-list');
   var addPedalBtn = document.getElementById('add-pedal-btn');
-  var bar = document.getElementById('bar');
-  var topbar = document.getElementById('topbar');
+  var colorSlider = document.getElementById('color');
+  var colorVal = document.getElementById('color-val');
+  var progressFill = document.getElementById('progress-fill');
+  var progressLabel = document.getElementById('progress-label');
+  var previewDot = document.getElementById('preview-dot');
+  var displayLabel = document.getElementById('display-label');
   var buildMeta = document.getElementById('build-meta');
   var displayBtn = document.getElementById('display-btn');
   var connectedFrame = document.getElementById('connected-frame');
@@ -924,7 +776,37 @@ html:has(body.stage-window){overscroll-behavior:none}
   var hideTimer = null;
   var wakeLock = null;
 
+  // Colour slider: position 0-100 -> hex, interpolating the same stops the
+  // slider track is painted with, so the readout always matches the track.
+  var COLOR_STOPS = [[0,[255,255,255]],[10,[255,59,48]],[22,[255,149,0]],[34,[255,214,10]],[50,[52,199,89]],[62,[48,176,199]],[74,[10,132,255]],[86,[94,92,230]],[96,[255,45,149]],[100,[255,255,255]]];
+  function hueToHex(pos){
+    pos = Math.max(0, Math.min(100, Number(pos) || 0));
+    var a = COLOR_STOPS[0], b = COLOR_STOPS[COLOR_STOPS.length - 1];
+    for(var i = 0; i < COLOR_STOPS.length - 1; i++){
+      if(pos >= COLOR_STOPS[i][0] && pos <= COLOR_STOPS[i + 1][0]){ a = COLOR_STOPS[i]; b = COLOR_STOPS[i + 1]; break; }
+    }
+    var t = b[0] === a[0] ? 0 : (pos - a[0]) / (b[0] - a[0]);
+    var hex = '#';
+    for(var c = 0; c < 3; c++){
+      var v = Math.round(a[1][c] + (b[1][c] - a[1][c]) * t);
+      hex += (v < 16 ? '0' : '') + v.toString(16);
+    }
+    return hex.toUpperCase();
+  }
+  function applyColor(){
+    var hex = hueToHex(state.textHue);
+    scriptText.style.color = hex;
+    if(colorSlider){ colorSlider.value = state.textHue; }
+    if(colorVal){ colorVal.textContent = hex; }
+  }
+
+  function isEditingScript(){
+    return !isStageWindow && document.activeElement && scriptText.contains(document.activeElement);
+  }
   function applyText(){
+    // Inline editing: our own typing already lives in the DOM, so rebuilding
+    // it here would reset the caret and scroll position mid-sentence.
+    if(isEditingScript()) return;
     var activeS = activeScript();
     var text = (activeS && activeS.text) || (isStageWindow ? 'Waiting for script from the control window…' : '');
     // Split on blank lines into paragraph blocks (not just one text node) so
@@ -939,6 +821,14 @@ html:has(body.stage-window){overscroll-behavior:none}
       frag.appendChild(div);
     });
     scriptText.appendChild(frag);
+    updateProgress();
+  }
+  function updateProgress(){
+    if(!progressFill || isStageWindow) return;
+    var max = Math.max(0, scroller.scrollHeight - scroller.clientHeight);
+    var pct = max ? Math.max(0, Math.min(100, Math.round(scroller.scrollTop / max * 100))) : 0;
+    progressFill.style.width = pct + '%';
+    progressLabel.textContent = pct + '% read';
   }
   function seekTo(top){
     suppressScrollSync = true;
@@ -983,15 +873,17 @@ html:has(body.stage-window){overscroll-behavior:none}
   }
   function applyPreviewVisibility(){
     if(!stagePreviewBox) return;
-    var shouldShow = !isStageWindow && state.previewVisible && !stage.classList.contains('hidden');
+    var hasScript = !!(activeScript() && activeScript().text && activeScript().text.trim());
+    var shouldShow = !isStageWindow && state.previewVisible;
     stagePreviewBox.classList.toggle('hidden', !shouldShow);
-    // Lazy-load the preview iframe the first time it's actually shown —
-    // no point spinning up a second full copy of the app before there's a
-    // script to display, or while the panel's toggled off.
-    if(shouldShow && stagePreviewFrame && !stagePreviewFrame.getAttribute('src')){
+    stagePreviewBox.classList.toggle('empty', !hasScript);
+    // Lazy-load the preview iframe the first time there is actually a script
+    // to show — no point spinning up a second full copy of the app before.
+    if(shouldShow && hasScript && stagePreviewFrame && !stagePreviewFrame.getAttribute('src')){
       stagePreviewFrame.setAttribute('src', location.pathname + location.search + '#stage-preview');
     }
     if(previewBtn) previewBtn.setAttribute('aria-pressed', state.previewVisible ? 'true' : 'false');
+    applyStageWidth();
   }
   function applyMargin(){
     var l = 'calc(max(28px, env(safe-area-inset-left,0px)) + ' + state.marginPx + 'px)';
@@ -1021,7 +913,7 @@ html:has(body.stage-window){overscroll-behavior:none}
     // live from the wrap so this doesn't need to know which one applies).
     if(stagePreviewFrame && stagePreviewFrameWrap){
       var intrinsic = state.stageWidth || 1280; // bootstrap default pre-connection
-      var boxWidth = stagePreviewFrameWrap.clientWidth || 240;
+      var boxWidth = stagePreviewFrameWrap.clientWidth || 264;
       stagePreviewFrame.style.width = intrinsic + 'px';
       stagePreviewFrame.style.transform = 'scale(' + (boxWidth / intrinsic) + ')';
     }
@@ -1052,7 +944,9 @@ html:has(body.stage-window){overscroll-behavior:none}
     setup.classList.add('hidden');
     stage.classList.remove('hidden');
     cancelEdit.style.display = '';
+    document.body.classList.add('prompting');
     applyPreviewVisibility();
+    updateProgress();
   }
   function showSetup(editing){
     pause();
@@ -1061,6 +955,7 @@ html:has(body.stage-window){overscroll-behavior:none}
     setup.classList.remove('hidden');
     stage.classList.add('hidden');
     cancelEdit.style.display = editing ? '' : 'none';
+    document.body.classList.remove('prompting');
     renderScriptTabs();
     applyPreviewVisibility();
   }
@@ -1249,7 +1144,6 @@ html:has(body.stage-window){overscroll-behavior:none}
     playIcon.innerHTML = '<rect x="6" y="5" width="4" height="14" rx="1"/><rect x="14" y="5" width="4" height="14" rx="1"/>';
     playBtn.classList.add('active');
     requestWake();
-    scheduleHide();
     // Stage/preview windows don't drive their own scroll — see tick()'s
     // comment above. They still flip `playing` and update wake-lock/UI
     // locally (useful on the real external display), but position only
@@ -1263,7 +1157,6 @@ html:has(body.stage-window){overscroll-behavior:none}
     playIcon.innerHTML = '<path d="M8 5v14l11-7z"/>';
     playBtn.classList.remove('active');
     releaseWake();
-    showBar();
     if(bc && !applyingRemote){
       // Stage/preview windows only ever mirror the control window's
       // position (see tick()'s comment), so the final 'scrollpos' sent
@@ -1291,25 +1184,11 @@ html:has(body.stage-window){overscroll-behavior:none}
 
   playBtn.addEventListener('click', toggle);
 
-  function showBar(){
-    bar.classList.remove('faded');
-    topbar.classList.remove('faded');
-    clearTimeout(hideTimer);
-    if(playing) scheduleHide();
-  }
-  function scheduleHide(){
-    clearTimeout(hideTimer);
-    hideTimer = setTimeout(function(){
-      bar.classList.add('faded');
-      topbar.classList.add('faded');
-    }, 2600);
-  }
-  scroller.addEventListener('pointerdown', function(e){
-    if(e.target.closest('#bar')) return;
-    showBar();
-  });
-  bar.addEventListener('pointerenter', showBar);
-  bar.addEventListener('pointermove', showBar);
+  // The control rails stay visible while playing in dual-monitor mode, so
+  // there is nothing to fade; kept as no-ops because play()/pause() and the
+  // keyboard handlers still call them (single-monitor mode will reuse them).
+  function showBar(){}
+  function scheduleHide(){}
 
   speedSlider.addEventListener('input', function(){
     state.speed = Number(speedSlider.value);
@@ -1330,6 +1209,11 @@ html:has(body.stage-window){overscroll-behavior:none}
   bgopSlider.addEventListener('input', function(){
     state.bgOpacity = Number(bgopSlider.value);
     applyBgOpacity();
+    save();
+  });
+  colorSlider.addEventListener('input', function(){
+    state.textHue = Number(colorSlider.value);
+    applyColor();
     save();
   });
   mirrorBtn.addEventListener('click', function(){
@@ -1438,6 +1322,13 @@ html:has(body.stage-window){overscroll-behavior:none}
   });
 
   // ---- External display window (control window only) ----
+  var lastHello = 0;
+  function setStageConnected(on){
+    connectedFrame.classList.toggle('on', on);
+    displayBtn.classList.toggle('connected', on);
+    displayLabel.textContent = on ? 'Stage connected' : 'Connect stage';
+    if(previewDot) previewDot.classList.toggle('on', on);
+  }
   if(!isStageWindow){
     var stageWin = null;
     function updateDisplayBtn(){
@@ -1493,10 +1384,9 @@ html:has(body.stage-window){overscroll-behavior:none}
     }
 
     // Ping the stage window every few seconds; a reply flips the status dot green.
-    var lastHello = 0;
     setInterval(function(){
       if(bc) bc.postMessage({type:'ping'});
-      connectedFrame.classList.toggle('on', Date.now() - lastHello < 4000);
+      setStageConnected(Date.now() - lastHello < 4000);
       // Catches the case where the person closed the staging window
       // themselves (its own close button) rather than via this toggle.
       if(stageWin && stageWin.closed){ stageWin = null; }
@@ -1511,12 +1401,55 @@ html:has(body.stage-window){overscroll-behavior:none}
     // window track the trackpad live instead of catching up after a pause.
     // Skipped while playing: the auto-scroll loop in tick() already keeps
     // both windows moving together at the same speed.
+    scroller.addEventListener('scroll', updateProgress);
+    window.addEventListener('resize', updateProgress);
     scroller.addEventListener('scroll', function(){
       if(playing) return;
       if(suppressScrollSync) return;
       if(!bc) return;
       var max = Math.max(0, scroller.scrollHeight - scroller.clientHeight);
       bc.postMessage({type:'seek', ratio: max ? scroller.scrollTop / max : 0});
+    });
+  }
+
+  // ---- Inline script editing (control window only) ----
+  // The prompter text itself is editable: fix a word mid-read without
+  // leaving the prompter. The DOM is never rebuilt from our own typing (see
+  // isEditingScript() in applyText), so caret and scroll position survive;
+  // edits auto-save (debounced) and propagate to the stage + preview.
+  if(!isStageWindow){
+    var editSaveTimer = null;
+    try{ scriptText.contentEditable = 'plaintext-only'; }catch(e){}
+    if(scriptText.contentEditable !== 'plaintext-only') scriptText.contentEditable = 'true';
+    scriptText.setAttribute('spellcheck', 'false');
+    scriptText.setAttribute('aria-label', 'Script — click to edit');
+    function readEditedText(){
+      var parts = [];
+      scriptText.childNodes.forEach(function(n){ parts.push(n.textContent); });
+      return parts.join('\n\n');
+    }
+    function flushEdit(){
+      clearTimeout(editSaveTimer);
+      editSaveTimer = null;
+      var s = activeScript();
+      if(!s) return;
+      var v = readEditedText();
+      if(v === s.text) return;
+      commitActiveScriptText(v);
+      var max = Math.max(0, scroller.scrollHeight - scroller.clientHeight);
+      if(bc) bc.postMessage({type:'seek', ratio: max ? scroller.scrollTop / max : 0});
+      updateProgress();
+    }
+    scriptText.addEventListener('input', function(){
+      clearTimeout(editSaveTimer);
+      editSaveTimer = setTimeout(flushEdit, 300);
+    });
+    scriptText.addEventListener('blur', function(){
+      if(editSaveTimer) flushEdit();
+      applyText();
+    });
+    scriptText.addEventListener('keydown', function(e){
+      if(e.key === 'Escape'){ scriptText.blur(); }
     });
   }
 
@@ -1586,7 +1519,7 @@ html:has(body.stage-window){overscroll-behavior:none}
       if(msg.type === 'state'){
         applyingRemote = true;
         Object.assign(state, msg.state);
-        applyText(); applyFlip(); applyGuide(); applyPreviewVisibility(); applySize(); applyMargin(); applyBgOpacity(); applySpeed(); applyStageWidth();
+        applyText(); applyFlip(); applyGuide(); applyPreviewVisibility(); applySize(); applyMargin(); applyBgOpacity(); applySpeed(); applyColor(); applyStageWidth();
         applyingRemote = false;
       }else if(msg.type === 'playing'){
         applyingRemote = true;
@@ -1621,7 +1554,7 @@ html:has(body.stage-window){overscroll-behavior:none}
         bc.postMessage({type:'hello'});
       }else if(msg.type === 'hello' && !isStageWindow){
         lastHello = Date.now();
-        connectedFrame.classList.add('on');
+        setStageConnected(true);
         sendSyncReply();
       }else if(msg.type === 'stageWidth' && !isStageWindow && typeof msg.width === 'number'){
         // The real external stage window just reported its actual width —
@@ -1672,9 +1605,24 @@ html:has(body.stage-window){overscroll-behavior:none}
     return false;
   }
 
+  // True while the person is typing somewhere (the inline editor, the paste
+  // box, a text field) — shortcut keys must not hijack those keystrokes.
+  function isTypingTarget(t){
+    if(!t) return false;
+    if(t.isContentEditable || t.tagName === 'TEXTAREA') return true;
+    return t.tagName === 'INPUT' && t.type !== 'range';
+  }
+
   document.addEventListener('keydown', function(e){
     if(pedalCaptureActive){ capturePedalKey(e); return; }
     if(isStageWindow) return;
+    if((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 's'){
+      e.preventDefault();
+      if(!setup.classList.contains('hidden')) saveScriptBtn.click();
+      else if(isEditingScript()) flushEdit();
+      return;
+    }
+    if(isTypingTarget(e.target)) return;
     if(stage.classList.contains('hidden')) return;
     var k = e.key.toLowerCase();
 
@@ -1700,6 +1648,7 @@ html:has(body.stage-window){overscroll-behavior:none}
   document.addEventListener('keyup', function(e){
     if(pedalCaptureActive) return;
     if(isStageWindow) return;
+    if(isTypingTarget(e.target)) return;
     if(!isSpaceOrPedal(e)) return;
     e.preventDefault();
     clearSpaceHoldTimer();
@@ -1721,7 +1670,7 @@ html:has(body.stage-window){overscroll-behavior:none}
   });
 
   // ---- Build/version indicator (control window top bar) ----
-  var APP_VERSION = 'v1.16.0';
+  var APP_VERSION = 'v2.0.0';
   if(buildMeta && !isStageWindow){
     buildMeta.textContent = APP_VERSION;
   }
@@ -1731,6 +1680,7 @@ html:has(body.stage-window){overscroll-behavior:none}
   applySize();
   applyMargin();
   applyBgOpacity();
+  applyColor();
   applyFlip();
   applyGuide();
   applyText();
