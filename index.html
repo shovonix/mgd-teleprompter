@@ -324,10 +324,6 @@ input[type=range]::-moz-range-thumb{
 .icon-btn[aria-pressed="true"]{background:rgba(var(--accent-rgb),.16);border-color:rgba(var(--accent-rgb),.5)}
 .icon-btn[aria-pressed="true"] svg{fill:var(--accent)}
 .icon-btn svg{width:17px;height:17px;fill:var(--fg)}
-/* Stage / Edit — always carry a touch of accent so they read as the secondary actions,
-   but stay well short of Play's solid-fill prominence. */
-.icon-btn.accent{border-color:rgba(var(--accent-rgb),.45)}
-.icon-btn.accent svg{fill:var(--accent)}
 .topbar-actions{display:flex;align-items:center;gap:8px;flex:none}
 #pedal-panel{
   display:none;
@@ -687,7 +683,7 @@ body.stage-window #connected-frame{display:none !important}
           <button class="icon-btn" id="flip-btn" aria-pressed="false" aria-label="Vertical flip — applies on the stage display only" title="Applies on the stage display only">
             <svg viewBox="0 0 24 24" style="transform:rotate(90deg)"><path d="M11 3h2v18h-2zM4 7l5 5-5 5zM20 7l-5 5 5 5z"/></svg>
           </button>
-          <button class="icon-btn accent" id="display-btn" aria-pressed="false" aria-label="Open external display (staging window)" title="Open/close the staging window">
+          <button class="icon-btn" id="display-btn" aria-pressed="false" aria-label="Open external display (staging window)" title="Open/close the staging window">
             <svg viewBox="0 0 24 24"><path d="M21 3H3c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h7l-2 3v1h8v-1l-2-3h7c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 14H3V5h18v12z"/></svg>
           </button>
         </div>
@@ -697,7 +693,7 @@ body.stage-window #connected-frame{display:none !important}
         </button>
 
         <div class="cluster cluster-right">
-          <button class="icon-btn accent" id="edit-btn" aria-label="Edit script — key E">
+          <button class="icon-btn" id="edit-btn" aria-label="Edit script — key E">
             <svg viewBox="0 0 24 24"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75zM20.71 7.04a1 1 0 000-1.41l-2.34-2.34a1 1 0 00-1.41 0l-1.83 1.83 3.75 3.75z"/></svg>
           </button>
           <button class="icon-btn" id="top-btn" aria-label="Back to top">
@@ -1157,7 +1153,17 @@ body.stage-window #connected-frame{display:none !important}
     playBtn.classList.remove('active');
     releaseWake();
     showBar();
-    if(bc && !applyingRemote) bc.postMessage({type:'playing', value:false});
+    if(bc && !applyingRemote){
+      // Each window runs its own independent rAF scroll loop while playing
+      // (only the play/pause *signal* is synced, not every frame — that's
+      // deliberate, to avoid flooding BroadcastChannel). That means the two
+      // loops drift apart over any real stretch of playback, so the window
+      // that triggers the pause has to hand the others its exact resting
+      // position too, or they just freeze wherever their own drifted loop
+      // happened to land. Same ratio approach as seekTo()/'seek' below.
+      var max = Math.max(0, scroller.scrollHeight - scroller.clientHeight);
+      bc.postMessage({type:'playing', value:false, ratio: max ? scroller.scrollTop / max : 0});
+    }
   }
   function toggle(){ playing ? pause() : play(); }
 
@@ -1448,7 +1454,17 @@ body.stage-window #connected-frame{display:none !important}
         applyingRemote = false;
       }else if(msg.type === 'playing'){
         applyingRemote = true;
-        if(msg.value) play(); else pause();
+        if(msg.value){
+          play();
+        }else{
+          pause();
+          if(typeof msg.ratio === 'number'){
+            suppressScrollSync = true;
+            clearTimeout(suppressScrollSyncTimer);
+            suppressScrollSyncTimer = setTimeout(function(){ suppressScrollSync = false; }, 120);
+            scroller.scrollTop = msg.ratio * Math.max(0, scroller.scrollHeight - scroller.clientHeight);
+          }
+        }
         applyingRemote = false;
       }else if(msg.type === 'seek'){
         suppressScrollSync = true;
@@ -1543,7 +1559,7 @@ body.stage-window #connected-frame{display:none !important}
   });
 
   // ---- Build/version indicator (control window top bar) ----
-  var APP_VERSION = 'v1.11.2';
+  var APP_VERSION = 'v1.12.0';
   if(buildMeta && !isStageWindow){
     buildMeta.textContent = APP_VERSION;
   }
