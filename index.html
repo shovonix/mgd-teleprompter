@@ -763,8 +763,6 @@ body.touch #screen-note{order:5;margin-top:12px;padding:10px 12px;font-size:12px
       <div class="slider-label"><span>Speed <kbd class="only-single">↑ ↓</kbd></span><span id="speed-val">—</span></div>
       <input type="range" id="speed" min="8" max="220" step="2">
     </div>
-    <button class="navbtn only-touch" id="top-btn" type="button"><svg viewBox="0 0 24 24"><path d="M12 5l7 7h-4v7h-6v-7H5z"/></svg><span>Jump to top</span></button>
-    <button class="navbtn only-touch" id="prev-para-btn" type="button"><svg viewBox="0 0 24 24"><path d="M6 6h2v12H6zm3.5 6l8.5 6V6z"/></svg><span>Previous paragraph</span></button>
   </div>
 
   <div class="sec">
@@ -1817,8 +1815,6 @@ body.touch #screen-note{order:5;margin-top:12px;padding:10px 12px;font-size:12px
     if(t.closest('.rail') || t.closest('#pedal-panel') || t.closest('.pedal-trigger') || t.closest('#menu-btn') || t.closest('#controls-btn')) return;
     closeRails();
   });
-  document.getElementById('top-btn').addEventListener('click', function(){ seekTo(0); });
-  document.getElementById('prev-para-btn').addEventListener('click', function(){ goPrevParagraph(); });
   document.getElementById('menu-btn').addEventListener('click', function(){ toggleRail('left'); });
   (function(){ var src = document.querySelector('#left-rail .brand-logo'); var dst = document.getElementById('setup-logo'); if(src && dst) dst.src = src.src; })();
   document.getElementById('setup-brand').addEventListener('click', function(){ brandHomeBtn.click(); });
