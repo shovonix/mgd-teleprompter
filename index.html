@@ -522,6 +522,14 @@ body.solo.ui-hidden #stage{cursor:none}
   border:1px solid var(--hair);color:#d6d6d8;font:500 12.5px/1.4 'Archivo',system-ui,sans-serif;
   opacity:0;pointer-events:none;transition:opacity .35s ease,transform .35s ease;
 }
+#update-toast{
+  position:fixed;left:50%;bottom:max(20px,env(safe-area-inset-bottom));transform:translate(-50%,12px);z-index:60;
+  padding:11px 18px;border-radius:999px;border:1px solid rgba(255,255,255,.4);cursor:pointer;
+  background:#f4f4f2;color:#0a0a0b;font:600 12.5px 'Archivo',system-ui,sans-serif;box-shadow:0 10px 36px rgba(0,0,0,.6);
+  opacity:0;pointer-events:none;transition:opacity .3s ease,transform .3s ease;max-width:calc(100% - 32px);
+}
+#update-toast.show{opacity:1;pointer-events:auto;transform:translate(-50%,0)}
+body.stage-window #update-toast{display:none}
 #mode-toast.show{opacity:1;transform:translate(-50%,0)}
 body.stage-window #mode-toast{display:none}
 #save-float{
@@ -622,6 +630,7 @@ body.touch #screen-note{order:5;margin-top:12px;padding:10px 12px;font-size:12px
 }
 </style>
 
+<button type="button" id="update-toast" aria-live="polite"></button>
 <aside id="left-rail" class="rail">
   <button type="button" class="rail-close" data-close="left" aria-label="Close scripts panel" title="Close">✕</button>
   <button type="button" class="brand-live" id="brand-home-btn" aria-label="Back to main page">
@@ -1941,7 +1950,7 @@ body.touch #screen-note{order:5;margin-top:12px;padding:10px 12px;font-size:12px
     };
     applyEditable();
     scriptText.setAttribute('spellcheck', 'false');
-    scriptText.setAttribute('aria-label', 'Script — click to edit');
+    scriptText.setAttribute('aria-label', 'Script');
     function readEditedText(){
       var parts = [];
       scriptText.childNodes.forEach(function(n){ parts.push(n.textContent); });
@@ -2197,9 +2206,37 @@ body.touch #screen-note{order:5;margin-top:12px;padding:10px 12px;font-size:12px
   });
 
   // ---- Build/version indicator (control window top bar) ----
-  var APP_VERSION = 'v2.0.0';
+  var APP_VERSION = 'v3.0';
   if(buildMeta && !isStageWindow){
     buildMeta.textContent = APP_VERSION;
+  }
+
+  // Fullscreen isn't available everywhere (iPhone Safari): hide the button there.
+  if(!document.documentElement.requestFullscreen && !document.documentElement.webkitRequestFullscreen){
+    fullscreenBtn.style.display = 'none';
+  }
+
+  // Stale-copy guard: browsers may cache index.html, so quietly compare against the
+  // server's current copy and offer a one-tap reload when a newer version is live.
+  if(!isStageWindow && window.fetch && location.protocol.indexOf('http') === 0){
+    var updateChecking = false;
+    var checkForUpdate = function(){
+      if(updateChecking || document.getElementById('update-toast').classList.contains('show')) return;
+      updateChecking = true;
+      fetch(location.pathname, {cache:'no-store'}).then(function(r){ return r.text(); }).then(function(t){
+        var m = t.match(/var APP_VERSION = '([^']+)'/);
+        if(m && m[1] !== APP_VERSION){
+          var el = document.getElementById('update-toast');
+          el.textContent = 'A new version (' + m[1] + ') is available — tap to reload';
+          el.classList.add('show');
+        }
+      }).catch(function(){}).then(function(){ updateChecking = false; });
+    };
+    window.__spCheckUpdate = checkForUpdate;
+    setTimeout(checkForUpdate, 4000);
+    setInterval(checkForUpdate, 10 * 60 * 1000);
+    document.addEventListener('visibilitychange', function(){ if(!document.hidden) checkForUpdate(); });
+    document.getElementById('update-toast').addEventListener('click', function(){ location.reload(); });
   }
 
   // boot
