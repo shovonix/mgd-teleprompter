@@ -1285,7 +1285,26 @@ body.touch .setup-inner{padding-top:34px}
     var lab = editBtn.querySelector('span');
     if(lab) lab.textContent = on ? 'Save' : 'Edit script';
     editBtn.classList.toggle('on', on);
-    if(on){ if(isSingle()) leftRail.classList.add('open'); try{ scriptText.focus(); }catch(e){} }
+    if(on){
+      if(isSingle()) leftRail.classList.add('open');
+      // Start editing where the reader is: caret on the line under the guide,
+      // and the scroll position untouched (a plain focus() jumps to the top).
+      var keepTop = scroller.scrollTop;
+      try{ scriptText.focus({preventScroll:true}); }catch(e){}
+      try{
+        var r = scroller.getBoundingClientRect();
+        var px = r.left + r.width / 2, py = r.top + r.height / 2, range = null;
+        if(document.caretRangeFromPoint) range = document.caretRangeFromPoint(px, py);
+        else if(document.caretPositionFromPoint){
+          var cp = document.caretPositionFromPoint(px, py);
+          if(cp){ range = document.createRange(); range.setStart(cp.offsetNode, cp.offset); range.collapse(true); }
+        }
+        if(range && scriptText.contains(range.startContainer)){
+          var sel = window.getSelection(); sel.removeAllRanges(); sel.addRange(range);
+        }
+      }catch(e){}
+      scroller.scrollTop = keepTop;
+    }
     else{ try{ scriptText.blur(); }catch(e){} if(isSingle()) leftRail.classList.remove('open'); }
   }
   editBtn.addEventListener('click', function(){
