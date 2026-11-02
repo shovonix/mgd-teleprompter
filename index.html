@@ -1302,8 +1302,7 @@ body.touch .setup-inner{padding-top:34px}
     if(lab) lab.textContent = on ? 'Save' : 'Edit script';
     editBtn.classList.toggle('on', on);
     if(on){
-      if(isSingle()) leftRail.classList.add('open');
-      // Start editing where the reader is: caret on the line under the guide,
+            // Start editing where the reader is: caret on the line under the guide,
       // and the scroll position untouched (a plain focus() jumps to the top).
       var keepTop = scroller.scrollTop;
       try{ scriptText.focus({preventScroll:true}); }catch(e){}
@@ -1321,7 +1320,7 @@ body.touch .setup-inner{padding-top:34px}
       }catch(e){}
       scroller.scrollTop = keepTop;
     }
-    else{ try{ scriptText.blur(); }catch(e){} if(isSingle()) leftRail.classList.remove('open'); }
+    else{ try{ scriptText.blur(); }catch(e){} }
   }
   editBtn.addEventListener('click', function(){
     if(isTouch()) toggleRail('left'); // Mobile/Tablet: Edit script opens the scripts panel
