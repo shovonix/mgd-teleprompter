@@ -517,13 +517,16 @@ body.solo.ui-hidden #stage{cursor:none}
 }
 #back-btn:hover{color:var(--fg);border-color:#4a4a50}
 #back-btn svg{width:16px;height:16px;fill:currentColor}
-body[data-mode="dual"]:not(.stage-window) #back-btn,
-body[data-mode="single"]:not(.stage-window) #back-btn{display:inline-flex}
+body:not(.stage-window) #back-btn{display:inline-flex}
+body.touch #back-btn{top:max(14px,env(safe-area-inset-top));right:max(14px,env(safe-area-inset-right))}
+body[data-mode="mobile"] #back-btn{width:42px;height:42px;padding:0;justify-content:center}
+body[data-mode="mobile"] #back-btn span{display:none}
 body.stage-window #back-btn{display:none !important}
 body.solo.ui-hidden #back-btn{opacity:0;pointer-events:none}
 /* ---------- Mobile + Tablet (touch) ---------- */
 body.touch #stage{touch-action:manipulation;-webkit-tap-highlight-color:transparent}
 body.touch #script-text{-webkit-user-select:none;user-select:none}
+body.touch.edit-mode #script-text{-webkit-user-select:text;user-select:text}
 body.touch:not(.stage-window) #setup{left:0}
 /* panels slide in over the text; scripts/controls closed by default, even on page 1 */
 body.touch .rail{z-index:20;box-shadow:0 0 60px rgba(0,0,0,.75);transition:transform .25s ease;padding-top:max(18px,env(safe-area-inset-top))}
@@ -533,16 +536,16 @@ body.touch #left-rail.open,body.touch #right-rail.open{transform:none}
 body.touch #right-rail{display:flex}
 body.touch:not(.prompting) #right-rail{display:none}
 body.touch .rail-close{display:block;width:38px;height:38px}
-body[data-mode="mobile"] .rail{width:50vw;min-width:260px}
-body[data-mode="tablet"] .rail{width:min(340px,46vw)}
-@media (orientation:portrait){
-  body[data-mode="mobile"] .rail{width:100vw}
-  body[data-mode="tablet"] .rail{width:min(380px,72vw)}
-}
+body.touch .rail{width:50vw;padding-left:14px;padding-right:14px}
+body.touch .brand-text{overflow:hidden}
+body.touch .brand-text .name{overflow:hidden;text-overflow:ellipsis}
+body.touch #right-rail .dev-tile{padding:9px 0}
 body.touch #bottombar{bottom:max(22px,env(safe-area-inset-bottom))}
 body.touch .cap-side{width:auto;min-width:52px;padding:0 18px;height:52px}
 body[data-mode="mobile"] .cap-side span{display:none}
 body[data-mode="mobile"] .cap-side{width:56px;padding:0}
+body[data-mode="mobile"] #edit-btn.on span{display:inline}
+body[data-mode="mobile"] #edit-btn.on{width:auto;padding:0 16px}
 body.touch .cap-side svg{width:20px;height:20px}
 body.touch #play{width:64px;height:64px}
 body.touch #progress-wrap{left:16px;right:16px}
@@ -551,9 +554,7 @@ body.touch #shortcuts-hint{display:none}
 body.touch .no-touch{display:none}
 #edit-btn.on{background:rgba(255,255,255,.12);color:var(--fg);border-color:rgba(255,255,255,.35)}
 body.edit-mode #script-text{outline:1px dashed rgba(255,255,255,.28);outline-offset:8px;cursor:text}
-#edit-text-btn{height:30px;padding:0 12px;border-radius:9px;border:1px solid var(--hair);background:transparent;color:var(--fg-dim);font:600 11.5px 'Archivo',system-ui,sans-serif;cursor:pointer}
 .scripts-head{gap:8px}
-#edit-text-btn{margin-left:auto}
 #menu-btn{display:none;position:absolute;top:max(14px,env(safe-area-inset-top));left:14px;height:38px;padding:0 14px;border-radius:10px;
   border:1px solid var(--hair);background:var(--raised);color:var(--fg-dim);font:600 12.5px 'Archivo',system-ui,sans-serif;cursor:pointer;gap:8px;align-items:center}
 body.touch #menu-btn{display:inline-flex}
@@ -579,7 +580,6 @@ body.touch .setup-inner{padding-top:34px}
   <div class="scripts-head">
     <div class="sec-title">Scripts</div>
     <button type="button" id="new-script-btn" aria-label="New script">+ New</button>
-    <button type="button" id="edit-text-btn" class="only-touch" aria-label="Edit this script's text">Edit text</button>
   </div>
   <div class="script-tabs" id="script-tabs"></div>
   <div class="rail-spacer"></div>
@@ -1306,7 +1306,7 @@ body.touch .setup-inner{padding-top:34px}
     showStage();
   });
   function setEditMode(on){
-    if(isTouch() || isStageWindow) return;
+    if(isStageWindow) return;
     if(on === editMode) return;
     if(!on && typeof flushEdit === 'function' && isEditingScript()) flushEdit();
     editMode = on;
@@ -1337,8 +1337,7 @@ body.touch .setup-inner{padding-top:34px}
     else{ try{ scriptText.blur(); }catch(e){} }
   }
   editBtn.addEventListener('click', function(){
-    if(isTouch()) toggleRail('left'); // Mobile/Tablet: Edit script opens the scripts panel
-    else setEditMode(!editMode);      // Single/Dual: turns inline editing on/off
+    setEditMode(!editMode); // all modes: turns inline editing on/off (button reads Save while on)
   });
   controlsBtn.addEventListener('click', function(){ toggleRail('right'); });
   // Logo + "Space Prompter" name in the top bar — same destination as the
@@ -1726,7 +1725,7 @@ body.touch .setup-inner{padding-top:34px}
   // playing: tap text = pause + bar. paused: tap text = hide everything
   // (panels too), tap again = bar only.
   scroller.addEventListener('click', function(){
-    if(isStageWindow || !isTouch()) return;
+    if(isStageWindow || !isTouch() || editMode) return; // taps edit text while editing
     if(playing){ pause(); showBar(); return; }
     if(leftRail.classList.contains('open') || rightRail.classList.contains('open')){
       closeRails(); document.body.classList.add('ui-hidden'); return;
@@ -1736,7 +1735,6 @@ body.touch .setup-inner{padding-top:34px}
   document.getElementById('top-btn').addEventListener('click', function(){ seekTo(0); });
   document.getElementById('prev-para-btn').addEventListener('click', function(){ goPrevParagraph(); });
   document.getElementById('menu-btn').addEventListener('click', function(){ toggleRail('left'); });
-  document.getElementById('edit-text-btn').addEventListener('click', function(){ closeRails(); showSetup(true); });
 
   // ---- Device type (control window only) ----
   // Only Dual Monitor has its layout built so far; the others are shown
@@ -1829,7 +1827,7 @@ body.touch .setup-inner{padding-top:34px}
   if(!isStageWindow){
     var editSaveTimer = null;
     applyEditable = function(){
-      if(isTouch() || !editMode){ scriptText.contentEditable = 'false'; return; }
+      if(!editMode){ scriptText.contentEditable = 'false'; return; }
       try{ scriptText.contentEditable = 'plaintext-only'; }catch(e){}
       if(scriptText.contentEditable !== 'plaintext-only') scriptText.contentEditable = 'true';
     };
