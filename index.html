@@ -747,6 +747,17 @@ body.stage-window #connected-frame{display:none !important}
   var suppressScrollSync = false; // true right after we set scrollTop ourselves, so the
   var suppressScrollSyncTimer = null; // scroll listener below doesn't re-broadcast our own seek
 
+  // A stage/preview window joining after the control window has already
+  // started (or scrolled partway) used to just open at the top and stay
+  // there until the next manual seek — there was no "catch me up" signal.
+  // Ask immediately on load; the control window answers with its current
+  // position (see the 'syncRequest' handler below). Deliberately separate
+  // from the 'hello' handshake the real stage window uses for the
+  // connected-dot indicator — asking for a position sync shouldn't make
+  // the control window think an external display is connected just
+  // because the local mini preview iframe loaded.
+  if(isStageWindow && bc) bc.postMessage({type:'syncRequest'});
+
   var state = {
     scripts: [],         // [{id, name, text, updatedAt}] — multiple saved scripts
     activeScriptId: null,
@@ -1121,12 +1132,31 @@ body.stage-window #connected-frame{display:none !important}
     try{ if(wakeLock){ wakeLock.release(); wakeLock = null; } }catch(e){}
   }
 
+  // Only the control window ever runs this loop (play() below only
+  // schedules it when !isStageWindow) — it's the single source of truth
+  // for scroll position. Stage/preview windows never integrate their own
+  // position; they just set scrollTop directly from the 'scrollpos'
+  // broadcasts this sends out (throttled) on every frame while playing.
+  // That's deliberate: two independent rAF loops, each accumulating its
+  // own dt, drift apart over any real stretch of playback (different
+  // refresh rates, render load) — a follower that only ever mirrors the
+  // driver's position can't drift, by construction.
+  var lastScrollBroadcastT = 0;
+  function broadcastScrollPos(){
+    if(!bc) return;
+    var now = (window.performance && performance.now) ? performance.now() : Date.now();
+    if(now - lastScrollBroadcastT < 40) return; // ~25Hz cap
+    lastScrollBroadcastT = now;
+    var max = Math.max(0, scroller.scrollHeight - scroller.clientHeight);
+    bc.postMessage({type:'scrollpos', ratio: max ? scroller.scrollTop / max : 0});
+  }
   function tick(t){
     if(!playing) return;
     if(!lastT) lastT = t;
     var dt = (t - lastT) / 1000;
     lastT = t;
     scroller.scrollTop += state.speed * dt;
+    broadcastScrollPos();
     var atBottom = scroller.scrollTop + scroller.clientHeight >= scroller.scrollHeight - 2;
     if(atBottom){
       pause();
@@ -1143,7 +1173,11 @@ body.stage-window #connected-frame{display:none !important}
     playBtn.classList.add('active');
     requestWake();
     scheduleHide();
-    rafId = requestAnimationFrame(tick);
+    // Stage/preview windows don't drive their own scroll — see tick()'s
+    // comment above. They still flip `playing` and update wake-lock/UI
+    // locally (useful on the real external display), but position only
+    // ever comes from the control window's broadcasts.
+    if(!isStageWindow) rafId = requestAnimationFrame(tick);
     if(bc && !applyingRemote) bc.postMessage({type:'playing', value:true});
   }
   function pause(){
@@ -1154,16 +1188,27 @@ body.stage-window #connected-frame{display:none !important}
     releaseWake();
     showBar();
     if(bc && !applyingRemote){
-      // Each window runs its own independent rAF scroll loop while playing
-      // (only the play/pause *signal* is synced, not every frame — that's
-      // deliberate, to avoid flooding BroadcastChannel). That means the two
-      // loops drift apart over any real stretch of playback, so the window
-      // that triggers the pause has to hand the others its exact resting
-      // position too, or they just freeze wherever their own drifted loop
-      // happened to land. Same ratio approach as seekTo()/'seek' below.
+      // Stage/preview windows only ever mirror the control window's
+      // position (see tick()'s comment), so the final 'scrollpos' sent
+      // during the last playing frame should already have them here —
+      // this is the belt-and-suspenders exact value for the instant
+      // scrolling actually stopped. Same ratio approach as seekTo()/'seek'.
       var max = Math.max(0, scroller.scrollHeight - scroller.clientHeight);
       bc.postMessage({type:'playing', value:false, ratio: max ? scroller.scrollTop / max : 0});
     }
+  }
+  // Answers a stage/preview window that just announced itself (on initial
+  // load via 'syncRequest', or the real stage window's periodic 'hello')
+  // with exactly where the control window is right now, so a window that
+  // joins mid-script — or reconnects after being closed and reopened —
+  // lands on the current line instead of starting from the top. Only
+  // meaningful called from the control window, which is the only one with
+  // an authoritative position to report.
+  function sendSyncReply(){
+    if(!bc) return;
+    var max = Math.max(0, scroller.scrollHeight - scroller.clientHeight);
+    bc.postMessage({type:'scrollpos', ratio: max ? scroller.scrollTop / max : 0});
+    if(playing) bc.postMessage({type:'playing', value:true});
   }
   function toggle(){ playing ? pause() : play(); }
 
@@ -1471,11 +1516,22 @@ body.stage-window #connected-frame{display:none !important}
         clearTimeout(suppressScrollSyncTimer);
         suppressScrollSyncTimer = setTimeout(function(){ suppressScrollSync = false; }, 120);
         scroller.scrollTop = msg.ratio * Math.max(0, scroller.scrollHeight - scroller.clientHeight);
+      }else if(msg.type === 'scrollpos' && isStageWindow){
+        // Continuous position feed from the control window's tick() loop
+        // while it's playing — this is what keeps a stage/preview window
+        // from ever drifting, since it never computes its own position.
+        scroller.scrollTop = msg.ratio * Math.max(0, scroller.scrollHeight - scroller.clientHeight);
+      }else if(msg.type === 'syncRequest' && !isStageWindow){
+        // A stage/preview window just loaded (possibly mid-script) and is
+        // asking where the control window currently is — answer right
+        // away rather than making it wait for the next periodic ping.
+        sendSyncReply();
       }else if(msg.type === 'ping' && isStageWindow && !isPreviewFrame){
         bc.postMessage({type:'hello'});
       }else if(msg.type === 'hello' && !isStageWindow){
         lastHello = Date.now();
         connectedFrame.classList.add('on');
+        sendSyncReply();
       }
     };
   }
@@ -1559,7 +1615,7 @@ body.stage-window #connected-frame{display:none !important}
   });
 
   // ---- Build/version indicator (control window top bar) ----
-  var APP_VERSION = 'v1.12.1';
+  var APP_VERSION = 'v1.13.0';
   if(buildMeta && !isStageWindow){
     buildMeta.textContent = APP_VERSION;
   }
