@@ -611,7 +611,7 @@ body.stage-window #connected-frame{display:none !important}
           <button class="icon-btn" id="flip-btn" aria-pressed="false" aria-label="Vertical flip — applies on the stage display only" title="Applies on the stage display only">
             <svg viewBox="0 0 24 24" style="transform:rotate(90deg)"><path d="M11 3h2v18h-2zM4 7l5 5-5 5zM20 7l-5 5 5 5z"/></svg>
           </button>
-          <button class="icon-btn accent" id="display-btn" aria-label="Open external display (staging window)">
+          <button class="icon-btn accent" id="display-btn" aria-pressed="false" aria-label="Open external display (staging window)" title="Open/close the staging window">
             <svg viewBox="0 0 24 24"><path d="M21 3H3c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h7l-2 3v1h8v-1l-2-3h7c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 14H3V5h18v12z"/></svg>
           </button>
         </div>
@@ -1209,18 +1209,37 @@ body.stage-window #connected-frame{display:none !important}
 
   // ---- External display window (control window only) ----
   if(!isStageWindow){
+    var stageWin = null;
+    function updateDisplayBtn(){
+      displayBtn.setAttribute('aria-pressed', (stageWin && !stageWin.closed) ? 'true' : 'false');
+    }
     displayBtn.addEventListener('click', function(){
+      // Toggle: if we already have the staging window open, this click
+      // closes it. Otherwise open a fresh one.
+      if(stageWin && !stageWin.closed){
+        stageWin.close();
+        stageWin = null;
+        updateDisplayBtn();
+        return;
+      }
       var url = PUBLIC_URL + '#stage';
       var w = null;
       try{
-        w = window.open(url, 'mgdTeleprompterStage', 'width=1280,height=800,menubar=no,toolbar=no,location=no,status=no');
+        // "popup=1" is what actually forces a real separate window in
+        // current Chrome/Edge — the older chrome=no/menubar=no/etc flags
+        // alone are no longer enough and the browser falls back to a tab.
+        // Safari/Firefox mostly honor width/height regardless, and still
+        // respect popup=1 where supported, so it's harmless to include.
+        w = window.open(url, 'mgdTeleprompterStage', 'popup=1,width=1280,height=800,menubar=no,toolbar=no,location=no,status=no');
       }catch(e){}
+      stageWin = w;
       if(!w){
         displayFallbackUrl.value = url;
         displayFallback.classList.add('show');
       }else{
         displayFallback.classList.remove('show');
       }
+      updateDisplayBtn();
     });
     displayFallbackCopy.addEventListener('click', function(){
       displayFallbackUrl.select();
@@ -1234,6 +1253,10 @@ body.stage-window #connected-frame{display:none !important}
     setInterval(function(){
       if(bc) bc.postMessage({type:'ping'});
       connectedFrame.classList.toggle('on', Date.now() - lastHello < 4000);
+      // Catches the case where the person closed the staging window
+      // themselves (its own close button) rather than via this toggle.
+      if(stageWin && stageWin.closed){ stageWin = null; }
+      updateDisplayBtn();
     }, 2000);
 
     // Manual scrolling (trackpad/mouse wheel, drag) on the control window
@@ -1379,7 +1402,7 @@ body.stage-window #connected-frame{display:none !important}
   });
 
   // ---- Build/version indicator (control window top bar) ----
-  var APP_VERSION = 'v1.9.0';
+  var APP_VERSION = 'v1.9.1';
   if(buildMeta && !isStageWindow){
     buildMeta.textContent = APP_VERSION;
   }
