@@ -1270,7 +1270,8 @@ body.touch .setup-inner{padding-top:34px}
     showStage();
   });
   editBtn.addEventListener('click', function(){
-    if(isSolo()) toggleRail('left'); // Single/Mobile/Tablet: Edit script opens the scripts panel
+    if(isTouch()) toggleRail('left'); // Mobile/Tablet: Edit script opens the scripts panel
+    // Single Monitor: goes to the paste/edit screen, which shows the scripts rail beside it
     else showSetup(true);
   });
   controlsBtn.addEventListener('click', function(){ toggleRail('right'); });
