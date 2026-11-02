@@ -179,6 +179,18 @@ button{font-family:inherit;color:inherit}
   word-break:break-word;
   color:var(--fg);
   transform-origin:center;
+  /* Fixed at the stage's intrinsic 1280px width in EVERY context —
+     control, the real external stage, and the mini preview — not just
+     the stage windows. A guide line (or the mini preview) only means
+     anything if "the same scroll position" also means "the same line
+     of text," which requires identical word-wrap everywhere; letting
+     the control window reflow to its own actual (often much wider)
+     browser width broke that even though the two stage-side contexts
+     already matched each other. Letterboxed/centered on anything wider
+     than 1280px, in all three places equally. */
+  max-width:1280px;
+  margin-left:auto;
+  margin-right:auto;
 }
 
 /* centerline guide, like a prompter rig's reading mark — red, and thick
@@ -570,16 +582,6 @@ body.stage-window #stage-preview-box{display:none !important}
 }
 #connected-frame.on{opacity:1}
 body.stage-window #connected-frame{display:none !important}
-/* The mini preview is a fixed 1280x800 canvas by design (it has to be —
-   it's scaled down from a known intrinsic size). The real external stage
-   window used to just fill whatever size its monitor/window actually is,
-   so its text wrapped at different points than the preview's — same
-   scroll ratio, different line content, which read as "the mini preview
-   doesn't match the stage." Locking the real stage's text column to the
-   same 1280px width (letterboxed/centered on anything wider) guarantees
-   identical word-wrap in both, regardless of the actual external
-   display's resolution. */
-body.stage-window #script-text{max-width:1280px;margin-left:auto;margin-right:auto}
 /* Belt-and-suspenders alongside the document-level wheel/touchmove block
    above: stops any native rubber-band/overscroll bounce on html/body
    too, so there's nothing left that can visibly move before snapping
@@ -1654,7 +1656,7 @@ html:has(body.stage-window){overscroll-behavior:none}
   });
 
   // ---- Build/version indicator (control window top bar) ----
-  var APP_VERSION = 'v1.14.1';
+  var APP_VERSION = 'v1.15.0';
   if(buildMeta && !isStageWindow){
     buildMeta.textContent = APP_VERSION;
   }
