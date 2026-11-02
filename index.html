@@ -838,7 +838,41 @@ body:not(.prompting):not(.stage-window) #setup{right:0}
       frag.appendChild(div);
     });
     scriptText.appendChild(frag);
+    applyViewScale();
     updateProgress();
+  }
+  // ---- Position sync in content units ----
+  // The control column can be narrower than the real stage window. To keep
+  // the SAME line of text under the guide everywhere, the control window lays
+  // its text out at the stage's real width and visually scales it down to fit
+  // (viewK < 1). Positions are exchanged as 'g' = the content coordinate
+  // under the guide line, in unscaled text px, so they mean the same line in
+  // every window whatever its own size, scale or padding.
+  var viewK = 1;
+  function textPadTop(){ return parseFloat(getComputedStyle(scriptText).paddingTop) || 0; }
+  function getG(){ return (scroller.scrollTop + scroller.clientHeight / 2) / viewK - textPadTop(); }
+  function setG(g){ scroller.scrollTop = (g + textPadTop()) * viewK - scroller.clientHeight / 2; }
+  function applyViewScale(){
+    if(isStageWindow) return;
+    var col = scroller.clientWidth;
+    var sw = state.stageWidth;
+    var k = (sw && col && sw > col) ? col / sw : 1;
+    var g = (stage.classList.contains('hidden') ? null : getG());
+    viewK = k;
+    if(k < 1){
+      scriptText.style.width = sw + 'px';
+      scriptText.style.maxWidth = 'none';
+      scriptText.style.marginLeft = '0';
+      scriptText.style.marginRight = '0';
+      scriptText.style.transformOrigin = '0 0';
+      scriptText.style.transform = 'scale(' + k + ')';
+      // transforms don't change layout size, so pull the bottom edge up by the
+      // amount the text shrank — keeps scrollHeight equal to the visual height.
+      scriptText.style.marginBottom = (-(scriptText.offsetHeight * (1 - k))) + 'px';
+    }else{
+      ['width','maxWidth','marginLeft','marginRight','transformOrigin','transform','marginBottom'].forEach(function(prop){ scriptText.style[prop] = ''; });
+    }
+    if(g !== null && isFinite(g)) setG(g);
   }
   function updateProgress(){
     if(!progressFill || isStageWindow) return;
@@ -852,10 +886,7 @@ body:not(.prompting):not(.stage-window) #setup{right:0}
     clearTimeout(suppressScrollSyncTimer);
     suppressScrollSyncTimer = setTimeout(function(){ suppressScrollSync = false; }, 120);
     scroller.scrollTop = top;
-    if(bc){
-      var max = Math.max(0, scroller.scrollHeight - scroller.clientHeight);
-      bc.postMessage({type:'seek', ratio: max ? top / max : 0});
-    }
+    if(bc) bc.postMessage({type:'seek', g: getG()});
   }
   function goPrevParagraph(){
     var paras = scriptText.querySelectorAll('.para');
@@ -863,7 +894,7 @@ body:not(.prompting):not(.stage-window) #setup{right:0}
     var current = scroller.scrollTop;
     var target = 0;
     for(var i = 0; i < paras.length; i++){
-      if(paras[i].offsetTop < current - 15){ target = paras[i].offsetTop; }
+      if(paras[i].offsetTop * viewK < current - 15){ target = paras[i].offsetTop * viewK; }
       else break;
     }
     seekTo(target);
@@ -883,7 +914,6 @@ body:not(.prompting):not(.stage-window) #setup{right:0}
       scroller.style.transform = 'scale(' + sx + ',' + sy + ')';
       scriptText.style.transform = 'none';
     }else{
-      scriptText.style.transform = 'none';
       scroller.style.transform = 'none';
     }
     mirrorBtn.setAttribute('aria-pressed', state.mirrored ? 'true' : 'false');
@@ -938,6 +968,7 @@ body:not(.prompting):not(.stage-window) #setup{right:0}
       stagePreviewFrame.style.width = intrinsic + 'px';
       stagePreviewFrame.style.transform = 'scale(' + (boxWidth / intrinsic) + ')';
     }
+    applyViewScale();
   }
   function applyBgOpacity(){
     // A contrast-preview control, not real window transparency (a web page
@@ -967,6 +998,7 @@ body:not(.prompting):not(.stage-window) #setup{right:0}
     cancelEdit.style.display = '';
     document.body.classList.add('prompting');
     applyPreviewVisibility();
+    applyViewScale();
     updateProgress();
   }
   function showSetup(editing){
@@ -1150,15 +1182,14 @@ body:not(.prompting):not(.stage-window) #setup{right:0}
   // payload is not a real cost.
   function broadcastScrollPos(){
     if(!bc) return;
-    var max = Math.max(0, scroller.scrollHeight - scroller.clientHeight);
-    bc.postMessage({type:'scrollpos', ratio: max ? scroller.scrollTop / max : 0});
+    bc.postMessage({type:'scrollpos', g: getG()});
   }
   function tick(t){
     if(!playing) return;
     if(!lastT) lastT = t;
     var dt = (t - lastT) / 1000;
     lastT = t;
-    scroller.scrollTop += state.speed * dt;
+    scroller.scrollTop += state.speed * dt * viewK; // speed is in stage px/s, so scale it to this view
     broadcastScrollPos();
     var atBottom = scroller.scrollTop + scroller.clientHeight >= scroller.scrollHeight - 2;
     if(atBottom){
@@ -1194,8 +1225,7 @@ body:not(.prompting):not(.stage-window) #setup{right:0}
       // during the last playing frame should already have them here —
       // this is the belt-and-suspenders exact value for the instant
       // scrolling actually stopped. Same ratio approach as seekTo()/'seek'.
-      var max = Math.max(0, scroller.scrollHeight - scroller.clientHeight);
-      bc.postMessage({type:'playing', value:false, ratio: max ? scroller.scrollTop / max : 0});
+      bc.postMessage({type:'playing', value:false, g: getG()});
     }
   }
   // Answers a stage/preview window that just announced itself (on initial
@@ -1207,8 +1237,7 @@ body:not(.prompting):not(.stage-window) #setup{right:0}
   // an authoritative position to report.
   function sendSyncReply(){
     if(!bc) return;
-    var max = Math.max(0, scroller.scrollHeight - scroller.clientHeight);
-    bc.postMessage({type:'scrollpos', ratio: max ? scroller.scrollTop / max : 0});
+    bc.postMessage({type:'scrollpos', g: getG()});
     if(playing) bc.postMessage({type:'playing', value:true});
   }
   function toggle(){ playing ? pause() : play(); }
@@ -1438,8 +1467,7 @@ body:not(.prompting):not(.stage-window) #setup{right:0}
       if(playing) return;
       if(suppressScrollSync) return;
       if(!bc) return;
-      var max = Math.max(0, scroller.scrollHeight - scroller.clientHeight);
-      bc.postMessage({type:'seek', ratio: max ? scroller.scrollTop / max : 0});
+      bc.postMessage({type:'seek', g: getG()});
     });
   }
 
@@ -1511,6 +1539,13 @@ body:not(.prompting):not(.stage-window) #setup{right:0}
     save();
   }
 
+  // Re-fit whenever the text block's own size changes (font size, margin,
+  // edits) or the column does; applyViewScale is idempotent so this settles.
+  if(!isStageWindow && window.ResizeObserver){
+    new ResizeObserver(function(){ applyViewScale(); }).observe(scriptText);
+    new ResizeObserver(function(){ applyViewScale(); }).observe(scroller);
+  }
+
   // ---- Inline script editing (control window only) ----
   // The prompter text itself is editable: fix a word mid-read without
   // leaving the prompter. The DOM is never rebuilt from our own typing (see
@@ -1535,8 +1570,7 @@ body:not(.prompting):not(.stage-window) #setup{right:0}
       var v = readEditedText();
       if(v === s.text) return;
       commitActiveScriptText(v);
-      var max = Math.max(0, scroller.scrollHeight - scroller.clientHeight);
-      if(bc) bc.postMessage({type:'seek', ratio: max ? scroller.scrollTop / max : 0});
+      if(bc) bc.postMessage({type:'seek', g: getG()});
       updateProgress();
     }
     scriptText.addEventListener('input', function(){
@@ -1626,11 +1660,11 @@ body:not(.prompting):not(.stage-window) #setup{right:0}
           play();
         }else{
           pause();
-          if(typeof msg.ratio === 'number'){
+          if(typeof msg.g === 'number'){
             suppressScrollSync = true;
             clearTimeout(suppressScrollSyncTimer);
             suppressScrollSyncTimer = setTimeout(function(){ suppressScrollSync = false; }, 120);
-            scroller.scrollTop = msg.ratio * Math.max(0, scroller.scrollHeight - scroller.clientHeight);
+            setG(msg.g);
           }
         }
         applyingRemote = false;
@@ -1638,12 +1672,12 @@ body:not(.prompting):not(.stage-window) #setup{right:0}
         suppressScrollSync = true;
         clearTimeout(suppressScrollSyncTimer);
         suppressScrollSyncTimer = setTimeout(function(){ suppressScrollSync = false; }, 120);
-        scroller.scrollTop = msg.ratio * Math.max(0, scroller.scrollHeight - scroller.clientHeight);
+        if(typeof msg.g === 'number') setG(msg.g);
       }else if(msg.type === 'scrollpos' && isStageWindow){
         // Continuous position feed from the control window's tick() loop
         // while it's playing — this is what keeps a stage/preview window
         // from ever drifting, since it never computes its own position.
-        scroller.scrollTop = msg.ratio * Math.max(0, scroller.scrollHeight - scroller.clientHeight);
+        if(typeof msg.g === 'number') setG(msg.g);
       }else if(msg.type === 'syncRequest' && !isStageWindow){
         // A stage/preview window just loaded (possibly mid-script) and is
         // asking where the control window currently is — answer right
