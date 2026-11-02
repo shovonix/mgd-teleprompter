@@ -71,7 +71,7 @@ kbd{
   background:var(--panel);
   z-index:5;
   display:flex;flex-direction:column;
-  padding:20px 18px 16px;
+  padding:18px 18px 12px;
   overflow-y:auto;overflow-x:hidden;
   scrollbar-width:thin;scrollbar-color:var(--hair) transparent;
 }
@@ -79,7 +79,7 @@ kbd{
 #right-rail{right:0;border-left:1px solid var(--hair)}
 body.stage-window .rail{display:none !important}
 
-.sec{margin-top:22px}
+.sec{margin-top:16px}
 .sec:first-child{margin-top:0}
 .sec-title{
   display:flex;align-items:center;justify-content:space-between;gap:8px;
@@ -129,6 +129,33 @@ body.stage-window .rail{display:none !important}
   width:20px;height:20px;border-radius:6px;font-size:14px;line-height:1;color:var(--fg-dim);
 }
 .script-tab-del:hover{background:rgba(255,255,255,.12);color:var(--fg)}
+.script-tab-actions{display:flex;align-items:center;gap:2px;flex:none}
+.script-tab-act{
+  display:flex;align-items:center;justify-content:center;
+  width:24px;height:24px;border-radius:6px;color:var(--fg-dim);
+}
+.script-tab-act svg{width:14px;height:14px;fill:currentColor}
+.script-tab-act:hover{background:rgba(255,255,255,.12);color:var(--fg)}
+.device-picker{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+.dev-tile{
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:9px;
+  background:var(--raised);border:1px solid var(--hair);border-radius:12px;
+  padding:14px 8px;cursor:pointer;color:#bdbdc0;
+  font-family:'Archivo',system-ui,sans-serif;font-weight:600;font-size:12.5px;line-height:1.25;text-align:center;
+  transition:border-color .15s ease, background .15s ease;
+}
+.dev-tile svg{width:26px;height:26px;fill:currentColor}
+.dev-tile:hover:not(:disabled){border-color:#4a4a50;color:var(--fg)}
+.dev-tile[aria-pressed="true"]{background:rgba(255,255,255,.1);border-color:rgba(255,255,255,.5);color:var(--fg);box-shadow:0 0 18px rgba(255,255,255,.06)}
+.dev-tile:disabled{opacity:.4;cursor:not-allowed}
+.dev-tile small{font-size:9.5px;font-weight:500;color:var(--fg-dim);letter-spacing:.04em}
+#right-rail .device-picker{grid-template-columns:1fr 1fr;gap:8px}
+#right-rail .dev-tile{flex-direction:row;justify-content:flex-start;gap:9px;padding:10px;font-size:11.5px;text-align:left}
+#right-rail .dev-tile svg{width:18px;height:18px;flex:none}
+#right-rail .dev-tile small{display:none}
+.setup-device{margin-bottom:26px}
+.setup-device .sec-title{margin-bottom:10px}
+.pedal-row{display:flex;align-items:center;gap:12px;margin-top:14px;font-size:12.5px;color:var(--fg-dim)}
 .scripts-empty{font-size:12px;color:var(--fg-dim);line-height:1.5;padding:4px 2px}
 .rail-spacer{flex:1}
 .scripts-tip{font-size:11px;color:var(--fg-dim);opacity:.8;margin-top:10px;line-height:1.5}
@@ -196,7 +223,7 @@ body:not(.stage-window) #stage{left:var(--rail);right:var(--rail);background-cli
   font-weight:600;
   white-space:pre-wrap;
   word-break:break-word;
-  color:var(--fg);
+  color:#fff;
   transform-origin:center;
   /* Fixed at the REAL external stage window's actual width, in every
      context (control, real stage, mini preview) so "same scroll position"
@@ -227,13 +254,13 @@ body:not(.stage-window) #stage::after{
 }
 /* ---- Reading progress + bottom capsule (control only) ---- */
 #progress-wrap{
-  position:absolute;left:50%;transform:translateX(-50%);
-  bottom:104px;width:min(520px,70%);
+  position:absolute;left:28px;right:28px;
+  bottom:104px;
   display:flex;align-items:center;gap:12px;
   pointer-events:none;z-index:4;
 }
-#progress{flex:1;height:2px;background:rgba(255,255,255,.12);border-radius:2px;overflow:hidden}
-#progress-fill{display:block;height:100%;width:0;background:rgba(255,255,255,.75)}
+#progress{flex:1;height:3px;background:rgba(255,255,255,.2);border-radius:2px;overflow:hidden}
+#progress-fill{display:block;height:100%;width:0;background:rgba(255,255,255,.95)}
 #progress-label{font-family:var(--mono);font-size:11px;color:var(--fg-dim);white-space:nowrap;min-width:64px;text-align:right}
 #bottombar{
   position:absolute;left:50%;transform:translateX(-50%);bottom:28px;
@@ -343,7 +370,7 @@ body.stage-window #stage-preview-box{display:none !important}
 #stage-preview-box.empty #stage-preview-frame{visibility:hidden}
 
 /* controls */
-.slider-group{display:flex;flex-direction:column;gap:8px;margin-bottom:15px}
+.slider-group{display:flex;flex-direction:column;gap:8px;margin-bottom:11px}
 .slider-label{display:flex;justify-content:space-between;align-items:baseline;font-size:12.5px;color:#cfcfd2}
 .slider-label span:last-child{font-family:var(--mono);font-size:11.5px;color:var(--fg-dim)}
 input[type=range]{
@@ -365,7 +392,7 @@ input[type=range]::-moz-range-thumb{
 .navbtn{
   width:100%;display:flex;align-items:center;gap:10px;
   background:var(--raised);border:1px solid var(--hair);border-radius:10px;
-  padding:10px 12px;margin-bottom:8px;cursor:pointer;
+  padding:8px 12px;margin-bottom:6px;cursor:pointer;
   font-size:13px;color:#dcdcde;text-align:left;
 }
 .navbtn:hover{border-color:#4a4a50}
@@ -374,26 +401,24 @@ input[type=range]::-moz-range-thumb{
 .tbtn{
   width:100%;display:flex;align-items:center;justify-content:space-between;gap:10px;
   background:var(--raised);border:1px solid var(--hair);border-radius:10px;
-  padding:10px 12px;margin-bottom:8px;cursor:pointer;font-size:13px;color:#dcdcde;
+  padding:8px 12px;margin-bottom:6px;cursor:pointer;font-size:13px;color:#dcdcde;
   transition:background .2s ease, border-color .2s ease;
 }
 .tbtn:hover{border-color:#4a4a50}
 .tbtn svg{width:16px;height:16px;fill:currentColor;flex:none;opacity:.8}
 .tbtn[aria-pressed="true"]{background:rgba(255,255,255,.1);border-color:rgba(255,255,255,.4);color:var(--fg)}
-.tbtn.guide[aria-pressed="true"]{background:rgba(232,70,58,.14);border-color:rgba(232,70,58,.6)}
-.tbtn.guide[aria-pressed="true"] svg{fill:var(--red);opacity:1}
 .caption{font-size:11px;color:var(--fg-dim);line-height:1.5;margin-top:4px}
 
 /* compact two-screen note — only while prompting, never dismissible */
 #screen-note-mini{
-  display:none;margin-top:20px;
-  border:1px dashed #3a3a3d;border-radius:10px;padding:10px 12px;
+  display:none;margin-top:12px;
+  border:1px dashed #3a3a3d;border-radius:10px;padding:8px 12px;
   font-size:11.5px;line-height:1.55;color:#a5a5a8;
 }
 #screen-note-mini b{color:var(--fg);font-weight:600}
 body.prompting #screen-note-mini{display:block}
 body.prompting #screen-note{display:none}
-#shortcuts-hint{display:flex;flex-direction:column;gap:7px;margin-top:18px;font-size:11.5px;color:var(--fg-dim);text-align:left}
+#shortcuts-hint{display:flex;flex-direction:column;gap:6px;margin-top:12px;font-size:11.5px;color:var(--fg-dim);text-align:left}
 #shortcuts-hint span{display:flex;align-items:center;gap:8px}
 
 #display-fallback{
@@ -444,12 +469,21 @@ html:has(body.stage-window){overscroll-behavior:none}
   </div>
   <div class="script-tabs" id="script-tabs"></div>
   <div class="rail-spacer"></div>
-  <div class="scripts-tip">Double-click a script to rename it.</div>
   <div class="copyright">© shovonix</div>
 </aside>
 
 <div id="setup">
   <div class="setup-inner">
+    <div class="setup-device">
+      <div class="sec-title">Device type</div>
+      <div class="device-picker" data-picker></div>
+      <div class="pedal-row">
+        <button class="icon-btn pedal-trigger" id="pedal-btn-setup" aria-label="Bluetooth pedal setup" title="Bluetooth pedal">
+          <svg viewBox="0 0 24 24"><path d="M17.71 7.71L12 2h-1v7.59L6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 11 14.41V22h1l5.71-5.71-4.3-4.29 4.3-4.29zM13 5.83l1.88 1.88L13 9.59V5.83zm1.88 10.46L13 18.17v-3.76l1.88 1.88z"/></svg>
+        </button>
+        <span>Bluetooth pedal — optional</span>
+      </div>
+    </div>
     <div class="brand">Paste your script</div>
     <div class="sub"><span>Plain text, or anything copied from a Google Doc. Saved on this device.</span><span><kbd>⌘S</kbd> / <kbd>Ctrl S</kbd> to save</span></div>
     <textarea id="script-input" placeholder="Paste or type your script here&#10;&#10;Line breaks become paragraph breaks on the prompter."></textarea>
@@ -504,15 +538,11 @@ html:has(body.stage-window){overscroll-behavior:none}
 
 <aside id="right-rail" class="rail">
   <div id="utility">
-    <button class="icon-btn" id="pedal-btn" aria-label="Bluetooth pedal setup" title="Bluetooth pedal">
+    <button class="icon-btn pedal-trigger" id="pedal-btn" aria-label="Bluetooth pedal setup" title="Bluetooth pedal">
       <svg viewBox="0 0 24 24"><path d="M17.71 7.71L12 2h-1v7.59L6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 11 14.41V22h1l5.71-5.71-4.3-4.29 4.3-4.29zM13 5.83l1.88 1.88L13 9.59V5.83zm1.88 10.46L13 18.17v-3.76l1.88 1.88z"/></svg>
-    </button>
-    <button class="icon-btn" id="preview-btn" aria-pressed="true" aria-label="Stage preview panel" title="Show/hide stage preview">
-      <svg viewBox="0 0 24 24"><path fill-rule="evenodd" clip-rule="evenodd" d="M3 5h18v14H3V5zm2 2v10h14V7H5z"/><rect x="13" y="12" width="6" height="5"/></svg>
     </button>
     <button class="icon-btn" id="fullscreen-btn" aria-label="Full screen — key F" title="Full screen (F)">
       <svg viewBox="0 0 24 24"><path d="M7 14H5v5h5v-2H7zM5 10h2V7h3V5H5zm12 9h-3v2h5v-5h-2zM14 5v2h3v3h2V5z"/></svg>
-      <span class="key-badge">F</span>
     </button>
     <div id="pedal-panel">
       <div class="t">Bluetooth pedal</div>
@@ -530,6 +560,11 @@ html:has(body.stage-window){overscroll-behavior:none}
         <div id="preview-empty">no script yet</div>
       </div>
     </div>
+  </div>
+
+  <div class="sec">
+    <div class="sec-title">Device type</div>
+    <div class="device-picker" data-picker></div>
   </div>
 
   <div class="sec">
@@ -561,10 +596,6 @@ html:has(body.stage-window){overscroll-behavior:none}
     <div class="slider-group" id="size-group">
       <div class="slider-label"><span>Text size</span><span id="size-val">—</span></div>
       <input type="range" id="size" min="22" max="110" step="2">
-    </div>
-    <div class="slider-group" id="color-group">
-      <div class="slider-label"><span>Text color</span><span id="color-val">#FFFFFF</span></div>
-      <input type="range" id="color" min="0" max="100" step="0.5" aria-label="Text color">
     </div>
     <button class="tbtn" id="mirror-btn" aria-pressed="false" aria-label="Mirror — horizontal flip, stage window only" title="Stage window only">
       <span>Mirror</span>
@@ -645,7 +676,7 @@ html:has(body.stage-window){overscroll-behavior:none}
     guideVisible: true, // red reading-guide line across the middle of the stage
     previewVisible: true, // mini stage preview in the control bar — open by default
     stageWidth: null, // real external stage window's reported width, px — null until one ever connects
-    textHue: 0,       // 0-100 position on the text-colour slider (0 = white)
+    deviceType: null, // 'mobile' | 'tablet' | 'single' | 'dual' — null until first detected
   };
 
   function genId(){ return 's' + Date.now().toString(36) + Math.random().toString(36).slice(2, 8); }
@@ -750,8 +781,6 @@ html:has(body.stage-window){overscroll-behavior:none}
   var pedalPanel = document.getElementById('pedal-panel');
   var pedalKeysList = document.getElementById('pedal-keys-list');
   var addPedalBtn = document.getElementById('add-pedal-btn');
-  var colorSlider = document.getElementById('color');
-  var colorVal = document.getElementById('color-val');
   var progressFill = document.getElementById('progress-fill');
   var progressLabel = document.getElementById('progress-label');
   var previewDot = document.getElementById('preview-dot');
@@ -768,37 +797,13 @@ html:has(body.stage-window){overscroll-behavior:none}
   var stagePreviewBox = document.getElementById('stage-preview-box');
   var stagePreviewFrame = document.getElementById('stage-preview-frame');
   var stagePreviewFrameWrap = document.getElementById('stage-preview-frame-wrap');
-  var previewBtn = document.getElementById('preview-btn');
+  var previewBtn = null; // preview is always shown in the control window now
 
   var playing = false;
   var rafId = null;
   var lastT = 0;
   var hideTimer = null;
   var wakeLock = null;
-
-  // Colour slider: position 0-100 -> hex, interpolating the same stops the
-  // slider track is painted with, so the readout always matches the track.
-  var COLOR_STOPS = [[0,[255,255,255]],[10,[255,59,48]],[22,[255,149,0]],[34,[255,214,10]],[50,[52,199,89]],[62,[48,176,199]],[74,[10,132,255]],[86,[94,92,230]],[96,[255,45,149]],[100,[255,255,255]]];
-  function hueToHex(pos){
-    pos = Math.max(0, Math.min(100, Number(pos) || 0));
-    var a = COLOR_STOPS[0], b = COLOR_STOPS[COLOR_STOPS.length - 1];
-    for(var i = 0; i < COLOR_STOPS.length - 1; i++){
-      if(pos >= COLOR_STOPS[i][0] && pos <= COLOR_STOPS[i + 1][0]){ a = COLOR_STOPS[i]; b = COLOR_STOPS[i + 1]; break; }
-    }
-    var t = b[0] === a[0] ? 0 : (pos - a[0]) / (b[0] - a[0]);
-    var hex = '#';
-    for(var c = 0; c < 3; c++){
-      var v = Math.round(a[1][c] + (b[1][c] - a[1][c]) * t);
-      hex += (v < 16 ? '0' : '') + v.toString(16);
-    }
-    return hex.toUpperCase();
-  }
-  function applyColor(){
-    var hex = hueToHex(state.textHue);
-    scriptText.style.color = hex;
-    if(colorSlider){ colorSlider.value = state.textHue; }
-    if(colorVal){ colorVal.textContent = hex; }
-  }
 
   function isEditingScript(){
     return !isStageWindow && document.activeElement && scriptText.contains(document.activeElement);
@@ -874,7 +879,7 @@ html:has(body.stage-window){overscroll-behavior:none}
   function applyPreviewVisibility(){
     if(!stagePreviewBox) return;
     var hasScript = !!(activeScript() && activeScript().text && activeScript().text.trim());
-    var shouldShow = !isStageWindow && state.previewVisible;
+    var shouldShow = !isStageWindow;
     stagePreviewBox.classList.toggle('hidden', !shouldShow);
     stagePreviewBox.classList.toggle('empty', !hasScript);
     // Lazy-load the preview iframe the first time there is actually a script
@@ -882,7 +887,6 @@ html:has(body.stage-window){overscroll-behavior:none}
     if(shouldShow && hasScript && stagePreviewFrame && !stagePreviewFrame.getAttribute('src')){
       stagePreviewFrame.setAttribute('src', location.pathname + location.search + '#stage-preview');
     }
-    if(previewBtn) previewBtn.setAttribute('aria-pressed', state.previewVisible ? 'true' : 'false');
     applyStageWidth();
   }
   function applyMargin(){
@@ -1027,20 +1031,30 @@ html:has(body.stage-window){overscroll-behavior:none}
       var tab = document.createElement('button');
       tab.type = 'button';
       tab.className = 'script-tab' + (s.id === state.activeScriptId ? ' active' : '');
-      tab.title = 'Double-click to rename';
       var nameSpan = document.createElement('span');
       nameSpan.className = 'script-tab-name';
       nameSpan.textContent = s.name;
+      var actions = document.createElement('span');
+      actions.className = 'script-tab-actions';
+      var editAct = document.createElement('span');
+      editAct.className = 'script-tab-act';
+      editAct.setAttribute('role', 'button');
+      editAct.setAttribute('aria-label', 'Rename ' + s.name);
+      editAct.title = 'Rename';
+      editAct.innerHTML = '<svg viewBox="0 0 24 24"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75zM20.71 7.04a1 1 0 000-1.41l-2.34-2.34a1 1 0 00-1.41 0l-1.83 1.83 3.75 3.75z"/></svg>';
+      editAct.addEventListener('click', function(e){ renameScript(s.id, e); });
       var delBtn = document.createElement('span');
-      delBtn.className = 'script-tab-del';
+      delBtn.className = 'script-tab-act';
       delBtn.setAttribute('role', 'button');
       delBtn.setAttribute('aria-label', 'Delete ' + s.name);
-      delBtn.textContent = '×';
+      delBtn.title = 'Delete';
+      delBtn.innerHTML = '<svg viewBox="0 0 24 24"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/></svg>';
       delBtn.addEventListener('click', function(e){ deleteScript(s.id, e); });
+      actions.appendChild(editAct);
+      actions.appendChild(delBtn);
       tab.appendChild(nameSpan);
-      tab.appendChild(delBtn);
+      tab.appendChild(actions);
       tab.addEventListener('click', function(){ selectScript(s.id); });
-      tab.addEventListener('dblclick', function(e){ renameScript(s.id, e); });
       scriptTabs.appendChild(tab);
     });
   }
@@ -1211,11 +1225,6 @@ html:has(body.stage-window){overscroll-behavior:none}
     applyBgOpacity();
     save();
   });
-  colorSlider.addEventListener('input', function(){
-    state.textHue = Number(colorSlider.value);
-    applyColor();
-    save();
-  });
   mirrorBtn.addEventListener('click', function(){
     state.mirrored = !state.mirrored;
     applyFlip();
@@ -1301,11 +1310,12 @@ html:has(body.stage-window){overscroll-behavior:none}
     endPedalCapture(true);
   }
 
-  pedalBtn.addEventListener('click', function(){
+  document.querySelectorAll('.pedal-trigger').forEach(function(b){ b.addEventListener('click', togglePedalPanel); });
+  function togglePedalPanel(){
     pedalPanel.classList.toggle('show');
     if(pedalPanel.classList.contains('show')) renderPedalKeys();
     else endPedalCapture(false);
-  });
+  }
 
   addPedalBtn.addEventListener('click', function(){
     if(pedalCaptureActive){ endPedalCapture(false); return; }
@@ -1316,7 +1326,7 @@ html:has(body.stage-window){overscroll-behavior:none}
 
   document.addEventListener('click', function(e){
     if(!pedalPanel.classList.contains('show')) return;
-    if(pedalPanel.contains(e.target) || e.target === pedalBtn || pedalBtn.contains(e.target)) return;
+    if(pedalPanel.contains(e.target) || (e.target.closest && e.target.closest('.pedal-trigger'))) return;
     pedalPanel.classList.remove('show');
     endPedalCapture(false);
   });
@@ -1410,6 +1420,74 @@ html:has(body.stage-window){overscroll-behavior:none}
       var max = Math.max(0, scroller.scrollHeight - scroller.clientHeight);
       bc.postMessage({type:'seek', ratio: max ? scroller.scrollTop / max : 0});
     });
+  }
+
+  // ---- Device type (control window only) ----
+  // Only Dual Monitor has its layout built so far; the others are shown
+  // disabled until their versions land (flip a flag to enable each).
+  var MODES = [
+    {id:'mobile', label:'Mobile', icon:'M7 2h10a2 2 0 012 2v16a2 2 0 01-2 2H7a2 2 0 01-2-2V4a2 2 0 012-2zm0 3v13h10V5H7zm5 14.2a1 1 0 100 2 1 1 0 000-2z', enabled:false},
+    {id:'tablet', label:'Tablet', icon:'M5 3h14a2 2 0 012 2v14a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2zm0 3v11h14V6H5zm7 12.2a1 1 0 100 2 1 1 0 000-2z', enabled:false},
+    {id:'single', label:'Single Monitor', icon:'M3 4h18a1 1 0 011 1v11a1 1 0 01-1 1h-7v2h3v2H7v-2h3v-2H3a1 1 0 01-1-1V5a1 1 0 011-1zm1 2v9h16V6H4z', enabled:false},
+    {id:'dual', label:'Dual Monitor', icon:'M1 6a1 1 0 011-1h10a1 1 0 011 1v8a1 1 0 01-1 1H8v2h2v2H4v-2h2v-2H2a1 1 0 01-1-1V6zm2 1v6h8V7H3zm11 .5h7a1 1 0 011 1V19a1 1 0 01-1 1h-7a1 1 0 01-1-1V8.5a1 1 0 011-1zm1 2V18h5V9.5h-5z', enabled:true}
+  ];
+  function modeById(id){ for(var i = 0; i < MODES.length; i++){ if(MODES[i].id === id) return MODES[i]; } return null; }
+  function detectDeviceType(){
+    var touch = false, minDim = 9999, extended = false;
+    try{ touch = window.matchMedia('(pointer:coarse)').matches; }catch(e){}
+    try{ minDim = Math.min(screen.width, screen.height); }catch(e){}
+    try{ extended = !!screen.isExtended; }catch(e){} // Chromium only; others stay on the default
+    var guess = 'dual';
+    if(touch && minDim < 600) guess = 'mobile';
+    else if(touch && minDim < 1100) guess = 'tablet';
+    else if(!extended && window.screen && typeof screen.isExtended === 'boolean') guess = 'single';
+    var m = modeById(guess);
+    return (m && m.enabled) ? guess : 'dual';
+  }
+  var MODE_NOTES = {
+    dual: 'This teleprompter runs across <b>two screens</b>.<span class="nb"><b>Control window</b> — the one you\'re looking at now. Paste, edit and press play here.</span><span class="nb"><b>Stage window</b> — your second (extended) display. It shows the mirrored view the camera reads.</span><span class="nb">Mirror and Flip only change the Stage window — this control view always stays readable.</span>',
+    mobile: 'Rotate your phone for the best preview.',
+    tablet: 'Rotate your tablet for the best preview.',
+    single: 'Two screens give a better experience — switch to <b>Dual Monitor</b> if you have a second display.'
+  };
+  function renderDevicePickers(){
+    document.querySelectorAll('[data-picker]').forEach(function(box){
+      box.innerHTML = '';
+      MODES.forEach(function(m){
+        var b = document.createElement('button');
+        b.type = 'button';
+        b.className = 'dev-tile';
+        b.setAttribute('aria-pressed', state.deviceType === m.id ? 'true' : 'false');
+        b.innerHTML = '<svg viewBox="0 0 24 24"><path d="' + m.icon + '"/></svg><span>' + m.label + '</span>' + (m.enabled ? '' : '<small>soon</small>');
+        if(!m.enabled){ b.disabled = true; b.title = 'Coming soon'; }
+        b.addEventListener('click', function(){ setDeviceType(m.id); });
+        box.appendChild(b);
+      });
+    });
+  }
+  function applyDeviceType(){
+    if(isStageWindow) return;
+    document.body.setAttribute('data-mode', state.deviceType || 'dual');
+    renderDevicePickers();
+    var note = document.getElementById('screen-note');
+    if(note) note.innerHTML = MODE_NOTES[state.deviceType] || MODE_NOTES.dual;
+  }
+  function setDeviceType(id){
+    var m = modeById(id);
+    if(!m || !m.enabled || id === state.deviceType) return;
+    state.deviceType = id;
+    // Each mode gets a clean start: close any stage window this one opened
+    // and tell any other stage window to close itself.
+    if(typeof stageWin !== 'undefined' && stageWin && !stageWin.closed){ try{ stageWin.close(); }catch(e){} stageWin = null; }
+    if(bc) bc.postMessage({type:'quitStage'});
+    if(typeof setStageConnected === 'function') setStageConnected(false);
+    lastHello = 0;
+    save();
+    applyDeviceType();
+  }
+  if(!isStageWindow && !state.deviceType){
+    state.deviceType = detectDeviceType();
+    save();
   }
 
   // ---- Inline script editing (control window only) ----
@@ -1519,7 +1597,7 @@ html:has(body.stage-window){overscroll-behavior:none}
       if(msg.type === 'state'){
         applyingRemote = true;
         Object.assign(state, msg.state);
-        applyText(); applyFlip(); applyGuide(); applyPreviewVisibility(); applySize(); applyMargin(); applyBgOpacity(); applySpeed(); applyColor(); applyStageWidth();
+        applyText(); applyFlip(); applyGuide(); applyPreviewVisibility(); applySize(); applyMargin(); applyBgOpacity(); applySpeed(); applyStageWidth(); applyDeviceType();
         applyingRemote = false;
       }else if(msg.type === 'playing'){
         applyingRemote = true;
@@ -1550,6 +1628,8 @@ html:has(body.stage-window){overscroll-behavior:none}
         // asking where the control window currently is — answer right
         // away rather than making it wait for the next periodic ping.
         sendSyncReply();
+      }else if(msg.type === 'quitStage' && isStageWindow && !isPreviewFrame){
+        try{ window.close(); }catch(e){}
       }else if(msg.type === 'ping' && isStageWindow && !isPreviewFrame){
         bc.postMessage({type:'hello'});
       }else if(msg.type === 'hello' && !isStageWindow){
@@ -1680,11 +1760,11 @@ html:has(body.stage-window){overscroll-behavior:none}
   applySize();
   applyMargin();
   applyBgOpacity();
-  applyColor();
   applyFlip();
   applyGuide();
   applyText();
   applyStageWidth();
+  applyDeviceType();
   // Re-run on the control window's own resize too (not just on a
   // stageWidth report): the mini preview's on-screen box itself changes
   // size across the mobile breakpoint, so its scale needs recomputing
