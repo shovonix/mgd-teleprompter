@@ -534,6 +534,9 @@ body.touch #play{width:64px;height:64px}
 body.touch #progress-wrap{left:16px;right:16px}
 body.touch .navbtn .navbtn-key{display:none}
 body.touch #shortcuts-hint{display:none}
+body.touch .no-touch{display:none}
+#edit-btn.on{background:rgba(255,255,255,.12);color:var(--fg);border-color:rgba(255,255,255,.35)}
+body.edit-mode #script-text{outline:1px dashed rgba(255,255,255,.28);outline-offset:8px;cursor:text}
 #edit-text-btn{height:30px;padding:0 12px;border-radius:9px;border:1px solid var(--hair);background:transparent;color:var(--fg-dim);font:600 11.5px 'Archivo',system-ui,sans-serif;cursor:pointer}
 .scripts-head{gap:8px}
 #edit-text-btn{margin-left:auto}
@@ -566,6 +569,7 @@ body.touch .setup-inner{padding-top:34px}
   </div>
   <div class="script-tabs" id="script-tabs"></div>
   <div class="rail-spacer"></div>
+  <div class="scripts-tip no-touch">To edit the current script, press <b>Edit script</b>, then select the text and type. It saves automatically and the Stage preview syncs. Text is only editable after you press the button.</div>
   <div class="copyright">© shovonix</div>
 </aside>
 
@@ -944,6 +948,7 @@ body.touch .setup-inner{padding-top:34px}
   function isTouch(){ return state.deviceType === 'mobile' || state.deviceType === 'tablet'; }
   function isSolo(){ return state.deviceType !== 'dual'; } // no Stage window in these modes
   var applyEditable = function(){};
+  var editMode = false; // inline script editing is only live after the Edit button is pressed
   var leftRail = document.getElementById('left-rail');
   var rightRail = document.getElementById('right-rail');
   var controlsBtn = document.getElementById('controls-btn');
@@ -1112,6 +1117,7 @@ body.touch .setup-inner{padding-top:34px}
   }
   function showSetup(editing){
     pause();
+    if(editMode) setEditMode(false);
     var activeS = activeScript();
     input.value = activeS ? activeS.text : '';
     setup.classList.remove('hidden');
@@ -1269,10 +1275,22 @@ body.touch .setup-inner{padding-top:34px}
     if(!confirmDiscard()) return;
     showStage();
   });
+  function setEditMode(on){
+    if(isTouch() || isStageWindow) return;
+    if(on === editMode) return;
+    if(!on && typeof flushEdit === 'function' && isEditingScript()) flushEdit();
+    editMode = on;
+    applyEditable();
+    document.body.classList.toggle('edit-mode', on);
+    var lab = editBtn.querySelector('span');
+    if(lab) lab.textContent = on ? 'Done editing' : 'Edit script';
+    editBtn.classList.toggle('on', on);
+    if(on){ if(isSingle()) leftRail.classList.add('open'); try{ scriptText.focus(); }catch(e){} }
+    else{ try{ scriptText.blur(); }catch(e){} if(isSingle()) leftRail.classList.remove('open'); }
+  }
   editBtn.addEventListener('click', function(){
     if(isTouch()) toggleRail('left'); // Mobile/Tablet: Edit script opens the scripts panel
-    // Single Monitor: goes to the paste/edit screen, which shows the scripts rail beside it
-    else showSetup(true);
+    else setEditMode(!editMode);      // Single/Dual: turns inline editing on/off
   });
   controlsBtn.addEventListener('click', function(){ toggleRail('right'); });
   // Logo + "Space Prompter" name in the top bar — same destination as the
@@ -1328,6 +1346,7 @@ body.touch .setup-inner{padding-top:34px}
 
   function play(){
     if(playing) return;
+    if(editMode) setEditMode(false);
     playing = true;
     lastT = 0;
     playIcon.innerHTML = '<rect x="6" y="5" width="4" height="14" rx="1"/><rect x="14" y="5" width="4" height="14" rx="1"/>';
@@ -1702,6 +1721,7 @@ body.touch .setup-inner{padding-top:34px}
     document.body.classList.toggle('solo', isSolo());
     document.body.classList.toggle('touch', isTouch());
     closeRails();
+    if(editMode) setEditMode(false);
     applyEditable();
     applyFlip();
     document.body.classList.remove('ui-hidden');
@@ -1743,7 +1763,7 @@ body.touch .setup-inner{padding-top:34px}
   if(!isStageWindow){
     var editSaveTimer = null;
     applyEditable = function(){
-      if(isTouch()){ scriptText.contentEditable = 'false'; return; }
+      if(isTouch() || !editMode){ scriptText.contentEditable = 'false'; return; }
       try{ scriptText.contentEditable = 'plaintext-only'; }catch(e){}
       if(scriptText.contentEditable !== 'plaintext-only') scriptText.contentEditable = 'true';
     };
@@ -1775,7 +1795,7 @@ body.touch .setup-inner{padding-top:34px}
       applyText();
     });
     scriptText.addEventListener('keydown', function(e){
-      if(e.key === 'Escape'){ scriptText.blur(); }
+      if(e.key === 'Escape'){ setEditMode(false); }
     });
   }
 
@@ -1977,7 +1997,7 @@ body.touch .setup-inner{padding-top:34px}
     // Margin, speed, text size, flip and fullscreen stay touch/mouse-only
     // (fullscreen still works on F, just not advertised in the hint).
     if(k === 'f'){ fullscreenBtn.click(); }
-    else if(k === 'e'){ showSetup(true); }
+    else if(k === 'e'){ editBtn.click(); }
   });
 
   document.addEventListener('keyup', function(e){
