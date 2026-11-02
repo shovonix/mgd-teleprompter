@@ -661,6 +661,8 @@ body.stage-window #connected-frame{display:none !important}
   var bc = null;
   try{ bc = new BroadcastChannel('mgdTeleprompterSync'); }catch(e){}
   var applyingRemote = false; // guards against echo loops when applying an incoming message
+  var suppressScrollSync = false; // true right after we set scrollTop ourselves, so the
+  var suppressScrollSyncTimer = null; // scroll listener below doesn't re-broadcast our own seek
 
   var state = {
     scripts: [],         // [{id, name, text, updatedAt}] — multiple saved scripts
@@ -785,6 +787,9 @@ body.stage-window #connected-frame{display:none !important}
     scriptText.appendChild(frag);
   }
   function seekTo(top){
+    suppressScrollSync = true;
+    clearTimeout(suppressScrollSyncTimer);
+    suppressScrollSyncTimer = setTimeout(function(){ suppressScrollSync = false; }, 120);
     scroller.scrollTop = top;
     if(bc){
       var max = Math.max(0, scroller.scrollHeight - scroller.clientHeight);
@@ -1213,6 +1218,24 @@ body.stage-window #connected-frame{display:none !important}
       if(bc) bc.postMessage({type:'ping'});
       connectedFrame.classList.toggle('on', Date.now() - lastHello < 4000);
     }, 2000);
+
+    // Manual scrolling (trackpad/mouse wheel, drag) on the control window
+    // isn't driven by seekTo(), so it never reached the stage window on its
+    // own — mirror it here, throttled so a fast scroll doesn't flood the
+    // channel. Skipped while playing: the auto-scroll loop in tick() already
+    // keeps both windows moving together at the same speed.
+    var scrollSyncTimer = null;
+    scroller.addEventListener('scroll', function(){
+      if(playing) return;
+      if(suppressScrollSync) return;
+      if(scrollSyncTimer) return;
+      scrollSyncTimer = setTimeout(function(){
+        scrollSyncTimer = null;
+        if(!bc) return;
+        var max = Math.max(0, scroller.scrollHeight - scroller.clientHeight);
+        bc.postMessage({type:'seek', ratio: max ? scroller.scrollTop / max : 0});
+      }, 50);
+    });
   }
 
   // ---- Stage window: one-time "drag me, then click to fullscreen" hint ----
@@ -1249,6 +1272,9 @@ body.stage-window #connected-frame{display:none !important}
         if(msg.value) play(); else pause();
         applyingRemote = false;
       }else if(msg.type === 'seek'){
+        suppressScrollSync = true;
+        clearTimeout(suppressScrollSyncTimer);
+        suppressScrollSyncTimer = setTimeout(function(){ suppressScrollSync = false; }, 120);
         scroller.scrollTop = msg.ratio * Math.max(0, scroller.scrollHeight - scroller.clientHeight);
       }else if(msg.type === 'ping' && isStageWindow){
         bc.postMessage({type:'hello'});
@@ -1338,7 +1364,7 @@ body.stage-window #connected-frame{display:none !important}
   });
 
   // ---- Build/version indicator (control window top bar) ----
-  var APP_VERSION = 'v1.7.2';
+  var APP_VERSION = 'v1.8.0';
   if(buildMeta && !isStageWindow){
     buildMeta.textContent = APP_VERSION;
   }
