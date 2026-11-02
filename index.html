@@ -2077,6 +2077,7 @@ body.touch .setup-inner{padding-top:34px}
   applyText();
   applyStageWidth();
   applyDeviceType();
+  if(!isStageWindow) renderScriptTabs(); // scripts list must show after a reload straight into the prompter
   // Re-run on the control window's own resize too (not just on a
   // stageWidth report): the mini preview's on-screen box itself changes
   // size across the mobile breakpoint, so its scale needs recomputing
