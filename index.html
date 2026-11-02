@@ -539,6 +539,24 @@ body.stage-window #stage-preview-box{display:none !important}
   pointer-events:none;
   display:block;
 }
+/* Mobile: the bar-inner anchor (bottom:100%, right-aligned over the
+   control bar) ends up overlapping the sliders on a short phone screen,
+   so dock it under the topbar instead (viewport-fixed, not tied to
+   #bar-inner), well under half its desktop size since there's much
+   less width to spare. Placed after the base rules above so it wins
+   the cascade at equal specificity regardless of source order. */
+@media (max-width: 480px){
+  #stage-preview-box{
+    position:fixed;
+    top:calc(env(safe-area-inset-top, 0px) + 88px);
+    right:10px;
+    bottom:auto;
+    margin-bottom:0;
+    width:144px;
+  }
+  #stage-preview-frame-wrap{width:144px;height:90px}
+  #stage-preview-frame{transform:scale(0.1125)}
+}
 
 /* ---------- Control panel extras ---------- */
 /* Whole-window glow frame — replaces the old status dot. Fades in/out so the
@@ -1525,7 +1543,7 @@ body.stage-window #connected-frame{display:none !important}
   });
 
   // ---- Build/version indicator (control window top bar) ----
-  var APP_VERSION = 'v1.11.1';
+  var APP_VERSION = 'v1.11.2';
   if(buildMeta && !isStageWindow){
     buildMeta.textContent = APP_VERSION;
   }
