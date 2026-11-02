@@ -320,6 +320,9 @@ body:not(.stage-window) #stage::after{
   font-family:var(--mono);font-size:9px;line-height:1;
   background:var(--fg);color:#0a0a0b;border-radius:4px;padding:2px 3px;font-weight:700;
 }
+#sync-status{font-size:11px;color:var(--fg-dim);white-space:nowrap;margin-left:2px}
+#sync-btn.spin svg{animation:spin .8s linear infinite}
+@keyframes spin{to{transform:rotate(-360deg)}}
 #pedal-panel{
   display:none;position:fixed;top:0;left:0;
   width:264px;background:var(--raised);border:1px solid var(--hair);border-radius:12px;
@@ -564,6 +567,10 @@ body:not(.prompting):not(.stage-window) #setup{right:0}
     <button class="icon-btn" id="fullscreen-btn" aria-label="Full screen — key F" title="Full screen (F)">
       <svg viewBox="0 0 24 24"><path d="M7 14H5v5h5v-2H7zM5 10h2V7h3V5H5zm12 9h-3v2h5v-5h-2zM14 5v2h3v3h2V5z"/></svg>
     </button>
+    <button class="icon-btn" id="sync-btn" aria-label="Sync screens" title="Sync screens — re-send the current position to the Stage window and preview">
+      <svg viewBox="0 0 24 24"><path d="M12 4V1L8 5l4 4V6c3.31 0 6 2.69 6 6 0 1.01-.25 1.97-.7 2.8l1.46 1.46C19.54 15.03 20 13.57 20 12c0-4.42-3.58-8-8-8zm0 14c-3.31 0-6-2.69-6-6 0-1.01.25-1.97.7-2.8L5.24 7.74C4.46 8.97 4 10.43 4 12c0 4.42 3.58 8 8 8v3l4-4-4-4v3z"/></svg>
+    </button>
+    <span id="sync-status" role="status"></span>
     <div id="pedal-panel">
       <div class="t">Bluetooth pedal</div>
       <div class="s">Any button you add here acts exactly like Space: tap to Play/Pause, double-tap for previous paragraph, hold to jump to start.</div>
@@ -826,6 +833,7 @@ body:not(.prompting):not(.stage-window) #setup{right:0}
     if(isEditingScript()) return;
     var activeS = activeScript();
     var text = (activeS && activeS.text) || (isStageWindow ? 'Waiting for script from the control window…' : '');
+
     // Split on blank lines into paragraph blocks (not just one text node) so
     // "previous paragraph" has real boundaries to jump between.
     var paras = text.split(/\n[ \t]*\n+/);
@@ -1468,6 +1476,31 @@ body:not(.prompting):not(.stage-window) #setup{right:0}
       if(suppressScrollSync) return;
       if(!bc) return;
       bc.postMessage({type:'seek', g: getG()});
+    });
+  }
+
+  // ---- Sync screens (control window only) ----
+  var syncBtn = document.getElementById('sync-btn');
+  var syncStatus = document.getElementById('sync-status');
+  var syncStatusTimer = null;
+  function showSyncStatus(text){
+    syncStatus.textContent = text;
+    clearTimeout(syncStatusTimer);
+    syncStatusTimer = setTimeout(function(){ syncStatus.textContent = ''; }, 2600);
+  }
+  if(!isStageWindow && syncBtn){
+    syncBtn.addEventListener('click', function(){
+      if(!bc){ showSyncStatus('Sync unavailable'); return; }
+      syncBtn.classList.add('spin');
+      var asked = Date.now();
+      // Position (and play state) only — re-send exactly where we are, then
+      // ask the stage to check in so we can tell whether anything answered.
+      sendSyncReply();
+      bc.postMessage({type:'ping'});
+      setTimeout(function(){
+        syncBtn.classList.remove('spin');
+        showSyncStatus(lastHello >= asked ? 'Synced' : 'No stage found');
+      }, 1500);
     });
   }
 
