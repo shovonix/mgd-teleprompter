@@ -453,6 +453,24 @@ body.stage-window #progress-wrap{display:none !important}
 #connected-frame{display:none !important}
 body.stage-window{overscroll-behavior:none}
 html:has(body.stage-window){overscroll-behavior:none}
+
+/* First page: no right rail until prompting starts */
+body:not(.prompting):not(.stage-window) #right-rail{display:none}
+body:not(.prompting):not(.stage-window) #setup{right:0}
+.setup-device{display:flex;align-items:center;gap:10px;margin-bottom:22px}
+.setup-device .sec-title{display:none}
+.setup-device .device-picker{display:flex;flex:1;gap:8px}
+.setup-device .dev-tile{flex:none;flex-direction:row;justify-content:center;gap:9px;padding:0 16px;height:44px;font-size:12.5px}
+.setup-device .dev-tile svg{width:18px;height:18px}
+.setup-device .dev-tile small{display:none}
+.setup-device .pedal-row{margin:0}
+.setup-device .pedal-row span{display:none}
+.setup-device .pedal-row .icon-btn{width:44px;height:44px}
+/* Rail: one row of icon-only device tiles (names on hover) */
+#right-rail .device-picker{display:flex;gap:8px}
+#right-rail .dev-tile{flex:1;justify-content:center;padding:9px 0}
+#right-rail .dev-tile span{display:none}
+#right-rail .dev-tile svg{width:19px;height:19px}
 </style>
 
 <aside id="left-rail" class="rail">
@@ -573,14 +591,6 @@ html:has(body.stage-window){overscroll-behavior:none}
       <div class="slider-label"><span>Speed</span><span id="speed-val">—</span></div>
       <input type="range" id="speed" min="8" max="220" step="2">
     </div>
-    <button class="navbtn" id="top-btn" aria-label="Jump to top">
-      <svg viewBox="0 0 24 24"><path d="M12 5l7 7h-4v7h-6v-7H5z"/></svg>
-      <span>Jump to top</span><span class="navbtn-key">hold space</span>
-    </button>
-    <button class="navbtn" id="prev-para-btn" aria-label="Previous paragraph">
-      <svg viewBox="0 0 24 24"><path d="M6 6h2v12H6zm3.5 6l8.5 6V6z"/></svg>
-      <span>Previous paragraph</span><span class="navbtn-key">space space</span>
-    </button>
   </div>
 
   <div class="sec">
@@ -628,6 +638,8 @@ html:has(body.stage-window){overscroll-behavior:none}
   <div id="shortcuts-hint">
     <span><kbd>space</kbd> play / pause</span>
     <span><kbd>F</kbd> full screen</span>
+    <span><kbd>hold space</kbd> jump to top</span>
+    <span><kbd>space</kbd><kbd>space</kbd> previous paragraph</span>
   </div>
 </aside>
 
@@ -773,8 +785,6 @@ html:has(body.stage-window){overscroll-behavior:none}
   var guideBtn = document.getElementById('guide-btn');
   var guideEl = document.getElementById('guide');
   var fullscreenBtn = document.getElementById('fullscreen-btn');
-  var topBtn = document.getElementById('top-btn');
-  var prevParaBtn = document.getElementById('prev-para-btn');
   var editBtn = document.getElementById('edit-btn');
   var brandHomeBtn = document.getElementById('brand-home-btn');
   var pedalBtn = document.getElementById('pedal-btn');
@@ -1240,10 +1250,6 @@ html:has(body.stage-window){overscroll-behavior:none}
     applyGuide();
     save();
   });
-  topBtn.addEventListener('click', function(){
-    seekTo(0);
-  });
-  prevParaBtn.addEventListener('click', goPrevParagraph);
   fullscreenBtn.addEventListener('click', function(){
     try{
       if(!document.fullscreenElement){
@@ -1459,7 +1465,7 @@ html:has(body.stage-window){overscroll-behavior:none}
         b.className = 'dev-tile';
         b.setAttribute('aria-pressed', state.deviceType === m.id ? 'true' : 'false');
         b.innerHTML = '<svg viewBox="0 0 24 24"><path d="' + m.icon + '"/></svg><span>' + m.label + '</span>' + (m.enabled ? '' : '<small>soon</small>');
-        if(!m.enabled){ b.disabled = true; b.title = 'Coming soon'; }
+        b.title = m.label + (m.enabled ? '' : ' — coming soon'); if(!m.enabled){ b.disabled = true; }
         b.addEventListener('click', function(){ setDeviceType(m.id); });
         box.appendChild(b);
       });
