@@ -564,8 +564,18 @@ body.touch .no-touch{display:none}
 body.touch .touch-block{display:block}
 body.touch .brand-live{padding-right:46px}
 .left-device{margin-top:22px}
-.left-device .device-picker{display:grid;grid-template-columns:1fr 1fr;gap:8px}
-.left-device .dev-tile{justify-content:center;padding:9px 0}
+.left-device .device-picker{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
+body.touch #left-rail > *{order:5}
+body.touch #left-rail > .rail-close{order:0}
+body.touch #left-rail > .brand-live{order:1}
+body.touch #left-rail > .left-device{order:2;margin-top:20px}
+body.touch #left-rail > .scripts-head{order:3}
+body.touch #left-rail > .script-tabs{order:4}
+body.touch #left-rail > .rail-spacer{order:6}
+body.touch #left-rail > #screen-note-mini{order:7}
+body.touch #left-rail > .copyright{order:8}
+.left-device .dev-tile svg{width:18px;height:18px}
+.left-device .dev-tile{justify-content:center;padding:9px 0;min-width:0}
 .left-device .dev-tile span{display:none}
 .left-pedal{display:flex;align-items:center;gap:10px;margin-top:14px;font-size:12px;color:var(--fg-dim)}
 #edit-btn.on{background:rgba(255,255,255,.12);color:var(--fg);border-color:rgba(255,255,255,.35)}
