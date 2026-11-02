@@ -570,6 +570,16 @@ body.stage-window #stage-preview-box{display:none !important}
 }
 #connected-frame.on{opacity:1}
 body.stage-window #connected-frame{display:none !important}
+/* The mini preview is a fixed 1280x800 canvas by design (it has to be —
+   it's scaled down from a known intrinsic size). The real external stage
+   window used to just fill whatever size its monitor/window actually is,
+   so its text wrapped at different points than the preview's — same
+   scroll ratio, different line content, which read as "the mini preview
+   doesn't match the stage." Locking the real stage's text column to the
+   same 1280px width (letterboxed/centered on anything wider) guarantees
+   identical word-wrap in both, regardless of the actual external
+   display's resolution. */
+body.stage-window #script-text{max-width:1280px;margin-left:auto;margin-right:auto}
 #display-fallback{
   display:none;
   flex-direction:column;
@@ -1616,7 +1626,7 @@ body.stage-window #connected-frame{display:none !important}
   });
 
   // ---- Build/version indicator (control window top bar) ----
-  var APP_VERSION = 'v1.13.1';
+  var APP_VERSION = 'v1.13.2';
   if(buildMeta && !isStageWindow){
     buildMeta.textContent = APP_VERSION;
   }
