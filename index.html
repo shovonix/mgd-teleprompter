@@ -560,6 +560,14 @@ body.touch #progress-wrap{left:16px;right:16px}
 body.touch .navbtn .navbtn-key{display:none}
 body.touch #shortcuts-hint{display:none}
 body.touch .no-touch{display:none}
+.touch-block{display:none}
+body.touch .touch-block{display:block}
+body.touch .brand-live{padding-right:46px}
+.left-device{margin-top:22px}
+.left-device .device-picker{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.left-device .dev-tile{justify-content:center;padding:9px 0}
+.left-device .dev-tile span{display:none}
+.left-pedal{display:flex;align-items:center;gap:10px;margin-top:14px;font-size:12px;color:var(--fg-dim)}
 #edit-btn.on{background:rgba(255,255,255,.12);color:var(--fg);border-color:rgba(255,255,255,.35)}
 body.edit-mode #script-text{outline:1px dashed rgba(255,255,255,.28);outline-offset:8px;cursor:text}
 .scripts-head{gap:8px}
@@ -609,6 +617,12 @@ body.touch #screen-note{order:5;margin-top:12px;padding:10px 12px;font-size:12px
     <button type="button" id="new-script-btn" aria-label="New script">+ New</button>
   </div>
   <div class="script-tabs" id="script-tabs"></div>
+  <div class="sec touch-block left-device">
+    <div class="sec-title">Device type</div>
+    <div class="device-picker" data-picker></div>
+    <div class="left-pedal"><button class="icon-btn pedal-trigger" id="pedal-btn-left" aria-label="Bluetooth pedal setup" title="Bluetooth pedal"><svg viewBox="0 0 24 24"><path d="M17.71 7.71L12 2h-1v7.59L6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 11 14.41V22h1l5.71-5.71-4.3-4.29 4.3-4.29zM13 5.83l1.88 1.88L13 9.59V5.83zm1.88 10.46L13 18.17v-3.76l1.88 1.88z"/></svg>
+    </button><span>Bluetooth pedal</span></div>
+  </div>
   <div class="rail-spacer"></div>
   <div id="screen-note-mini" class="only-dual">
     <b>Two screens.</b> Control window = this one. Stage window = your second display, the view the camera reads.
