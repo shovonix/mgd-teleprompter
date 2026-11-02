@@ -580,6 +580,12 @@ body.stage-window #connected-frame{display:none !important}
    identical word-wrap in both, regardless of the actual external
    display's resolution. */
 body.stage-window #script-text{max-width:1280px;margin-left:auto;margin-right:auto}
+/* Belt-and-suspenders alongside the document-level wheel/touchmove block
+   above: stops any native rubber-band/overscroll bounce on html/body
+   too, so there's nothing left that can visibly move before snapping
+   back on its own. */
+body.stage-window{overscroll-behavior:none}
+html:has(body.stage-window){overscroll-behavior:none}
 #display-fallback{
   display:none;
   flex-direction:column;
@@ -844,14 +850,22 @@ body.stage-window #script-text{max-width:1280px;margin-left:auto;margin-right:au
   // control window's broadcasts now (see tick()/broadcastScrollPos()
   // further down) — a local scroll here has no job to do and nothing to
   // sync it back out to the control window, so it would just leave the
-  // display visibly off until the next play/seek from control. Block it
-  // outright rather than relying on self-correction, which only happens
-  // while actively playing anyway (nothing re-syncs a stray scroll while
-  // paused). Keyboard shortcuts are already control-only on this window;
-  // this closes the remaining mouse-wheel/trackpad/touch vector.
+  // display visibly off until the next play/seek from control. Keyboard
+  // shortcuts are already control-only on this window; this blocks the
+  // remaining mouse-wheel/trackpad/touch vector.
+  //
+  // Attached on `document` with capture:true, not on #scroller — the
+  // "drag me" hint card (#stage-hint) sits as a *sibling* of #scroller
+  // with a higher z-index, so a wheel/touch event over it never reaches
+  // a listener on #scroller at all (it targets the hint card, and the
+  // DOM only bubbles to ancestors, never sideways to a sibling). That
+  // let a wheel scroll briefly move the page — nothing scrollable was
+  // actually under it, so it looked like a rubber-band snap back rather
+  // than a real scroll, but it was still unblocked motion. Capturing on
+  // document catches it regardless of which element is underneath.
   if(isStageWindow){
-    scroller.addEventListener('wheel', function(e){ e.preventDefault(); }, {passive:false});
-    scroller.addEventListener('touchmove', function(e){ e.preventDefault(); }, {passive:false});
+    document.addEventListener('wheel', function(e){ e.preventDefault(); }, {passive:false, capture:true});
+    document.addEventListener('touchmove', function(e){ e.preventDefault(); }, {passive:false, capture:true});
   }
   var playBtn = document.getElementById('play');
   var playIcon = document.getElementById('play-icon');
@@ -1640,7 +1654,7 @@ body.stage-window #script-text{max-width:1280px;margin-left:auto;margin-right:au
   });
 
   // ---- Build/version indicator (control window top bar) ----
-  var APP_VERSION = 'v1.14.0';
+  var APP_VERSION = 'v1.14.1';
   if(buildMeta && !isStageWindow){
     buildMeta.textContent = APP_VERSION;
   }
