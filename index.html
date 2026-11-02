@@ -1331,7 +1331,21 @@ body.touch .setup-inner{padding-top:34px}
   // Edit button (the paste-script screen), just a second, more obvious way
   // to get back to it.
   brandHomeBtn.addEventListener('click', function(){
-    showSetup(true);
+    // Fresh, empty paste screen. If the current script is already empty, reuse it
+    // instead of piling up blank scripts.
+    if(!confirmDiscard()) return;
+    var cur = activeScript();
+    if(!cur || cur.text){
+      var s = { id: genId(), name: nextDefaultName(), text: '', updatedAt: Date.now() };
+      state.scripts.push(s);
+      state.activeScriptId = s.id;
+      save();
+    }
+    input.value = '';
+    renderScriptTabs();
+    showSetup(false);
+    input.value = '';
+    input.focus();
   });
 
   document.getElementById('back-btn').addEventListener('click', function(){ showSetup(true); });
