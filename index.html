@@ -507,6 +507,19 @@ body.solo.ui-hidden #bottombar,
 body.solo.ui-hidden #progress-wrap{opacity:0;pointer-events:none}
 body.solo.ui-hidden #stage{cursor:none}
 
+#back-btn{
+  position:absolute;top:16px;right:18px;z-index:6;display:none;align-items:center;gap:8px;
+  height:38px;padding:0 14px;border-radius:999px;cursor:pointer;
+  background:rgba(14,14,15,.72);-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);
+  border:1px solid var(--hair);color:#cfcfd2;font:600 12.5px 'Archivo',system-ui,sans-serif;
+  transition:opacity .3s ease,color .2s ease,border-color .2s ease;
+}
+#back-btn:hover{color:var(--fg);border-color:#4a4a50}
+#back-btn svg{width:16px;height:16px;fill:currentColor}
+body[data-mode="dual"]:not(.stage-window) #back-btn,
+body[data-mode="single"]:not(.stage-window) #back-btn{display:inline-flex}
+body.stage-window #back-btn{display:none !important}
+body.solo.ui-hidden #back-btn{opacity:0;pointer-events:none}
 /* ---------- Mobile + Tablet (touch) ---------- */
 body.touch #stage{touch-action:manipulation;-webkit-tap-highlight-color:transparent}
 body.touch #script-text{-webkit-user-select:none;user-select:none}
@@ -614,6 +627,10 @@ body.touch .setup-inner{padding-top:34px}
       <div class="s" id="stage-hint-body">Drag this window onto your external display, then click anywhere (or press F) to go fullscreen. Press Play in the control window to start scrolling here. Press <kbd>Esc</kbd> any time to drop out of fullscreen and bring this card back.</div>
     </div>
   </div>
+
+  <button type="button" id="back-btn" aria-label="Back to the paste screen" title="Back to the paste screen">
+    <svg viewBox="0 0 24 24"><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20z"/></svg><span>Back</span>
+  </button>
 
   <div id="progress-wrap">
     <div id="progress"><i id="progress-fill"></i></div>
@@ -1317,6 +1334,8 @@ body.touch .setup-inner{padding-top:34px}
   brandHomeBtn.addEventListener('click', function(){
     showSetup(true);
   });
+
+  document.getElementById('back-btn').addEventListener('click', function(){ showSetup(true); });
 
   function requestWake(){
     try{
