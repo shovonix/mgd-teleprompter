@@ -499,17 +499,20 @@ body.stage-window #bar{display:none !important}
    same BroadcastChannel/localStorage sync as a real external stage window,
    so it needs no custom update logic of its own. */
 #stage-preview-box{
-  position:fixed;
-  right:16px;bottom:16px;
+  /* Docked as the first row inside the control bar itself (#bar-inner is a
+     flex column), right-aligned above the buttons/sliders — not floating
+     over the script text, so it can never cover other controls. */
+  align-self:flex-end;
   width:240px;
   border-radius:10px;
   overflow:hidden;
   border:1px solid var(--border);
-  box-shadow:0 10px 30px rgba(0,0,0,.5);
-  z-index:50;
+  box-shadow:0 6px 20px rgba(0,0,0,.4);
   background:#000;
 }
 #stage-preview-box.hidden{display:none}
+/* #bar is already hidden entirely in the real stage window, which covers
+   this too — kept explicit in case that markup ever moves again. */
 body.stage-window #stage-preview-box{display:none !important}
 #stage-preview-label{
   position:relative;
@@ -647,6 +650,15 @@ body.stage-window #connected-frame{display:none !important}
 
   <div id="bar">
     <div id="bar-inner">
+      <div id="stage-preview-box" class="hidden">
+        <div id="stage-preview-label">
+          Stage preview
+          <button type="button" id="stage-preview-toggle" aria-label="Collapse stage preview">–</button>
+        </div>
+        <div id="stage-preview-frame-wrap">
+          <iframe id="stage-preview-frame" tabindex="-1" aria-hidden="true"></iframe>
+        </div>
+      </div>
       <div class="row controls-row">
         <div class="cluster cluster-left">
           <div class="slider-group" id="margin-group">
@@ -703,16 +715,6 @@ body.stage-window #connected-frame{display:none !important}
       <div class="hint"><kbd>Space</kbd> Play/Pause &nbsp;·&nbsp; <kbd>Space</kbd><kbd>Space</kbd> Previous paragraph &nbsp;·&nbsp; Hold <kbd>Space</kbd> Jump to start</div>
       <div class="hint hint-sub">Mirror &amp; flip only apply on the stage display</div>
     </div>
-  </div>
-</div>
-
-<div id="stage-preview-box" class="hidden">
-  <div id="stage-preview-label">
-    Stage preview
-    <button type="button" id="stage-preview-toggle" aria-label="Collapse stage preview">–</button>
-  </div>
-  <div id="stage-preview-frame-wrap">
-    <iframe id="stage-preview-frame" tabindex="-1" aria-hidden="true"></iframe>
   </div>
 </div>
 
@@ -1525,7 +1527,7 @@ body.stage-window #connected-frame{display:none !important}
   });
 
   // ---- Build/version indicator (control window top bar) ----
-  var APP_VERSION = 'v1.10.0';
+  var APP_VERSION = 'v1.10.1';
   if(buildMeta && !isStageWindow){
     buildMeta.textContent = APP_VERSION;
   }
