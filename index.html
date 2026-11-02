@@ -1136,17 +1136,18 @@ body.stage-window #connected-frame{display:none !important}
   // schedules it when !isStageWindow) — it's the single source of truth
   // for scroll position. Stage/preview windows never integrate their own
   // position; they just set scrollTop directly from the 'scrollpos'
-  // broadcasts this sends out (throttled) on every frame while playing.
-  // That's deliberate: two independent rAF loops, each accumulating its
-  // own dt, drift apart over any real stretch of playback (different
-  // refresh rates, render load) — a follower that only ever mirrors the
-  // driver's position can't drift, by construction.
-  var lastScrollBroadcastT = 0;
+  // broadcasts this sends out every frame while playing. That's
+  // deliberate: two independent rAF loops, each accumulating its own dt,
+  // drift apart over any real stretch of playback (different refresh
+  // rates, render load) — a follower that only ever mirrors the driver's
+  // position can't drift, by construction. Sent at full rAF rate (no
+  // throttle) rather than a lower fixed rate: a throttled feed (originally
+  // ~25Hz here) makes the stage window visibly step/judder between
+  // updates instead of gliding, since it has no local motion of its own
+  // to fill the gaps — BroadcastChannel traffic at 60Hz with this small a
+  // payload is not a real cost.
   function broadcastScrollPos(){
     if(!bc) return;
-    var now = (window.performance && performance.now) ? performance.now() : Date.now();
-    if(now - lastScrollBroadcastT < 40) return; // ~25Hz cap
-    lastScrollBroadcastT = now;
     var max = Math.max(0, scroller.scrollHeight - scroller.clientHeight);
     bc.postMessage({type:'scrollpos', ratio: max ? scroller.scrollTop / max : 0});
   }
@@ -1615,7 +1616,7 @@ body.stage-window #connected-frame{display:none !important}
   });
 
   // ---- Build/version indicator (control window top bar) ----
-  var APP_VERSION = 'v1.13.0';
+  var APP_VERSION = 'v1.13.1';
   if(buildMeta && !isStageWindow){
     buildMeta.textContent = APP_VERSION;
   }
