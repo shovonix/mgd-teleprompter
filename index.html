@@ -321,9 +321,9 @@ body:not(.stage-window) #stage::after{
   background:var(--fg);color:#0a0a0b;border-radius:4px;padding:2px 3px;font-weight:700;
 }
 #pedal-panel{
-  display:none;position:absolute;top:100%;left:0;margin-top:8px;
+  display:none;position:fixed;top:0;left:0;
   width:264px;background:var(--raised);border:1px solid var(--hair);border-radius:12px;
-  padding:14px;box-shadow:0 10px 30px rgba(0,0,0,.5);z-index:20;
+  padding:14px;box-shadow:0 10px 30px rgba(0,0,0,.5);z-index:60;
 }
 #pedal-panel.show{display:block}
 #pedal-panel .t{font-size:13px;font-weight:600;color:var(--fg);margin-bottom:4px}
@@ -877,9 +877,14 @@ body:not(.prompting):not(.stage-window) #setup{right:0}
     if(isStageWindow){
       var sx = state.mirrored ? -1 : 1;
       var sy = state.flipped ? -1 : 1;
-      scriptText.style.transform = 'scale(' + sx + ',' + sy + ')';
+      // Transform the scroll viewport (not the text block): it flips around
+      // the viewport's own centre, which is exactly where the guide line
+      // sits, so the line being read stays on the guide in every mode.
+      scroller.style.transform = 'scale(' + sx + ',' + sy + ')';
+      scriptText.style.transform = 'none';
     }else{
       scriptText.style.transform = 'none';
+      scroller.style.transform = 'none';
     }
     mirrorBtn.setAttribute('aria-pressed', state.mirrored ? 'true' : 'false');
     flipBtn.setAttribute('aria-pressed', state.flipped ? 'true' : 'false');
@@ -1319,8 +1324,16 @@ body:not(.prompting):not(.stage-window) #setup{right:0}
   }
 
   document.querySelectorAll('.pedal-trigger').forEach(function(b){ b.addEventListener('click', togglePedalPanel); });
-  function togglePedalPanel(){
+  document.body.appendChild(pedalPanel);
+  function togglePedalPanel(e){
     pedalPanel.classList.toggle('show');
+    if(pedalPanel.classList.contains('show')){
+      var t = (e && e.currentTarget) || pedalBtn;
+      var r = t.getBoundingClientRect();
+      var w = pedalPanel.offsetWidth || 264;
+      pedalPanel.style.left = Math.max(8, Math.min(window.innerWidth - w - 8, r.left)) + 'px';
+      pedalPanel.style.top = (r.bottom + 8) + 'px';
+    }
     if(pedalPanel.classList.contains('show')) renderPedalKeys();
     else endPedalCapture(false);
   }
