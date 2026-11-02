@@ -1221,20 +1221,18 @@ body.stage-window #connected-frame{display:none !important}
 
     // Manual scrolling (trackpad/mouse wheel, drag) on the control window
     // isn't driven by seekTo(), so it never reached the stage window on its
-    // own — mirror it here, throttled so a fast scroll doesn't flood the
-    // channel. Skipped while playing: the auto-scroll loop in tick() already
-    // keeps both windows moving together at the same speed.
-    var scrollSyncTimer = null;
+    // own — mirror it here. Broadcast on every scroll event rather than
+    // debouncing: the browser already rate-limits native scroll events to
+    // its own paint cycle, so sending immediately is what makes the stage
+    // window track the trackpad live instead of catching up after a pause.
+    // Skipped while playing: the auto-scroll loop in tick() already keeps
+    // both windows moving together at the same speed.
     scroller.addEventListener('scroll', function(){
       if(playing) return;
       if(suppressScrollSync) return;
-      if(scrollSyncTimer) return;
-      scrollSyncTimer = setTimeout(function(){
-        scrollSyncTimer = null;
-        if(!bc) return;
-        var max = Math.max(0, scroller.scrollHeight - scroller.clientHeight);
-        bc.postMessage({type:'seek', ratio: max ? scroller.scrollTop / max : 0});
-      }, 50);
+      if(!bc) return;
+      var max = Math.max(0, scroller.scrollHeight - scroller.clientHeight);
+      bc.postMessage({type:'seek', ratio: max ? scroller.scrollTop / max : 0});
     });
   }
 
@@ -1364,7 +1362,7 @@ body.stage-window #connected-frame{display:none !important}
   });
 
   // ---- Build/version indicator (control window top bar) ----
-  var APP_VERSION = 'v1.8.0';
+  var APP_VERSION = 'v1.8.1';
   if(buildMeta && !isStageWindow){
     buildMeta.textContent = APP_VERSION;
   }
