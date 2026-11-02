@@ -563,16 +563,35 @@ body.touch .no-touch{display:none}
 #edit-btn.on{background:rgba(255,255,255,.12);color:var(--fg);border-color:rgba(255,255,255,.35)}
 body.edit-mode #script-text{outline:1px dashed rgba(255,255,255,.28);outline-offset:8px;cursor:text}
 .scripts-head{gap:8px}
-#menu-btn{display:none;position:absolute;top:max(14px,env(safe-area-inset-top));left:14px;height:38px;padding:0 14px;border-radius:10px;
-  border:1px solid var(--hair);background:var(--raised);color:var(--fg-dim);font:600 12.5px 'Archivo',system-ui,sans-serif;cursor:pointer;gap:8px;align-items:center}
-body.touch #menu-btn{display:inline-flex}
-body.touch .setup-inner{padding-top:34px}
-@media (max-width:700px){
-  body.touch #setup{padding:60px 16px 20px}
-  body.touch .setup-device{flex-wrap:wrap}
-  body.touch .setup-device .dev-tile{padding:0 12px}
-  body.touch .setup-device .dev-tile span{display:none}
-  body.touch .setup-device .device-picker{flex-wrap:nowrap}
+#setup-top,#setup-scripts{display:none}
+body.touch #setup-top{display:flex;align-items:center;justify-content:space-between;gap:10px;order:0;margin-bottom:12px}
+#setup-brand{display:flex;align-items:center;gap:10px;background:none;border:0;padding:0;color:var(--fg);cursor:pointer;min-width:0;
+  font:700 15px 'Archivo',system-ui,sans-serif}
+#setup-brand .brand-logo{height:34px;width:34px;border-radius:10px}
+#menu-btn{width:40px;height:40px;border-radius:10px;border:1px solid var(--hair);background:var(--raised);color:var(--fg-dim);font-size:17px;cursor:pointer}
+body.touch #setup-scripts{display:flex;gap:8px;overflow-x:auto;order:1;margin-bottom:12px;padding-bottom:2px;scrollbar-width:none;-webkit-overflow-scrolling:touch}
+#setup-scripts::-webkit-scrollbar{display:none}
+.chip{flex:none;height:36px;padding:0 14px;border-radius:999px;border:1px solid var(--hair);background:var(--raised);color:var(--fg-dim);
+  font:600 12.5px 'Archivo',system-ui,sans-serif;cursor:pointer;white-space:nowrap;max-width:60vw;overflow:hidden;text-overflow:ellipsis}
+.chip.active{background:rgba(255,255,255,.12);border-color:rgba(255,255,255,.45);color:var(--fg)}
+.chip.plus{border-style:dashed;background:transparent}
+/* Mobile/Tablet paste page: everything in one view, no scrolling to reach Start */
+body.touch #setup{bottom:auto;height:100dvh;padding:max(14px,env(safe-area-inset-top)) 16px max(14px,env(safe-area-inset-bottom));justify-content:flex-start}
+body.touch .setup-inner{width:100%;max-width:640px;flex:1;min-height:0}
+body.touch #setup .brand,body.touch #setup .sub,body.touch .setup-device .sec-title{display:none}
+body.touch #script-input{order:2;height:clamp(110px,24dvh,230px);padding:14px;font-size:16px;border-radius:12px;flex:none}
+body.touch .setup-row{order:3;margin-top:12px;flex-wrap:nowrap}
+body.touch .setup-row .btn{height:48px;padding:0 18px}
+body.touch .setup-row .btn.primary{min-width:0}
+body.touch .setup-device{order:4;margin:14px 0 0;flex-wrap:nowrap}
+body.touch .setup-device .device-picker{flex-wrap:nowrap}
+body.touch .setup-device .dev-tile{padding:0 12px}
+body.touch .setup-device .dev-tile span{display:none}
+body.touch #screen-note{order:5;margin-top:12px;padding:10px 12px;font-size:12px;line-height:1.5}
+@media (max-height:520px){
+  body.touch .setup-device,body.touch #screen-note{display:none}
+  body.touch #setup-top{margin-bottom:8px}
+  body.touch #script-input{height:clamp(80px,34dvh,160px)}
 }
 </style>
 
@@ -598,8 +617,12 @@ body.touch .setup-inner{padding-top:34px}
 </aside>
 
 <div id="setup">
-  <button type="button" id="menu-btn" aria-label="Open scripts">☰ Scripts</button>
   <div class="setup-inner">
+    <div id="setup-top">
+      <button type="button" id="setup-brand" aria-label="New script"><img class="brand-logo" id="setup-logo" alt=""><span class="name">Space Prompter</span></button>
+      <button type="button" id="menu-btn" aria-label="Manage scripts" title="Manage scripts (rename, delete)">☰</button>
+    </div>
+    <div id="setup-scripts"></div>
     <div class="setup-device">
       <div class="sec-title">Device type</div>
       <div class="device-picker" data-picker></div>
@@ -1275,6 +1298,22 @@ body.touch .setup-inner{padding-top:34px}
       tab.addEventListener('click', function(){ selectScript(s.id); });
       scriptTabs.appendChild(tab);
     });
+    var chips = document.getElementById('setup-scripts');
+    if(chips){
+      chips.innerHTML = '';
+      state.scripts.forEach(function(sc){
+        var c = document.createElement('button');
+        c.type = 'button';
+        c.className = 'chip' + (sc.id === state.activeScriptId ? ' active' : '');
+        c.textContent = sc.name;
+        c.addEventListener('click', function(){ selectScript(sc.id); });
+        chips.appendChild(c);
+      });
+      var plus = document.createElement('button');
+      plus.type = 'button'; plus.className = 'chip plus'; plus.textContent = '+ New';
+      plus.addEventListener('click', function(){ newScriptBtn.click(); });
+      chips.appendChild(plus);
+    }
   }
   function flashButton(btn, text){
     var orig = btn.textContent;
@@ -1748,6 +1787,8 @@ body.touch .setup-inner{padding-top:34px}
   document.getElementById('top-btn').addEventListener('click', function(){ seekTo(0); });
   document.getElementById('prev-para-btn').addEventListener('click', function(){ goPrevParagraph(); });
   document.getElementById('menu-btn').addEventListener('click', function(){ toggleRail('left'); });
+  (function(){ var src = document.querySelector('#left-rail .brand-logo'); var dst = document.getElementById('setup-logo'); if(src && dst) dst.src = src.src; })();
+  document.getElementById('setup-brand').addEventListener('click', function(){ brandHomeBtn.click(); });
 
   // ---- Device type (control window only) ----
   // Only Dual Monitor has its layout built so far; the others are shown
