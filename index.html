@@ -569,7 +569,7 @@ body.touch .setup-inner{padding-top:34px}
   </div>
   <div class="script-tabs" id="script-tabs"></div>
   <div class="rail-spacer"></div>
-  <div class="scripts-tip no-touch">To edit the current script, press <b>Edit script</b>, then select the text and type. It saves automatically and the Stage preview syncs. Text is only editable after you press the button.</div>
+  <div class="scripts-tip no-touch">To edit the current script, press <b>Edit script</b>, then select the text and type. The button turns into <b>Save</b> — press it when you're done. It also saves automatically and the Stage preview syncs.</div>
   <div class="copyright">© shovonix</div>
 </aside>
 
@@ -1283,7 +1283,7 @@ body.touch .setup-inner{padding-top:34px}
     applyEditable();
     document.body.classList.toggle('edit-mode', on);
     var lab = editBtn.querySelector('span');
-    if(lab) lab.textContent = on ? 'Done editing' : 'Edit script';
+    if(lab) lab.textContent = on ? 'Save' : 'Edit script';
     editBtn.classList.toggle('on', on);
     if(on){ if(isSingle()) leftRail.classList.add('open'); try{ scriptText.focus(); }catch(e){} }
     else{ try{ scriptText.blur(); }catch(e){} if(isSingle()) leftRail.classList.remove('open'); }
