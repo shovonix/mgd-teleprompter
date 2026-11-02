@@ -1126,6 +1126,8 @@ body.touch .setup-inner{padding-top:34px}
     stage.classList.remove('hidden');
     cancelEdit.style.display = '';
     document.body.classList.add('prompting');
+    pruneEmptyScripts(state.activeScriptId);
+    renderScriptTabs();
     if(isSolo() && !isStageWindow) closeRails();
     applyPreviewVisibility();
     applyViewScale();
@@ -1171,9 +1173,20 @@ body.touch .setup-inner{padding-top:34px}
     save();
     renderScriptTabs();
   }
+  // Blank scripts (a logo click or + New that was never filled in) delete
+  // themselves as soon as you leave them; keepId is the one still in use.
+  function pruneEmptyScripts(keepId){
+    var before = state.scripts.length;
+    state.scripts = state.scripts.filter(function(sc){ return sc.id === keepId || (sc.text && sc.text.trim()); });
+    if(state.scripts.length !== before){
+      if(!findScript(state.activeScriptId)) state.activeScriptId = keepId || (state.scripts[0] && state.scripts[0].id) || null;
+      save();
+    }
+  }
   function selectScript(id){
     if(id === state.activeScriptId) return;
     if(!confirmDiscard()) return;
+    pruneEmptyScripts(id);
     state.activeScriptId = id;
     save();
     var activeS = activeScript();
@@ -1281,6 +1294,7 @@ body.touch .setup-inner{padding-top:34px}
     var s = { id: genId(), name: name, text: '', updatedAt: Date.now() };
     state.scripts.push(s);
     state.activeScriptId = s.id;
+    pruneEmptyScripts(s.id);
     save();
     input.value = '';
     renderScriptTabs();
@@ -1335,6 +1349,8 @@ body.touch .setup-inner{padding-top:34px}
     // instead of piling up blank scripts.
     if(!confirmDiscard()) return;
     var cur = activeScript();
+    pruneEmptyScripts(cur && !cur.text ? cur.id : null);
+    cur = activeScript();
     if(!cur || cur.text){
       var s = { id: genId(), name: nextDefaultName(), text: '', updatedAt: Date.now() };
       state.scripts.push(s);
