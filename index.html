@@ -179,16 +179,18 @@ button{font-family:inherit;color:inherit}
   word-break:break-word;
   color:var(--fg);
   transform-origin:center;
-  /* Fixed at the stage's intrinsic 1280px width in EVERY context —
-     control, the real external stage, and the mini preview — not just
-     the stage windows. A guide line (or the mini preview) only means
+  /* Fixed at the REAL external stage window's actual width, in EVERY
+     context — control, the real stage, and the mini preview — not a
+     guessed constant. A guide line (or the mini preview) only means
      anything if "the same scroll position" also means "the same line
-     of text," which requires identical word-wrap everywhere; letting
-     the control window reflow to its own actual (often much wider)
-     browser width broke that even though the two stage-side contexts
-     already matched each other. Letterboxed/centered on anything wider
-     than 1280px, in all three places equally. */
-  max-width:1280px;
+     of text," which requires identical word-wrap everywhere, and the
+     stage window can be opened at literally any size. --mgd-stage-width
+     is set once the real stage window reports its own width (see the
+     'stageWidth' broadcast handler in the script below) and persists
+     from then on. Until a stage has ever connected, there's nothing to
+     match yet, so this is intentionally uncapped (full width) rather
+     than defaulting to an arbitrary number. */
+  max-width:var(--mgd-stage-width, none);
   margin-left:auto;
   margin-right:auto;
 }
@@ -540,6 +542,13 @@ body.stage-window #stage-preview-box{display:none !important}
   overflow:hidden;
 }
 #stage-preview-frame{
+  /* 1280/800 and this scale are only the bootstrap default, shown before
+     any real stage window has ever reported its actual width. Once one
+     does, applyStageWidth() in the script below sets this element's width
+     and transform inline (so its #script-text — which obeys the same
+     --mgd-stage-width var as control and the real stage — fills this
+     frame edge-to-edge instead of showing its own letterbox), replacing
+     these values. */
   width:1280px;height:800px;
   border:0;
   transform:scale(0.1875);
@@ -788,6 +797,7 @@ html:has(body.stage-window){overscroll-behavior:none}
     pedalKeys: [],     // [{code,key}] — any of these behave exactly like Space
     guideVisible: true, // red reading-guide line across the middle of the stage
     previewVisible: true, // mini stage preview in the control bar — open by default
+    stageWidth: null, // real external stage window's reported width, px — null until one ever connects
   };
 
   function genId(){ return 's' + Date.now().toString(36) + Math.random().toString(36).slice(2, 8); }
@@ -905,6 +915,7 @@ html:has(body.stage-window){overscroll-behavior:none}
   var stageHintBody = document.getElementById('stage-hint-body');
   var stagePreviewBox = document.getElementById('stage-preview-box');
   var stagePreviewFrame = document.getElementById('stage-preview-frame');
+  var stagePreviewFrameWrap = document.getElementById('stage-preview-frame-wrap');
   var previewBtn = document.getElementById('preview-btn');
 
   var playing = false;
@@ -989,6 +1000,31 @@ html:has(body.stage-window){overscroll-behavior:none}
     scriptText.style.paddingRight = r;
     marginSlider.value = state.marginPx;
     marginVal.textContent = state.marginPx + 'px';
+  }
+  function applyStageWidth(){
+    // state.stageWidth is the real external stage window's own reported
+    // width (see the 'stageWidth' broadcast handler below) — null until a
+    // stage has ever connected, in which case the CSS var is left unset so
+    // #script-text's max-width falls through to its 'none' default
+    // (full width, everywhere) rather than guessing a number.
+    if(state.stageWidth){
+      document.documentElement.style.setProperty('--mgd-stage-width', state.stageWidth + 'px');
+    }else{
+      document.documentElement.style.removeProperty('--mgd-stage-width');
+    }
+    // The mini preview iframe only exists inside the control window. Its
+    // intrinsic canvas needs to actually equal the real stage's width (not
+    // just be capped at it) so its own #script-text fills the frame edge-
+    // to-edge instead of showing a redundant letterbox inside the already-
+    // tiny preview box — then the visual scale is recomputed so it still
+    // fits the fixed on-screen box (240px desktop / 144px mobile, read
+    // live from the wrap so this doesn't need to know which one applies).
+    if(stagePreviewFrame && stagePreviewFrameWrap){
+      var intrinsic = state.stageWidth || 1280; // bootstrap default pre-connection
+      var boxWidth = stagePreviewFrameWrap.clientWidth || 240;
+      stagePreviewFrame.style.width = intrinsic + 'px';
+      stagePreviewFrame.style.transform = 'scale(' + (boxWidth / intrinsic) + ')';
+    }
   }
   function applyBgOpacity(){
     // A contrast-preview control, not real window transparency (a web page
@@ -1505,6 +1541,20 @@ html:has(body.stage-window){overscroll-behavior:none}
     });
     if(bc) bc.postMessage({type:'hello'});
 
+    // Tell the control window how wide this real display actually is —
+    // it can be opened at any size, so there's nothing to assume. Sent on
+    // load and again (debounced) on resize, since dragging the window to
+    // a different monitor or just resizing it changes what "the same
+    // line" means everywhere else. See the 'stageWidth' handler below.
+    if(bc) bc.postMessage({type:'stageWidth', width: document.documentElement.clientWidth});
+    var stageWidthResizeTimer = null;
+    window.addEventListener('resize', function(){
+      clearTimeout(stageWidthResizeTimer);
+      stageWidthResizeTimer = setTimeout(function(){
+        if(bc) bc.postMessage({type:'stageWidth', width: document.documentElement.clientWidth});
+      }, 200);
+    });
+
     // Esc = "return": stop scrolling, drop out of fullscreen, bring the
     // explainer card back so the window is ready to be handed off again.
     // F = fullscreen/un-fullscreen — the hint text has always advertised
@@ -1536,7 +1586,7 @@ html:has(body.stage-window){overscroll-behavior:none}
       if(msg.type === 'state'){
         applyingRemote = true;
         Object.assign(state, msg.state);
-        applyText(); applyFlip(); applyGuide(); applyPreviewVisibility(); applySize(); applyMargin(); applyBgOpacity(); applySpeed();
+        applyText(); applyFlip(); applyGuide(); applyPreviewVisibility(); applySize(); applyMargin(); applyBgOpacity(); applySpeed(); applyStageWidth();
         applyingRemote = false;
       }else if(msg.type === 'playing'){
         applyingRemote = true;
@@ -1573,6 +1623,21 @@ html:has(body.stage-window){overscroll-behavior:none}
         lastHello = Date.now();
         connectedFrame.classList.add('on');
         sendSyncReply();
+      }else if(msg.type === 'stageWidth' && !isStageWindow && typeof msg.width === 'number'){
+        // The real external stage window just reported its actual width —
+        // that becomes the canonical wrap width everywhere (this control
+        // window, its own mini preview, and any stage/preview window that
+        // joins later), replacing whatever was assumed before. Persisted
+        // via save() so it's still known next time even if no stage is
+        // currently open, and applied immediately — including mid-
+        // playback if the stage reconnects at a different width (e.g. a
+        // different monitor) — rather than left stale until some other
+        // state change happens to trigger a re-apply.
+        if(state.stageWidth !== msg.width){
+          state.stageWidth = msg.width;
+          save();
+          applyStageWidth();
+        }
       }
     };
   }
@@ -1656,7 +1721,7 @@ html:has(body.stage-window){overscroll-behavior:none}
   });
 
   // ---- Build/version indicator (control window top bar) ----
-  var APP_VERSION = 'v1.15.0';
+  var APP_VERSION = 'v1.16.0';
   if(buildMeta && !isStageWindow){
     buildMeta.textContent = APP_VERSION;
   }
@@ -1669,6 +1734,18 @@ html:has(body.stage-window){overscroll-behavior:none}
   applyFlip();
   applyGuide();
   applyText();
+  applyStageWidth();
+  // Re-run on the control window's own resize too (not just on a
+  // stageWidth report): the mini preview's on-screen box itself changes
+  // size across the mobile breakpoint, so its scale needs recomputing
+  // even when the canonical stage width hasn't changed.
+  if(!isStageWindow){
+    var stageWidthUiResizeTimer = null;
+    window.addEventListener('resize', function(){
+      clearTimeout(stageWidthUiResizeTimer);
+      stageWidthUiResizeTimer = setTimeout(applyStageWidth, 150);
+    });
+  }
   if(isStageWindow){
     showStage();
   }else if(activeScript() && activeScript().text && activeScript().text.trim()){
