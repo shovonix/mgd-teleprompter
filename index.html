@@ -1808,6 +1808,15 @@ body.touch #screen-note{order:5;margin-top:12px;padding:10px 12px;font-size:12px
     }
     document.body.classList.toggle('ui-hidden');
   });
+  // Touch: a tap anywhere outside an open panel closes it (paste page and prompter alike).
+  document.addEventListener('click', function(e){
+    if(isStageWindow || !isTouch()) return;
+    if(!leftRail.classList.contains('open') && !rightRail.classList.contains('open')) return;
+    var t = e.target;
+    if(!t || !t.closest) return;
+    if(t.closest('.rail') || t.closest('#pedal-panel') || t.closest('.pedal-trigger') || t.closest('#menu-btn') || t.closest('#controls-btn')) return;
+    closeRails();
+  });
   document.getElementById('top-btn').addEventListener('click', function(){ seekTo(0); });
   document.getElementById('prev-para-btn').addEventListener('click', function(){ goPrevParagraph(); });
   document.getElementById('menu-btn').addEventListener('click', function(){ toggleRail('left'); });
