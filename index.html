@@ -81,14 +81,14 @@ kbd{
 #right-rail{right:0;border-left:1px solid var(--hair)}
 body.stage-window .rail{display:none !important}
 
-.sec{margin-top:16px}
+.sec{margin-top:24px}
 .sec:first-child{margin-top:0}
 .sec-title{
   display:flex;align-items:center;justify-content:space-between;gap:8px;
   font-family:'Archivo',system-ui,sans-serif;
   font-weight:600;font-size:11px;letter-spacing:.14em;text-transform:uppercase;
   color:var(--fg-dim);
-  margin-bottom:12px;
+  margin-bottom:14px;
 }
 
 /* ---- Left rail: brand + scripts ---- */
@@ -103,7 +103,7 @@ body.stage-window .rail{display:none !important}
 .brand-text{display:flex;flex-direction:column;min-width:0;line-height:1.3}
 .brand-text .name{font-family:'Archivo',system-ui,sans-serif;font-weight:700;font-size:14px;white-space:nowrap}
 .brand-text .meta{font-family:var(--mono);font-size:10.5px;color:var(--fg-dim)}
-.scripts-head{display:flex;align-items:center;justify-content:space-between;margin:26px 0 10px}
+.scripts-head{display:flex;align-items:center;justify-content:space-between;margin:28px 0 14px}
 .scripts-head .sec-title{margin:0}
 #new-script-btn{
   font-family:'Archivo',system-ui,sans-serif;font-weight:600;font-size:12px;
@@ -111,7 +111,7 @@ body.stage-window .rail{display:none !important}
   border-radius:8px;padding:5px 10px;cursor:pointer;white-space:nowrap;
 }
 #new-script-btn:hover{color:var(--fg);border-color:var(--fg-dim)}
-.script-tabs{display:flex;flex-direction:column;gap:7px}
+.script-tabs{display:flex;flex-direction:column;gap:8px}
 .script-tab{
   display:flex;align-items:center;justify-content:space-between;gap:8px;width:100%;
   font-family:'Archivo',system-ui,sans-serif;font-weight:600;font-size:13px;text-align:left;
@@ -161,7 +161,7 @@ body.stage-window .rail{display:none !important}
 .scripts-empty{font-size:12px;color:var(--fg-dim);line-height:1.5;padding:4px 2px}
 .rail-spacer{flex:1}
 .scripts-tip{font-size:11px;color:var(--fg-dim);opacity:.8;margin-top:10px;line-height:1.5}
-.copyright{font-size:10px;color:var(--fg-dim);opacity:.55;margin-top:14px}
+.copyright{font-size:10px;color:var(--fg-dim);opacity:.55;margin-top:18px}
 
 /* ---------- Setup (paste) state, centre column ---------- */
 #setup{
@@ -375,7 +375,7 @@ body.stage-window #stage-preview-box{display:none !important}
 #stage-preview-box.empty #stage-preview-frame{visibility:hidden}
 
 /* controls */
-.slider-group{display:flex;flex-direction:column;gap:8px;margin-bottom:11px}
+.slider-group{display:flex;flex-direction:column;gap:10px;margin-bottom:18px}
 .slider-label{display:flex;justify-content:space-between;align-items:baseline;font-size:12.5px;color:#cfcfd2}
 .slider-label span:last-child{font-family:var(--mono);font-size:11.5px;color:var(--fg-dim)}
 input[type=range]{
@@ -397,7 +397,7 @@ input[type=range]::-moz-range-thumb{
 .navbtn{
   width:100%;display:flex;align-items:center;gap:10px;
   background:var(--raised);border:1px solid var(--hair);border-radius:10px;
-  padding:8px 12px;margin-bottom:6px;cursor:pointer;
+  padding:10px 12px;margin-bottom:8px;cursor:pointer;
   font-size:13px;color:#dcdcde;text-align:left;
 }
 .navbtn:hover{border-color:#4a4a50}
@@ -406,24 +406,25 @@ input[type=range]::-moz-range-thumb{
 .tbtn{
   width:100%;display:flex;align-items:center;justify-content:space-between;gap:10px;
   background:var(--raised);border:1px solid var(--hair);border-radius:10px;
-  padding:8px 12px;margin-bottom:6px;cursor:pointer;font-size:13px;color:#dcdcde;
+  padding:10px 12px;margin-bottom:8px;cursor:pointer;font-size:13px;color:#dcdcde;
   transition:background .2s ease, border-color .2s ease;
 }
 .tbtn:hover{border-color:#4a4a50}
 .tbtn svg{width:16px;height:16px;fill:currentColor;flex:none;opacity:.8}
 .tbtn[aria-pressed="true"]{background:rgba(255,255,255,.1);border-color:rgba(255,255,255,.4);color:var(--fg)}
-.caption{font-size:11px;color:var(--fg-dim);line-height:1.5;margin-top:4px}
+.caption{font-size:11px;color:var(--fg-dim);line-height:1.5;margin-top:10px}
+.sec > :last-child{margin-bottom:0}
 
 /* compact two-screen note — only while prompting, never dismissible */
 #screen-note-mini{
-  display:none;margin-top:12px;
-  border:1px dashed #3a3a3d;border-radius:10px;padding:8px 12px;
+  display:none;margin-top:18px;
+  border:1px dashed #3a3a3d;border-radius:10px;padding:10px 12px;
   font-size:11.5px;line-height:1.55;color:#a5a5a8;
 }
 #screen-note-mini b{color:var(--fg);font-weight:600}
 body.prompting #screen-note-mini{display:block}
 body.prompting #screen-note{display:none}
-#shortcuts-hint{display:flex;flex-direction:column;gap:6px;margin-top:12px;font-size:11.5px;color:var(--fg-dim);text-align:left}
+#shortcuts-hint{display:flex;flex-direction:column;gap:9px;margin-top:22px;padding-top:18px;border-top:1px solid var(--hair);font-size:11.5px;color:var(--fg-dim);text-align:left}
 #shortcuts-hint span{display:flex;align-items:center;gap:8px}
 
 #display-fallback{
@@ -582,6 +583,9 @@ body.touch .setup-inner{padding-top:34px}
   </div>
   <div class="script-tabs" id="script-tabs"></div>
   <div class="rail-spacer"></div>
+  <div id="screen-note-mini" class="only-dual">
+    <b>Two screens.</b> Control window = this one. Stage window = your second display, the view the camera reads.
+  </div>
   <div class="copyright">© shovonix</div>
 </aside>
 
@@ -732,10 +736,6 @@ body.touch .setup-inner{padding-top:34px}
       <svg viewBox="0 0 24 24"><path fill-rule="evenodd" clip-rule="evenodd" d="M3 5h18v14H3V5zm2 2v10h14V7H5z"/><rect x="5" y="11" width="14" height="2"/></svg>
     </button>
     <div class="caption only-dual">Mirror and Flip only change the Stage window — this control view stays readable either way.</div>
-  </div>
-
-  <div id="screen-note-mini" class="only-dual">
-    <b>Two screens.</b> Control window = this one. Stage window = your second display, the view the camera reads.
   </div>
 
   <div id="display-fallback" class="only-dual">
