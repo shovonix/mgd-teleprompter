@@ -839,6 +839,20 @@ body.stage-window #script-text{max-width:1280px;margin-left:auto;margin-right:au
   var cancelEdit = document.getElementById('cancel-edit');
   var scroller = document.getElementById('scroller');
   var scriptText = document.getElementById('script-text');
+
+  // Scroll position on a stage/preview window only ever comes from the
+  // control window's broadcasts now (see tick()/broadcastScrollPos()
+  // further down) — a local scroll here has no job to do and nothing to
+  // sync it back out to the control window, so it would just leave the
+  // display visibly off until the next play/seek from control. Block it
+  // outright rather than relying on self-correction, which only happens
+  // while actively playing anyway (nothing re-syncs a stray scroll while
+  // paused). Keyboard shortcuts are already control-only on this window;
+  // this closes the remaining mouse-wheel/trackpad/touch vector.
+  if(isStageWindow){
+    scroller.addEventListener('wheel', function(e){ e.preventDefault(); }, {passive:false});
+    scroller.addEventListener('touchmove', function(e){ e.preventDefault(); }, {passive:false});
+  }
   var playBtn = document.getElementById('play');
   var playIcon = document.getElementById('play-icon');
   var speedSlider = document.getElementById('speed');
@@ -1626,7 +1640,7 @@ body.stage-window #script-text{max-width:1280px;margin-left:auto;margin-right:au
   });
 
   // ---- Build/version indicator (control window top bar) ----
-  var APP_VERSION = 'v1.13.2';
+  var APP_VERSION = 'v1.14.0';
   if(buildMeta && !isStageWindow){
     buildMeta.textContent = APP_VERSION;
   }
