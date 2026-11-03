@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Blog — shovonix.dev</title>
+<meta name="description" content="Build logs and notes from Shovon Arifin: motion graphics, tools, and what I learn making them.">
+<meta name="theme-color" content="#0A0A0B">
+<link rel="icon" href="space-prompter-story/logo.png">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Blog — shovonix.dev">
+<meta property="og:description" content="Build logs and notes from Shovon Arifin.">
+<meta property="og:url" content="https://shovonix.dev/blog/">
+<meta property="og:image" content="https://shovonix.dev/blog/space-prompter-story/img/v35-play.jpg">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700;800&family=Public+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+*{box-sizing:border-box}
+body{margin:0;background:#0A0A0B;color:#F4F4F2;font:400 17px/1.7 'Public Sans',sans-serif;-webkit-font-smoothing:antialiased}
+a{color:inherit}
+.wrap{width:100%;max-width:1160px;margin:0 auto;padding:0 32px}
+nav{display:flex;align-items:center;justify-content:space-between;height:84px}
+nav a.brand{font:800 20px 'Archivo',sans-serif;letter-spacing:-.02em;text-decoration:none}
+nav a.brand span{color:#8A8A90}
+nav a.back{font:500 14px 'Archivo',sans-serif;color:#B4B4B9;text-decoration:none}
+nav a.back:hover,nav a.on{color:#fff}
+.navr{display:flex;align-items:center;gap:22px}
+.ico{display:inline-flex;color:#8A8A90}.ico:hover{color:#fff}
+.eyebrow{font:600 12px 'Archivo',sans-serif;letter-spacing:.16em;text-transform:uppercase;color:#9A9AA0;margin:0 0 16px}
+h1{font:800 clamp(40px,6vw,68px)/1.04 'Archivo',sans-serif;letter-spacing:-.03em;margin:0 0 18px}
+.lede{font-size:20px;color:#C9C9CD;max-width:620px;margin:0 0 56px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:24px;padding-bottom:96px}
+.card{display:block;text-decoration:none;background:#111113;border:1px solid #26262A;border-radius:18px;overflow:hidden;transition:border-color .2s,transform .2s}
+.card:hover{border-color:#4a4a52;transform:translateY(-3px)}
+.card img{display:block;width:100%;aspect-ratio:16/9;object-fit:cover;background:#000;border-bottom:1px solid #26262A}
+.card .b{padding:20px 22px 24px}
+.card .d{font:500 12px 'JetBrains Mono',monospace;letter-spacing:.06em;text-transform:uppercase;color:#7A7A80;margin:0 0 10px}
+.card h2{font:800 22px/1.2 'Archivo',sans-serif;letter-spacing:-.015em;margin:0 0 10px}
+.card p{margin:0;color:#B4B4B9;font-size:15px;line-height:1.55}
+.soon{border-style:dashed;display:flex;align-items:center;justify-content:center;min-height:240px;color:#6A6A70;font:500 14px 'Archivo',sans-serif}
+footer{border-top:1px solid #1d1d20;padding:34px 0;font:400 14px 'Public Sans',sans-serif;color:#7A7A80}
+footer a{color:#B4B4B9}
+@media(max-width:600px){.wrap{padding:0 20px}.grid{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <nav>
+    <a class="brand" href="/">shovonix<span>.dev</span></a>
+    <div class="navr">
+      <a class="back on" href="/blog/">Blog</a>
+      <a class="back" href="/space-prompter/">Space Prompter &rarr;</a>
+      <a class="ico" href="https://www.youtube.com/@Shovonix" target="_blank" rel="noopener" aria-label="YouTube"><svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><path d="M23.5 6.2a3 3 0 0 0-2.1-2.1C19.5 3.6 12 3.6 12 3.6s-7.5 0-9.4.5A3 3 0 0 0 .5 6.2C0 8.1 0 12 0 12s0 3.9.5 5.8a3 3 0 0 0 2.1 2.1c1.9.5 9.4.5 9.4.5s7.5 0 9.4-.5a3 3 0 0 0 2.1-2.1c.5-1.9.5-5.8.5-5.8s0-3.9-.5-5.8zM9.6 15.6V8.4l6.2 3.6-6.2 3.6z"/></svg></a>
+      <a class="ico" href="https://github.com/shovonix" target="_blank" rel="noopener" aria-label="GitHub"><svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><path d="M12 .5C5.65.5.5 5.65.5 12c0 5.08 3.29 9.39 7.86 10.91.58.1.79-.25.79-.56v-2c-3.2.7-3.87-1.37-3.87-1.37-.52-1.33-1.28-1.69-1.28-1.69-1.04-.71.08-.7.08-.7 1.16.08 1.76 1.19 1.76 1.19 1.03 1.76 2.69 1.25 3.35.96.1-.74.4-1.25.73-1.54-2.55-.29-5.24-1.28-5.24-5.69 0-1.26.45-2.28 1.19-3.09-.12-.29-.52-1.46.11-3.05 0 0 .97-.31 3.17 1.18a11 11 0 0 1 5.77 0c2.2-1.49 3.17-1.18 3.17-1.18.63 1.59.23 2.76.11 3.05.74.81 1.19 1.83 1.19 3.09 0 4.42-2.69 5.39-5.25 5.68.41.36.78 1.06.78 2.14v3.17c0 .31.21.67.8.56A11.5 11.5 0 0 0 23.5 12C23.5 5.65 18.35.5 12 .5z"/></svg></a>
+    </div>
+  </nav>
+  <header style="padding-top:56px">
+    <p class="eyebrow">Blog</p>
+    <h1>Build logs and notes</h1>
+    <p class="lede">Things I make for video and automation, and the honest story of how they got made.</p>
+  </header>
+  <main class="grid">
+    <a class="card" href="/blog/space-prompter-story/">
+      <img src="space-prompter-story/img/v35-play.jpg" alt="Space Prompter in play mode" loading="lazy">
+      <div class="b">
+        <p class="d">3 Nov 2026 &middot; Build log</p>
+        <h2>How I built Space Prompter in four days</h2>
+        <p>From a wireframe to a finished free teleprompter: the real version history, mistakes included.</p>
+      </div>
+    </a>
+    <div class="card soon">More posts coming</div>
+  </main>
+  <footer>&copy; shovonix &middot; <a href="/">shovonix.dev</a> &middot; <a href="https://www.youtube.com/@Shovonix">YouTube</a> &middot; <a href="https://github.com/shovonix">GitHub</a></footer>
+</div>
+</body>
+</html>
