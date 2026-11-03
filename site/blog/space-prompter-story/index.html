@@ -53,6 +53,11 @@ ul.facts li:last-child{border-bottom:1px solid #1d1d20}
 .video button span{width:84px;height:84px;border-radius:50%;background:#fff;display:flex;align-items:center;justify-content:center;box-shadow:0 10px 40px rgba(0,0,0,.6)}
 .cta{display:inline-flex;align-items:center;height:52px;padding:0 26px;border-radius:12px;background:#F4F4F2;color:#0A0A0B;font:700 15px 'Archivo',sans-serif;text-decoration:none;box-shadow:0 0 28px rgba(255,255,255,.16)}
 .cta.ghost{background:transparent;color:#F4F4F2;border:1px solid #33333A;box-shadow:none;margin-left:12px}
+.author{display:flex;align-items:center;gap:18px;margin:56px 0 0;padding:22px 24px;background:#111113;border:1px solid #26262A;border-radius:16px}
+.author img,.phone .author img{width:64px;height:64px;max-width:64px;margin:0;border-radius:18px;flex:none;border:0}
+.author .w{font:600 12px 'Archivo',sans-serif;letter-spacing:.16em;text-transform:uppercase;color:#7A7A80;margin:0 0 4px}
+.author .n{font:800 20px 'Archivo',sans-serif;letter-spacing:-.01em;color:#F4F4F2;margin:0}
+.author .t{font:400 15px 'Public Sans',sans-serif;color:#9A9AA0;margin:2px 0 0}
 footer{border-top:1px solid #1d1d20;margin-top:96px;padding:36px 0 56px;color:#7A7A80;font:400 14px 'Public Sans',sans-serif}
 footer a{color:#B4B4B9}
 @media (max-width:700px){body{font-size:17px}.pair{grid-template-columns:1fr}.cta.ghost{margin:12px 0 0}.wrap{padding:0 20px}}
@@ -75,7 +80,7 @@ footer a{color:#B4B4B9}
   <p class="eyebrow">Build log</p>
   <h1>How I built Space Prompter in four days</h1>
   <p class="lede">My team needed a teleprompter that did not fight us on set. So I made one, with Claude, between 31 October and 3 November. Here is the real version history, wrong turns included.</p>
-  <p class="meta">31 Oct &ndash; 3 Nov 2026 &middot; 118 commits &middot; by Shovon</p>
+  <p class="meta">31 Oct &ndash; 3 Nov 2026 &middot; 118 commits &middot; by Shovon Arifin</p>
 </header>
 
 <main class="col">
@@ -243,6 +248,16 @@ footer a{color:#B4B4B9}
     <a class="cta" href="https://studio.shovonix.dev" target="_blank" rel="noopener">Open the prompter</a>
     <a class="cta ghost" href="/space-prompter/">About Space Prompter</a>
   </p>
+
+  <div class="author">
+    <img src="logo.png" alt="Shovon Arifin">
+    <div>
+      <p class="w">Written by</p>
+      <p class="n">Shovon Arifin</p>
+      <p class="t">Motion Graphic Designer, WPManageNinja</p>
+    </div>
+  </div>
+
 </div>
 
 <footer>
