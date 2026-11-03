@@ -4361,7 +4361,7 @@ var qrcode = function() {
     var guess = 'dual';
     if(touch && minDim < 600) guess = 'mobile';
     else if(touch && minDim < 1100) guess = 'tablet';
-    else if(!extended && window.screen && typeof screen.isExtended === 'boolean') guess = 'single';
+    // Big (non-touch) screens always start in Dual Monitor, even with one display attached.
     var m = modeById(guess);
     return (m && m.enabled) ? guess : 'dual';
   }
@@ -4406,6 +4406,7 @@ var qrcode = function() {
     var m = modeById(id);
     if(!m || !m.enabled || id === state.deviceType) return;
     state.deviceType = id;
+    state.modeChosen = true; // the user picked this mode themselves
     // Each mode gets a clean start: close any stage window this one opened
     // and tell any other stage window to close itself.
     if(typeof stageWin !== 'undefined' && stageWin && !stageWin.closed){ try{ stageWin.close(); }catch(e){} stageWin = null; }
@@ -4418,6 +4419,12 @@ var qrcode = function() {
   }
   if(!isStageWindow && !state.deviceType){
     state.deviceType = detectDeviceType();
+    save();
+  }
+  // One-time: older versions auto-picked Single Monitor on desktop. Move those
+  // to Dual unless the user chose a mode themselves after this change.
+  if(!isStageWindow && !state.modeChosen && state.deviceType === 'single' && detectDeviceType() === 'dual'){
+    state.deviceType = 'dual';
     save();
   }
 
