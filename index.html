@@ -1904,9 +1904,16 @@ body.touch #screen-note{order:5;margin-top:12px;padding:10px 12px;font-size:12px
   document.addEventListener('click', function(e){
     if(isStageWindow || !isTouch()) return;
     if(!leftRail.classList.contains('open') && !rightRail.classList.contains('open')) return;
+    // Use the event path, not e.target: buttons inside a rail (device picker,
+    // etc.) re-render themselves on click, so the target is already detached
+    // from the DOM by the time this runs and closest() would miss the rail.
+    var path = (e.composedPath && e.composedPath()) || [];
+    var inside = path.some(function(n){
+      return n && n.closest && (n.closest('.rail') || n.closest('#pedal-panel') || n.closest('.pedal-trigger') || n.closest('#menu-btn') || n.closest('#controls-btn'));
+    });
+    if(inside) return;
     var t = e.target;
-    if(!t || !t.closest) return;
-    if(t.closest('.rail') || t.closest('#pedal-panel') || t.closest('.pedal-trigger') || t.closest('#menu-btn') || t.closest('#controls-btn')) return;
+    if(t && t.closest && (t.closest('.rail') || t.closest('#pedal-panel') || t.closest('.pedal-trigger') || t.closest('#menu-btn') || t.closest('#controls-btn'))) return;
     closeRails();
   });
   document.getElementById('menu-btn').addEventListener('click', function(){ toggleRail('left'); });
@@ -1961,7 +1968,8 @@ body.touch #screen-note{order:5;margin-top:12px;padding:10px 12px;font-size:12px
     document.body.setAttribute('data-mode', state.deviceType || 'dual');
     document.body.classList.toggle('solo', isSolo());
     document.body.classList.toggle('touch', isTouch());
-    closeRails();
+    // Rails stay open on a device change so you can compare modes; they only
+    // close on a tap of the text area, the close (x) icon, or starting playback.
     if(editMode) setEditMode(false);
     applyEditable();
     applyFlip();
