@@ -574,21 +574,12 @@ body.stage-window #mode-toast{display:none}
 #save-float svg{width:18px;height:18px;fill:currentColor}
 body.touch.edit-mode:not(.stage-window) #save-float{display:inline-flex}
 #demo-btn{
-  position:absolute;top:16px;right:112px;z-index:6;display:none;align-items:center;gap:8px;
-  height:38px;padding:0 14px;border-radius:999px;cursor:pointer;
-  background:rgba(14,14,15,.72);-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);
-  border:1px solid var(--hair);color:#cfcfd2;font:600 12.5px 'Archivo',system-ui,sans-serif;
-  transition:opacity .3s ease,color .2s ease,border-color .2s ease;
+  margin-left:auto;display:inline-flex;align-items:center;gap:7px;height:32px;padding:0 13px;border-radius:999px;cursor:pointer;
+  background:transparent;border:1px solid var(--hair);color:#cfcfd2;font:600 12px 'Archivo',system-ui,sans-serif;
 }
-#demo-btn svg{width:15px;height:15px;fill:currentColor}
+#demo-btn svg{width:13px;height:13px;fill:currentColor}
 #demo-btn:hover{color:var(--fg);border-color:#4a4a50}
 #demo-btn.on{background:#f4f4f2;color:#0a0a0b;border-color:#f4f4f2}
-body:not(.stage-window) #demo-btn{display:inline-flex}
-body.touch #demo-btn{top:max(14px,env(safe-area-inset-top));right:calc(max(14px,env(safe-area-inset-right)) + 100px)}
-body[data-mode="mobile"] #demo-btn{right:calc(max(14px,env(safe-area-inset-right)) + 52px);width:42px;height:42px;padding:0;justify-content:center}
-body[data-mode="mobile"] #demo-btn span{display:none}
-body.stage-window #demo-btn{display:none !important}
-body.solo.ui-hidden #demo-btn{opacity:0;pointer-events:none}
 #back-btn:hover{color:var(--fg);border-color:#4a4a50}
 #back-btn svg{width:16px;height:16px;fill:currentColor}
 body:not(.stage-window) #back-btn{display:inline-flex}
@@ -725,7 +716,9 @@ body.touch #screen-note{order:5;margin-top:12px;padding:10px 12px;font-size:12px
       </div>
     </div>
     <div class="brand">Paste your script</div>
-    <div class="sub"><span>Plain text, or anything copied from a Google Doc. Saved on this device.</span><span><kbd>⌘S</kbd> / <kbd>Ctrl S</kbd> to save</span></div>
+    <div class="sub"><span>Plain text, or anything copied from a Google Doc. Saved on this device.</span><span><kbd>⌘S</kbd> / <kbd>Ctrl S</kbd> to save</span><button type="button" id="demo-btn" aria-label="Paste demo text to try the prompter">
+    <svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg><span>Demo text</span>
+  </button></div>
     <textarea id="script-input" placeholder="Paste or type your script here&#10;&#10;Line breaks become paragraph breaks on the prompter."></textarea>
     <div class="setup-row">
       <button class="btn ghost" id="save-script-btn">Save</button>
@@ -770,9 +763,6 @@ body.touch #screen-note{order:5;margin-top:12px;padding:10px 12px;font-size:12px
   </div>
   <button type="button" id="save-float" aria-label="Save changes">
     <svg viewBox="0 0 24 24"><path d="M9 16.2L4.8 12l-1.4 1.4L9 19 21 7l-1.4-1.4z"/></svg><span>Save</span>
-  </button>
-  <button type="button" id="demo-btn" aria-label="Paste demo text to try the prompter">
-    <svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg><span>Demo text</span>
   </button>
   <button type="button" id="back-btn" aria-label="Back to the paste screen" title="Back to the paste screen">
     <svg viewBox="0 0 24 24"><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20z"/></svg><span>Back</span>
@@ -3885,41 +3875,24 @@ var qrcode = function() {
   });
 
   document.getElementById('save-float').addEventListener('click', function(){ setEditMode(false); });
-  document.getElementById('back-btn').addEventListener('click', function(){ if(demoPrev !== undefined) clearDemo(true); showSetup(true); });
+  document.getElementById('back-btn').addEventListener('click', function(){ showSetup(true); });
 
-  // Demo text: a throwaway script so you can see the prompter in action.
-  // Press again ("Clear demo") and it is deleted and your own script returns.
-  var DEMO_TEXT = "Welcome to Space Prompter.\n\nThis is demo text, so you can see how the prompter behaves before pasting your own script.\n\nPress Play to start scrolling. Use the speed control to find a pace that feels natural, and change the text size until it reads comfortably from where you sit.\n\nTry Flip H, Flip V and Rotate if you are using a mirror rig. Try the alignment options, too.\n\nWhen you are ready, press Clear demo and your own script comes right back.\n\nGood luck with the take.";
-  var demoPrev, demoId, demoBtn = document.getElementById('demo-btn');
+  // Demo text lives only in the paste box: it fills the box, and pressing
+  // again ("Clear demo") puts back whatever was there before. Nothing is saved.
+  var DEMO_TEXT = "Welcome to Space Prompter.\n\nThis is demo text, so you can see how the prompter behaves before pasting your own script.\n\nPress Play to start scrolling. Use the speed control to find a pace that feels natural, and change the text size until it reads comfortably from where you sit.\n\nTry Flip H, Flip V and Rotate if you are using a mirror rig. Try the alignment options, too.\n\nWhen you are ready, clear the demo and paste your own script.\n\nGood luck with the take.";
+  var demoPrev = null, demoBtn = document.getElementById('demo-btn');
   function setDemoBtn(on){
     demoBtn.classList.toggle('on', on);
     demoBtn.querySelector('span').textContent = on ? 'Clear demo' : 'Demo text';
-    demoBtn.setAttribute('aria-label', on ? 'Clear demo text' : 'Paste demo text to try the prompter');
-  }
-  function clearDemo(silent){
-    pause();
-    state.scripts = state.scripts.filter(function(x){ return x.id !== demoId; });
-    state.activeScriptId = (demoPrev && findScript(demoPrev)) ? demoPrev : (state.scripts[0] ? state.scripts[0].id : null);
-    demoPrev = undefined; demoId = null;
-    setDemoBtn(false);
-    save(); renderScriptTabs();
-    if(silent) return;
-    var left = activeScript();
-    if(!left || !left.text.trim()) showSetup(false);
-    else { applyText(); seekTo(0); }
   }
   demoBtn.addEventListener('click', function(e){
     e.stopPropagation();
-    if(demoPrev !== undefined){ clearDemo(); return; }
-    pause();
-    demoPrev = state.activeScriptId || null;
-    var d = { id: genId(), name: 'Demo', text: DEMO_TEXT, updatedAt: Date.now() };
-    demoId = d.id;
-    state.scripts.push(d);
-    state.activeScriptId = d.id;
+    if(demoPrev !== null){ input.value = demoPrev; demoPrev = null; setDemoBtn(false); input.focus(); return; }
+    demoPrev = input.value;
+    input.value = DEMO_TEXT;
     setDemoBtn(true);
-    save(); renderScriptTabs(); applyText(); seekTo(0);
   });
+  input.addEventListener('input', function(){ if(demoPrev !== null){ demoPrev = null; setDemoBtn(false); } });
 
   function requestWake(){
     try{
