@@ -12,7 +12,7 @@ cat > /usr/local/bin/sp-stats-run.sh <<RUN
 #!/bin/bash
 OUT=$OUT
 mkdir -p "\$OUT"
-for pair in shovonix:hub studio:studio; do
+for pair in shovonix:hub studio:studio prompter:prompter; do
   u=\${pair%%:*}; n=\${pair##*:}
   L=\$(ls /home/\$u/logs/nginx/access.log* 2>/dev/null)
   [ -n "\$L" ] || continue
@@ -20,7 +20,7 @@ for pair in shovonix:hub studio:studio; do
 done
 cat > "\$OUT/index.html" <<HTML
 <!doctype html><meta charset=utf-8><meta name=robots content="noindex,nofollow"><meta name=viewport content="width=device-width,initial-scale=1"><title>Stats</title>
-<body style="font:16px system-ui;background:#0a0a0b;color:#f4f4f2;padding:40px"><h2>Traffic stats</h2><p><a style="color:#fff" href="hub.html">shovonix.dev (hub + Space Prompter page)</a></p><p><a style="color:#fff" href="studio.html">studio.shovonix.dev (the app)</a></p><p style="color:#8a8a90">Updated hourly. IPs anonymised, known bots excluded.</p>
+<body style="font:16px system-ui;background:#0a0a0b;color:#f4f4f2;padding:40px"><h2>Traffic stats</h2><p><a style="color:#fff" href="hub.html">shovonix.dev (hub + Space Prompter page)</a></p><p><a style="color:#fff" href="prompter.html">prompter.shovonix.dev (the app, new address)</a></p><p><a style="color:#fff" href="studio.html">studio.shovonix.dev (the app, old address, shrinking)</a></p><p style="color:#8a8a90">Updated hourly. IPs anonymised, known bots excluded.</p>
 HTML
 chown -R shovonix:shovonix "\$OUT"; chmod -R a+rX "\$OUT"
 RUN
