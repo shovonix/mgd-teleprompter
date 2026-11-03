@@ -61,6 +61,13 @@ ul.facts li:last-child{border-bottom:1px solid #1d1d20}
 footer{border-top:1px solid #1d1d20;margin-top:96px;padding:36px 0 56px;color:#7A7A80;font:400 14px 'Public Sans',sans-serif}
 footer a{color:#B4B4B9}
 @media (max-width:700px){body{font-size:17px}.pair{grid-template-columns:1fr}.cta.ghost{margin:12px 0 0}.wrap{padding:0 20px}}
+figure img{cursor:zoom-in}
+#lb{position:fixed;inset:0;z-index:99;background:rgba(5,5,6,.98);display:none;flex-direction:column;align-items:center;justify-content:center;padding:24px;cursor:zoom-out}
+#lb.on{display:flex}
+#lb img{max-width:100%;max-height:calc(100vh - 110px);width:auto;height:auto;border-radius:10px;border:1px solid #26262A;background:#000}
+#lb p{margin:14px 0 0;max-width:720px;text-align:center;font:400 14px/1.5 'Public Sans',sans-serif;color:#9A9AA0}
+#lb button{position:absolute;top:18px;right:20px;width:44px;height:44px;border-radius:50%;border:1px solid #33333A;background:#111113;color:#F4F4F2;font:400 22px/1 'Archivo',sans-serif;cursor:pointer}
+body.lbo{overflow:hidden}
 </style>
 </head>
 <body>
@@ -270,6 +277,13 @@ document.getElementById('ytplay').addEventListener('click',function(){
   var b=document.getElementById('ytbox');
   b.innerHTML='<iframe src="https://www.youtube-nocookie.com/embed/05xDE15KG3A?autoplay=1&rel=0" title="Space Prompter demo" referrerpolicy="strict-origin-when-cross-origin" allow="autoplay; encrypted-media; picture-in-picture; fullscreen" allowfullscreen style="position:absolute;inset:0;width:100%;height:100%;border:0"></iframe>';
 });
+</script>
+<div id="lb" role="dialog" aria-modal="true" aria-label="Image viewer"><button type="button" aria-label="Close">&times;</button><img alt=""><p></p></div>
+<script>
+(function(){var lb=document.getElementById('lb'),im=lb.querySelector('img'),cp=lb.querySelector('p');
+function close(){lb.classList.remove('on');document.body.classList.remove('lbo')}
+document.querySelectorAll('figure img').forEach(function(i){i.addEventListener('click',function(){var f=i.closest('figure'),c=f&&f.querySelector('figcaption');im.src=i.currentSrc||i.src;im.alt=i.alt;cp.textContent=c?c.textContent:'';lb.classList.add('on');document.body.classList.add('lbo')})});
+lb.addEventListener('click',close);document.addEventListener('keydown',function(e){if(e.key==='Escape')close()});})();
 </script>
 </body>
 </html>
