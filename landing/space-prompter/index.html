@@ -140,10 +140,13 @@ a{color:inherit;text-decoration:none}
   <p class="eyebrow">Watch</p>
   <h2 class="h2" style="max-width:760px;margin:0 auto">See it in 45 seconds.</h2>
   <div style="margin:40px auto 0;max-width:980px;border-radius:22px;overflow:hidden;border:1px solid #26262A;background:#000;box-shadow:0 30px 90px rgba(0,0,0,.55)">
-    <video controls playsinline preload="none" poster="space-prompter-poster.jpg" style="display:block;width:100%;height:auto;aspect-ratio:16/9;background:#000">
-      <source src="space-prompter.mp4" type="video/mp4">
-      Your browser can't play this video.
-    </video>
+    <div id="ytbox" style="position:relative;aspect-ratio:16/9;background:#000 url(space-prompter-poster.jpg) center/cover">
+      <button id="ytplay" type="button" aria-label="Play video" style="position:absolute;inset:0;width:100%;height:100%;border:0;background:transparent;cursor:pointer;display:flex;align-items:center;justify-content:center">
+        <span style="width:84px;height:84px;border-radius:50%;background:#fff;display:flex;align-items:center;justify-content:center;box-shadow:0 10px 40px rgba(0,0,0,.6)"><svg width="30" height="30" viewBox="0 0 24 24"><path d="M8 5v14l11-7z" fill="#0A0A0B"/></svg></span>
+      </button>
+    </div>
+    <noscript><a href="https://youtu.be/05xDE15KG3A" style="display:block;padding:24px;color:#fff">Watch on YouTube</a></noscript>
+    <script>document.getElementById('ytplay').addEventListener('click',function(){var b=document.getElementById('ytbox');b.innerHTML='<iframe src="https://www.youtube-nocookie.com/embed/05xDE15KG3A?autoplay=1&rel=0" title="Space Prompter" allow="autoplay; encrypted-media; picture-in-picture; fullscreen" allowfullscreen style="position:absolute;inset:0;width:100%;height:100%;border:0"></iframe>'})</script>
   </div>
 </div>
 
