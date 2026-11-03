@@ -9,7 +9,7 @@ phone/tablet. It stores nothing and cannot read scripts.
 mkdir -p /opt/space-prompter-relay && cd /opt/space-prompter-relay
 curl -sSL -H "Accept: application/vnd.github.raw+json" -o server.js  "https://api.github.com/repos/shovonix/space-teleprompter/contents/relay/server.js?ref=main"
 curl -sSL -H "Accept: application/vnd.github.raw+json" -o package.json "https://api.github.com/repos/shovonix/space-teleprompter/contents/relay/package.json?ref=main"
-npm install --omit=dev
+# no npm install needed: the relay has zero dependencies (needs Node 18+: apt install -y nodejs)
 chown -R studio:studio /opt/space-prompter-relay
 ```
 
