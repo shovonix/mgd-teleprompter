@@ -26,7 +26,7 @@ After=network.target
 User=studio
 WorkingDirectory=/opt/space-prompter-relay
 Environment=PORT=8787
-Environment=ALLOWED_ORIGINS=https://studio.shovonix.dev,https://shovonix.dev
+Environment=ALLOWED_ORIGINS=https://prompter.shovonix.dev,https://studio.shovonix.dev,https://shovonix.dev
 ExecStart=/usr/bin/node server.js
 Restart=always
 RestartSec=3
@@ -42,7 +42,7 @@ curl -s http://127.0.0.1:8787/healthz   # should print: ok
 
 ## 3. Route /relay through nginx
 
-CloudPanel: Sites > studio.shovonix.dev > Vhost, add inside the `server { ... }` block:
+CloudPanel: Sites > prompter.shovonix.dev > Vhost (and studio.shovonix.dev while it still exists), add inside the `server { ... }` block:
 
 ```nginx
 location /relay {

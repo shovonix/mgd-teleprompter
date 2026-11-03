@@ -1,8 +1,8 @@
 # Space Prompter
 
-A self-hosted, single-file teleprompter for video shoots. Live at https://studio.shovonix.dev
+A self-hosted, single-file teleprompter for video shoots. Live at https://prompter.shovonix.dev
 
-[Open the app](https://studio.shovonix.dev) · [About Space Prompter](https://shovonix.dev/space-prompter/) · [Read the build story](https://shovonix.dev/blog/space-prompter-story/) · [Demo video](https://youtu.be/05xDE15KG3A)
+[Open the app](https://prompter.shovonix.dev) · [About Space Prompter](https://shovonix.dev/space-prompter/) · [Read the build story](https://shovonix.dev/blog/space-prompter-story/) · [Demo video](https://youtu.be/05xDE15KG3A)
 
 Built by [Shovon Arifin](https://shovonix.dev).
 
