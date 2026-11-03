@@ -14,3 +14,9 @@ Built by [Shovon Arifin](https://shovonix.dev).
 Everything lives in `index.html`; there is no build step. Scripts and settings are stored in the browser (`localStorage`).
 - **Pair phone / tablet (QR)**: in Mobile/Tablet mode on a desktop, a QR opens the same script on the device, keeps it live, and lets either device play/pause. Needs the relay in `relay/` (see `relay/INSTALL.md`); traffic is end-to-end encrypted.
 - **Controls**: Rotate 90°, Flip H, Flip V, text alignment.
+
+## Licence
+
+Copyright © 2026 Shovon Arifin. All rights reserved.
+
+The code is public so you can see how Space Prompter works. It is not open source: you may not copy, modify, redistribute or host it, in whole or in part, without written permission. Use the live app at the link above.
