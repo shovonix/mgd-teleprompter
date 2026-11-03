@@ -1,0 +1,253 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>How I built Space Prompter in four days — shovonix.dev</title>
+<meta name="description" content="The build log of Space Prompter: why I replaced our teleprompter app, the first wireframe, version one, and what four days of iterating with Claude looked like.">
+<meta name="theme-color" content="#0A0A0B">
+<link rel="icon" href="logo.png">
+<meta property="og:type" content="article">
+<meta property="og:title" content="How I built Space Prompter in four days">
+<meta property="og:description" content="From a wireframe to a finished free teleprompter: the real version history, mistakes included.">
+<meta property="og:url" content="https://shovonix.dev/blog/space-prompter-story/">
+<meta property="og:image" content="https://shovonix.dev/blog/space-prompter-story/img/v35-play.jpg">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700;800&family=Public+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+*{box-sizing:border-box}
+body{margin:0;background:#0A0A0B;color:#F4F4F2;font:400 18px/1.75 'Public Sans',sans-serif;-webkit-font-smoothing:antialiased}
+a{color:inherit}
+.wrap{width:100%;max-width:1160px;margin:0 auto;padding:0 32px}
+.col{width:100%;max-width:720px;margin:0 auto;padding:0 24px}
+nav{display:flex;align-items:center;justify-content:space-between;height:84px}
+nav a.brand{font:800 20px 'Archivo',sans-serif;letter-spacing:-.02em;text-decoration:none}
+nav a.brand span{color:#8A8A90}
+nav a.back{font:500 14px 'Archivo',sans-serif;color:#B4B4B9;text-decoration:none}
+nav a.back:hover{color:#fff}
+.eyebrow{font:600 12px 'Archivo',sans-serif;letter-spacing:.16em;text-transform:uppercase;color:#9A9AA0;margin:0 0 16px}
+h1{font:800 clamp(38px,6vw,68px)/1.04 'Archivo',sans-serif;letter-spacing:-.03em;margin:0 0 22px}
+h2{font:800 clamp(26px,3.4vw,36px)/1.12 'Archivo',sans-serif;letter-spacing:-.02em;margin:72px 0 18px}
+h2 small{display:block;font:500 12px 'JetBrains Mono',monospace;letter-spacing:.08em;text-transform:uppercase;color:#7A7A80;margin-bottom:10px}
+p{margin:0 0 22px;color:#C9C9CD}
+strong{color:#F4F4F2;font-weight:600}
+.lede{font-size:21px;line-height:1.6;color:#D6D6DA}
+.meta{font:400 13px 'JetBrains Mono',monospace;color:#7A7A80;letter-spacing:.02em;margin-top:26px}
+figure{margin:36px 0}
+figure.wide{max-width:1000px;margin-left:auto;margin-right:auto;padding:0 24px}
+figure img,figure svg{display:block;width:100%;height:auto;border-radius:14px;border:1px solid #26262A;background:#000}
+figcaption{font:400 14px/1.5 'Public Sans',sans-serif;color:#8A8A90;margin-top:12px}
+figcaption b{color:#B4B4B9;font-weight:600}
+.pair{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.pair figure{margin:0}
+.phone img{max-width:620px;margin:0 auto}
+ul.facts{list-style:none;padding:0;margin:0 0 22px}
+ul.facts li{padding:12px 0;border-top:1px solid #1d1d20;color:#C9C9CD}
+ul.facts li:last-child{border-bottom:1px solid #1d1d20}
+.callout{background:#111113;border:1px solid #26262A;border-radius:16px;padding:22px 24px;margin:32px 0}
+.callout p{margin:0;color:#D6D6DA}
+.video{position:relative;aspect-ratio:16/9;background:#000 url(/space-prompter/space-prompter-poster.jpg) center/cover;border-radius:16px;overflow:hidden;border:1px solid #26262A}
+.video button{position:absolute;inset:0;width:100%;height:100%;border:0;background:transparent;cursor:pointer;display:flex;align-items:center;justify-content:center}
+.video button span{width:84px;height:84px;border-radius:50%;background:#fff;display:flex;align-items:center;justify-content:center;box-shadow:0 10px 40px rgba(0,0,0,.6)}
+.cta{display:inline-flex;align-items:center;height:52px;padding:0 26px;border-radius:12px;background:#F4F4F2;color:#0A0A0B;font:700 15px 'Archivo',sans-serif;text-decoration:none;box-shadow:0 0 28px rgba(255,255,255,.16)}
+.cta.ghost{background:transparent;color:#F4F4F2;border:1px solid #33333A;box-shadow:none;margin-left:12px}
+footer{border-top:1px solid #1d1d20;margin-top:96px;padding:36px 0 56px;color:#7A7A80;font:400 14px 'Public Sans',sans-serif}
+footer a{color:#B4B4B9}
+@media (max-width:700px){body{font-size:17px}.pair{grid-template-columns:1fr}.cta.ghost{margin:12px 0 0}.wrap{padding:0 20px}}
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <nav>
+    <a class="brand" href="/">shovonix<span>.dev</span></a>
+    <a class="back" href="/space-prompter/">Space Prompter &rarr;</a>
+  </nav>
+</div>
+
+<header class="col" style="padding-top:56px">
+  <p class="eyebrow">Build log</p>
+  <h1>How I built Space Prompter in four days</h1>
+  <p class="lede">My team needed a teleprompter that did not fight us on set. So I made one, with Claude, between 31 October and 3 November. Here is the real version history, wrong turns included.</p>
+  <p class="meta">31 Oct &ndash; 3 Nov 2026 &middot; 118 commits &middot; by Shovon</p>
+</header>
+
+<main class="col">
+
+  <h2><small>The problem</small>Every shoot, the teleprompter was the weak link</h2>
+  <p>My team has used teleprompter apps for years, and they always came with something: <strong>sync problems</strong>, <strong>Android vs iOS compatibility</strong>, <strong>paid subscriptions</strong>. We also used the Neewer teleprompter app, whose Bluetooth pedal only works with Neewer's own software.</p>
+  <p>None of it was a disaster. It was a steady tax on every shoot. So I decided to build the one we actually wanted.</p>
+
+  <h2><small>The idea</small>One page, one job</h2>
+  <p>The first brief was small on purpose. Paste a script. Press play. Text scrolls past a guide line. That is it.</p>
+  <ul class="facts">
+    <li><strong>No account, no install.</strong> A single web page. Scripts stay in the browser.</li>
+    <li><strong>Built for the camera.</strong> Mirror and flip on their own axes, because a prompter in front of a lens shows the text reversed.</li>
+    <li><strong>A second screen.</strong> The reading view pops into its own window, so it can sit on an external monitor while the controls stay on the main display.</li>
+    <li><strong>Keyboard first.</strong> Space to play and pause, arrows for speed. No hunting for buttons mid-take.</li>
+  </ul>
+
+</main>
+
+<figure class="wide">
+<!-- Wireframe recreation -->
+<svg viewBox="0 0 1000 470" role="img" aria-label="Wireframe of the first concept: a paste-script screen and a prompter screen with a control bar, plus a second window for an external monitor">
+  <defs>
+    <marker id="ar" markerWidth="8" markerHeight="8" refX="6" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="#8A8A90"/></marker>
+    <style>
+      .ln{fill:none;stroke:#6a6a72;stroke-width:1.6;stroke-dasharray:6 5;stroke-linecap:round}
+      .sd{fill:none;stroke:#cfcfd4;stroke-width:1.8}
+      .tx{font:500 13px 'JetBrains Mono',monospace;fill:#9a9aa0}
+      .tt{font:700 15px 'Archivo',sans-serif;fill:#f4f4f2}
+      .gl{stroke:#c0392b;stroke-width:2}
+      .sc{fill:#4a4a50}
+    </style>
+  </defs>
+  <rect width="1000" height="470" fill="#0d0d0f"/>
+
+  <!-- screen 1 -->
+  <text class="tt" x="40" y="38">1 &middot; Paste your script</text>
+  <rect class="sd" x="40" y="54" width="270" height="340" rx="10"/>
+  <rect class="ln" x="58" y="72" width="234" height="230" rx="6"/>
+  <text class="tx" x="72" y="100">Paste or type</text>
+  <text class="tx" x="72" y="120">your script here</text>
+  <rect class="sd" x="58" y="322" width="234" height="40" rx="8"/>
+  <text class="tt" x="130" y="347">Start prompting</text>
+  <text class="tx" x="40" y="420">Saved on this device</text>
+
+  <!-- screen 2 -->
+  <text class="tt" x="360" y="38">2 &middot; Prompter (main display)</text>
+  <rect class="sd" x="360" y="54" width="330" height="340" rx="10"/>
+  <rect class="sc" x="384" y="90" width="220" height="10" rx="4"/>
+  <rect class="sc" x="384" y="116" width="270" height="10" rx="4"/>
+  <rect class="sc" x="384" y="142" width="180" height="10" rx="4"/>
+  <line class="gl" x1="372" y1="196" x2="678" y2="196"/>
+  <text class="tx" x="560" y="188">guide line</text>
+  <rect fill="#f4f4f2" x="384" y="214" width="250" height="12" rx="4"/>
+  <rect class="sc" x="384" y="244" width="270" height="10" rx="4"/>
+  <rect class="sc" x="384" y="270" width="200" height="10" rx="4"/>
+  <rect class="sd" x="376" y="330" width="298" height="50" rx="12"/>
+  <circle class="sd" cx="404" cy="355" r="12"/><path d="M400,349 L411,355 L400,361 z" fill="#f4f4f2"/>
+  <text class="tx" x="428" y="347">speed</text><line class="ln" x1="428" y1="357" x2="480" y2="357"/>
+  <text class="tx" x="494" y="347">size</text><line class="ln" x1="494" y1="357" x2="540" y2="357"/>
+  <text class="tx" x="552" y="347">margin</text><line class="ln" x1="552" y1="357" x2="604" y2="357"/>
+  <text class="tx" x="620" y="352">flip</text>
+  <text class="tx" x="360" y="420">play &middot; speed &middot; size &middot; margin</text>
+  <text class="tx" x="360" y="438">mirror + flip &middot; fullscreen</text>
+
+  <!-- screen 3 -->
+  <text class="tt" x="740" y="38">3 &middot; Stage window</text>
+  <rect class="sd" x="740" y="120" width="220" height="150" rx="8"/>
+  <line class="gl" x1="750" y1="195" x2="950" y2="195"/>
+  <rect class="sc" x="760" y="150" width="140" height="9" rx="4"/>
+  <rect fill="#f4f4f2" x="760" y="214" width="170" height="10" rx="4" opacity=".85"/>
+  <text class="tx" x="740" y="300">external monitor,</text>
+  <text class="tx" x="740" y="318">mirrored for the lens</text>
+  <path d="M692,215 C712,215 718,195 736,195" fill="none" stroke="#8A8A90" stroke-width="1.6" marker-end="url(#ar)"/>
+  <text class="tx" x="700" y="180">synced</text>
+</svg>
+<figcaption><b>Wireframe.</b> Recreated from my first written notes, not the original sketch. Three surfaces: paste, prompt, and a second window for the camera-facing monitor.</figcaption>
+</figure>
+
+<div class="col">
+
+  <h2><small>31 October &middot; v1</small>The first version was ugly and nearly broken</h2>
+  <p>Version one was a single HTML file. Full-width red button, big empty text box, a scrolling stage. I put it on my own server the same day, then tested it on real devices and found the basics were wrong.</p>
+</div>
+
+<div class="wide-pair" style="max-width:1000px;margin:0 auto;padding:0 24px">
+  <div class="pair">
+    <figure><img src="img/v1-setup.jpg" alt="Version one: paste screen, red button" loading="lazy"><figcaption><b>v1, paste screen.</b> A text box and a red button.</figcaption></figure>
+    <figure><img src="img/v1-play.jpg" alt="Version one: prompter" loading="lazy"><figcaption><b>v1, prompting.</b> Big text, a thin red guide line, nothing else.</figcaption></figure>
+  </div>
+</div>
+
+<div class="col">
+  <p style="margin-top:32px">Three bugs showed up in the first live test:</p>
+  <ul class="facts">
+    <li><strong>No viewport tag.</strong> On a phone, the page did not scale to the screen.</li>
+    <li><strong>No character encoding.</strong> The arrow symbols in the shortcut hints turned into garbage characters.</li>
+    <li><strong>Play did nothing.</strong> The code reached for an element that was never in the page, crashed, and the Space key and the button both died with it.</li>
+  </ul>
+  <p>Each one was a few lines to fix. But it was a useful reminder: <strong>the first version always lies about being done</strong> until it runs on a real device.</p>
+
+  <h2><small>1 November &middot; v1.x</small>Redesigns, and one I reverted</h2>
+  <p>Day two was mostly interface. I rebuilt the control window with frosted-glass bars, tried a heavier "liquid glass" look, and then <strong>threw it away</strong> and went back to the cleaner baseline. The glass kept making the text underneath bleed through the bar. I patched it several times before finding the real cause: a stacking-context bug, not an opacity problem.</p>
+</div>
+
+<figure class="wide">
+  <img src="img/v1b-glass.jpg" alt="Redesigned control bar with frosted glass" loading="lazy">
+  <figcaption><b>Day two.</b> Frosted control bar, icon buttons, sliders in one row.</figcaption>
+</figure>
+
+<div class="col">
+  <p>Two things from this day survived into the final app. First, <strong>one key does three jobs</strong>: tap Space to play and pause, double-tap to go back a paragraph, hold to jump to the start. Second, the Bluetooth pedal. The Neewer pedal stays locked to Neewer's app, so instead of reverse-engineering it, I added a learn mode: press the key your pedal sends, and it acts like Space. <strong>Any pedal that sends a key press works.</strong></p>
+</div>
+
+<figure class="wide">
+  <img src="img/v17-pedal.jpg" alt="v1.7 with green accent and pedal support" loading="lazy">
+  <figcaption><b>v1.7.</b> Green accent, a control bar with every setting in reach, and pedal learn mode.</figcaption>
+</figure>
+
+<div class="col">
+  <h2><small>2 November &middot; v2.0 &rarr; v3.0</small>The hard part was keeping two screens in step</h2>
+  <p>The second-screen idea sounded simple and was the single hardest thing in the project. The stage window has to scroll exactly like the control window, at the same wrap width, with no stutter. I went through several attempts: batching updates (too choppy), throttling (fuzzy, stepped motion), a guessed 1280px width (wrong), until the control window was made to read the <strong>real width of the stage window</strong> and scale to match.</p>
+  <p>That unlocked v2.0, a dual-monitor control panel, and the day's other big change: it stopped being the "MGD Teleprompter" and became <strong>Space Prompter</strong>, because the spacebar runs the whole thing. By the end of the day it also had single-monitor, tablet and phone modes.</p>
+</div>
+
+<figure class="wide">
+  <img src="img/v2-dual.jpg" alt="v2.0 dual-monitor control panel" loading="lazy">
+  <figcaption><b>v2.0.</b> Control window on the left, a live preview of the stage, device type, appearance controls.</figcaption>
+</figure>
+
+<div class="col">
+  <h2><small>3 November &middot; v3.x</small>Phone as remote, fade the rest, and shipping</h2>
+  <p>The last day added <strong>QR pairing</strong>: scan a code on your computer and your phone becomes a remote or a second screen, with the script synced live. It runs through a tiny relay service, and the link is encrypted, so the relay cannot read your script. I also added a <strong>Fade others</strong> slider, which dims every paragraph except the one you are reading, a demo-text button, rotate and flip controls, and installable-app support.</p>
+</div>
+
+<figure class="wide">
+  <img src="img/v35-play.jpg" alt="Space Prompter v3.5 while prompting, with fade-others applied" loading="lazy">
+  <figcaption><b>v3.5.</b> The finished app: faded paragraphs around the line being read, the control panel on the right.</figcaption>
+</figure>
+
+<div class="col phone">
+  <figure>
+    <img src="img/phone.jpg" alt="Space Prompter on a phone: paste screen and prompter with floating bar" loading="lazy">
+    <figcaption><b>On a phone.</b> The same app, with a floating control bar and slide-in panels.</figcaption>
+  </figure>
+
+  <p>Then came everything around the app: a landing page, a demo video, a thumbnail and the SEO. I made those with Claude too, because shipping the tool is only half of it. If nobody can find it or understand it in ten seconds, it does not exist.</p>
+
+  <div class="video" id="ytbox">
+    <button id="ytplay" type="button" aria-label="Play video"><span><svg width="30" height="30" viewBox="0 0 24 24"><path d="M8 5v14l11-7z" fill="#0A0A0B"/></svg></span></button>
+  </div>
+  <p style="font:400 14px 'Public Sans',sans-serif;color:#8A8A90;margin-top:12px">The 45-second demo.</p>
+
+  <h2><small>What I would tell you</small>What I took from it</h2>
+  <ul class="facts">
+    <li><strong>Start smaller than you think.</strong> The whole idea fit in three boxes. Everything else was added after real use.</li>
+    <li><strong>Test on a real device on day one.</strong> Three basic bugs only showed up on a phone.</li>
+    <li><strong>Fix causes, not symptoms.</strong> The glass bar bug took several patches until I looked for the actual cause.</li>
+    <li><strong>Revert freely.</strong> The liquid-glass look looked impressive and made the tool worse. Undoing it was the right call.</li>
+  </ul>
+
+  <div class="callout"><p><strong>Where it stands.</strong> Space Prompter is live, free, and my team has used it on shoots. Native iOS and Android apps are still "coming soon", and for now you install it from the browser. If you try it, tell me what is missing.</p></div>
+
+  <p style="margin-top:36px">
+    <a class="cta" href="https://studio.shovonix.dev" target="_blank" rel="noopener">Open the prompter</a>
+    <a class="cta ghost" href="/space-prompter/">About Space Prompter</a>
+  </p>
+</div>
+
+<footer>
+  <div class="col">&copy; shovonix &middot; <a href="/">shovonix.dev</a> &middot; <a href="https://www.youtube.com/@Shovonix" target="_blank" rel="noopener">YouTube</a> &middot; <a href="https://github.com/shovonix" target="_blank" rel="noopener">GitHub</a></div>
+</footer>
+
+<script>
+document.getElementById('ytplay').addEventListener('click',function(){
+  var b=document.getElementById('ytbox');
+  b.innerHTML='<iframe src="https://www.youtube-nocookie.com/embed/05xDE15KG3A?autoplay=1&rel=0" title="Space Prompter demo" referrerpolicy="strict-origin-when-cross-origin" allow="autoplay; encrypted-media; picture-in-picture; fullscreen" allowfullscreen style="position:absolute;inset:0;width:100%;height:100%;border:0"></iframe>';
+});
+</script>
+</body>
+</html>
