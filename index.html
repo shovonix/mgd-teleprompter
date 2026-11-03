@@ -254,7 +254,8 @@ body:not(.stage-window) #script-text{cursor:text}
 }
 #guide.off{opacity:0}
 
-.para{margin-bottom:1.1em}
+.para{margin-bottom:1.1em;transition:opacity .3s ease}
+.para.dim{opacity:var(--dimop,.45)}
 .para:last-child{margin-bottom:0}
 
 body:not(.stage-window) #stage::after{
@@ -851,6 +852,10 @@ body.touch #screen-note{order:5;margin-top:12px;padding:10px 12px;font-size:12px
     <div class="slider-group" id="bgop-group">
       <div class="slider-label"><span>Opacity</span><span id="bgop-val">—</span></div>
       <input type="range" id="bgop" min="20" max="100" step="5">
+    </div>
+    <div class="slider-group" id="dim-group">
+      <div class="slider-label"><span>Fade others</span><span id="dim-val">—</span></div>
+      <input type="range" id="dim" min="0" max="90" step="5">
     </div>
     <div class="slider-group" id="size-group">
       <div class="slider-label"><span>Text size</span><span id="size-val">—</span></div>
@@ -3247,6 +3252,7 @@ var qrcode = function() {
     speed: 40,        // px/sec
     fontSize: 48,     // px
     marginPx: 0,       // extra left/right margin, px per side
+    dimPct: 55,        // how much the paragraphs away from the guide line fade (0 = no fade)
     bgOpacity: 100,    // stage background darkness, 100 = solid black
     pedalKeys: [],     // [{code,key}] — any of these behave exactly like Space
     guideVisible: true, // red reading-guide line across the middle of the stage
@@ -3345,6 +3351,8 @@ var qrcode = function() {
   var marginVal = document.getElementById('margin-val');
   var bgopSlider = document.getElementById('bgop');
   var bgopVal = document.getElementById('bgop-val');
+  var dimSlider = document.getElementById('dim');
+  var dimVal = document.getElementById('dim-val');
   var mirrorBtn = document.getElementById('mirror-btn');
   var flipBtn = document.getElementById('flip-btn');
   var rotateBtn = document.getElementById('rotate-btn');
@@ -3406,6 +3414,7 @@ var qrcode = function() {
     });
     scriptText.appendChild(frag);
     applyViewScale();
+    dimCur = -2; scheduleDim();
     updateProgress();
   }
   // ---- Position sync in content units ----
@@ -3579,6 +3588,30 @@ var qrcode = function() {
     }
     applyViewScale();
   }
+  // Fade every paragraph except the one on the guide line, so the reader's
+  // eye stays on the current line. Pure display: nothing here is saved to the script.
+  var dimCur = -2, dimRaf = 0;
+  function applyDim(){
+    var pct = Math.max(0, Math.min(90, state.dimPct == null ? 55 : state.dimPct));
+    scriptText.style.setProperty('--dimop', String(1 - pct / 100));
+    if(dimSlider){ dimSlider.value = pct; dimVal.textContent = pct ? pct + '%' : 'Off'; }
+    dimCur = -2;
+    updateDim();
+  }
+  function updateDim(){
+    var paras = scriptText.querySelectorAll('.para');
+    var off = !paras.length || !(state.dimPct > 0) || (typeof editMode !== 'undefined' && editMode);
+    var cur = -1;
+    if(!off){
+      var y = (scroller.scrollTop + scroller.clientHeight / 2) / viewK;
+      for(var i = 0; i < paras.length; i++){ if(paras[i].offsetTop <= y + 8) cur = i; else break; }
+      if(cur < 0) cur = 0;
+    }
+    if(cur === dimCur && !off) return;
+    dimCur = off ? -2 : cur;
+    for(var j = 0; j < paras.length; j++) paras[j].classList.toggle('dim', !off && j !== cur);
+  }
+  function scheduleDim(){ if(dimRaf) return; dimRaf = requestAnimationFrame(function(){ dimRaf = 0; updateDim(); }); }
   function applyBgOpacity(){
     // A contrast-preview control, not real window transparency (a web page
     // can't make a browser window see-through to the desktop behind it).
@@ -3592,6 +3625,7 @@ var qrcode = function() {
   }
   function applySize(){
     scriptText.style.fontSize = state.fontSize + 'px';
+    scheduleDim();
     scriptText.style.lineHeight = '1.5';
     sizeSlider.value = state.fontSize;
     sizeVal.textContent = state.fontSize + 'px';
@@ -3821,6 +3855,7 @@ var qrcode = function() {
     if(on === editMode) return;
     if(!on && typeof flushEdit === 'function' && isEditingScript()) flushEdit();
     editMode = on;
+    dimCur = -2; updateDim();
     applyEditable();
     document.body.classList.toggle('edit-mode', on);
     var lab = editBtn.querySelector('span');
@@ -4025,9 +4060,15 @@ var qrcode = function() {
     applyMargin();
     save();
   });
+  dimSlider.addEventListener('input', function(){
+    state.dimPct = Number(dimSlider.value);
+    applyDim();
+    save();
+  });
   bgopSlider.addEventListener('input', function(){
     state.bgOpacity = Number(bgopSlider.value);
     applyBgOpacity();
+  applyDim();
     save();
   });
   mirrorBtn.addEventListener('click', function(){
@@ -4234,6 +4275,8 @@ var qrcode = function() {
     // Skipped while playing: the auto-scroll loop in tick() already keeps
     // both windows moving together at the same speed.
     scroller.addEventListener('scroll', updateProgress);
+    scroller.addEventListener('scroll', scheduleDim, {passive:true});
+    window.addEventListener('resize', scheduleDim);
     window.addEventListener('resize', updateProgress);
     scroller.addEventListener('scroll', function(){
       if(playing) return;
@@ -4764,7 +4807,7 @@ var qrcode = function() {
       if(msg.type === 'state'){
         applyingRemote = true;
         Object.assign(state, msg.state);
-        applyText(); applyFlip(); applyAlign(); applyGuide(); applyPreviewVisibility(); applySize(); applyMargin(); applyBgOpacity(); applySpeed(); applyStageWidth(); applyDeviceType();
+        applyText(); applyFlip(); applyAlign(); applyGuide(); applyPreviewVisibility(); applySize(); applyMargin(); applyBgOpacity(); applyDim(); applySpeed(); applyStageWidth(); applyDeviceType();
         if(stageWidthSender) stageWidthSender();
         applyingRemote = false;
       }else if(msg.type === 'playing'){
@@ -4925,7 +4968,7 @@ var qrcode = function() {
   });
 
   // ---- Build/version indicator (control window top bar) ----
-  var APP_VERSION = 'v3.2';
+  var APP_VERSION = 'v3.3';
   if(buildMeta && !isStageWindow){
     buildMeta.textContent = APP_VERSION;
   }
@@ -4963,6 +5006,7 @@ var qrcode = function() {
   applySize();
   applyMargin();
   applyBgOpacity();
+  applyDim();
   applyFlip();
   applyAlign();
   applyGuide();
