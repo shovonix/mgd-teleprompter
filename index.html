@@ -4731,7 +4731,11 @@ var qrcode = function() {
   function pairMaybeAutoOpen(fromUser){
     if(isStageWindow || pair.role === 'guest') return;
     var m = state.deviceType;
-    if(m !== 'mobile' && m !== 'tablet') return;
+    if(m !== 'mobile' && m !== 'tablet'){
+      // Left Mobile/Tablet: the QR has no job any more, so put it away.
+      if(!document.getElementById('pair-modal').hidden){ pairCloseModal(); pairRefreshUi(); }
+      return;
+    }
     var coarse = false; try{ coarse = window.matchMedia('(pointer:coarse)').matches; }catch(e){}
     if(coarse) return; // already on a touch device: nothing to scan from here
     if(!fromUser){ try{ if(sessionStorage.getItem('sp-pair-auto')) return; sessionStorage.setItem('sp-pair-auto', '1'); }catch(e){} }
