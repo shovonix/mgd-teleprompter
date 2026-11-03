@@ -8,3 +8,5 @@ A self-hosted, single-file teleprompter for video shoots. Live at https://studio
 - Keys: `Space` play/pause, double `Space` previous paragraph, hold `Space` jump to top, `F` full screen.
 
 Everything lives in `index.html`; there is no build step. Scripts and settings are stored in the browser (`localStorage`).
+- **Pair phone / tablet (QR)**: in Mobile/Tablet mode on a desktop, a QR opens the same script on the device, keeps it live, and lets either device play/pause. Needs the relay in `relay/` (see `relay/INSTALL.md`); traffic is end-to-end encrypted.
+- **Controls**: Rotate 90°, Flip H, Flip V, text alignment.
