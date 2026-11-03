@@ -1,4 +1,11 @@
 <meta charset="UTF-8">
+<link rel="manifest" href="/manifest.webmanifest">
+<meta name="theme-color" content="#0A0A0B">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Prompter">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
@@ -4291,8 +4298,8 @@ var qrcode = function() {
   }
   var MODE_NOTES = {
     dual: 'This teleprompter runs across <b>two screens</b>.<span class="nb"><b>Control window</b> — the one you\'re looking at now. Paste, edit and press play here.</span><span class="nb"><b>Stage window</b> — your second (extended) display. It shows the mirrored view the camera reads.</span><span class="nb">Rotate, Flip H and Flip V only change the Stage window — this control view always stays readable.</span>',
-    mobile: 'Prepare your script here, then rotate your phone for the best preview.',
-    tablet: 'Prepare your script here, then rotate your tablet for the best preview.',
+    mobile: 'Prepare your script here, then rotate your phone for the best preview.<span class="nb"><b>Tip:</b> use your browser\'s Add to Home Screen to install it like an app. <b>iOS &amp; Android apps: coming soon.</b></span>',
+    tablet: 'Prepare your script here, then rotate your tablet for the best preview.<span class="nb"><b>Tip:</b> use your browser\'s Add to Home Screen to install it like an app. <b>iOS &amp; Android apps: coming soon.</b></span>',
     single: 'Two screens give a better experience — switch to <b>Dual Monitor</b> if you have a second display.'
   };
   function renderDevicePickers(){
@@ -4960,6 +4967,10 @@ var qrcode = function() {
     pairGuestStart(joinMatch[1], joinMatch[2]);
   }else if(!isStageWindow){
     pairMaybeAutoOpen(false);
+  }
+
+  if('serviceWorker' in navigator && location.protocol === 'https:' && !isStageWindow){
+    window.addEventListener('load', function(){ navigator.serviceWorker.register('/sw.js').catch(function(){}); });
   }
 
   window.claude = window.claude || {};
