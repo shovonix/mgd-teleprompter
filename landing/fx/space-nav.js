@@ -8,7 +8,7 @@
   var me=document.currentScript||document.querySelector('script[src*="space-nav"]');
   var OFFSET=+(me&&me.getAttribute('data-offset'))||0;
   var HINT=!(me&&me.getAttribute('data-hint')==='off');
-  var TAP_GAP=380, HOLD=450, EDGE=30;
+  var DOUBLE=520, HOLD=450, EDGE=30;
   var reduce=window.matchMedia&&matchMedia('(prefers-reduced-motion:reduce)').matches;
   function sections(){
     var l=[].slice.call(document.querySelectorAll('[data-space-section]'));
@@ -49,21 +49,24 @@
   }
   function nextFrom(y){var a=anchors();for(var i=0;i<a.length;i++) if(a[i]>y+EDGE) return a[i]; return 1e9;}
   function prevFrom(y){var a=anchors(),b=0;for(var i=0;i<a.length;i++) if(a[i]<y-EDGE) b=a[i]; return b;}
-  var down=false, held=false, holdT=null, lastTap=0, origin=0;
+  var down=false, held=false, dbl=false, holdT=null, lastDown=0, origin=0;
   addEventListener('keydown',function(e){
     if(e.code!=='Space'||e.ctrlKey||e.metaKey||e.altKey||e.shiftKey||skip(e.target)) return;
     e.preventDefault(); hideHint();
     if(e.repeat||down) return;
-    down=true; held=false;
-    holdT=setTimeout(function(){held=true;go(0);},HOLD);
+    down=true; held=false; dbl=false;
+    var now=Date.now();
+    if(lastDown&&now-lastDown<DOUBLE){            /* second press: go back from where the first started */
+      dbl=true; lastDown=0; go(prevFrom(origin)); return;
+    }
+    lastDown=now;
+    holdT=setTimeout(function(){held=true;lastDown=0;go(0);},HOLD);
   });
   addEventListener('keyup',function(e){
     if(e.code!=='Space'||!down) return;
     down=false; clearTimeout(holdT);
-    if(held){held=false;lastTap=0;return;}
-    var now=Date.now();
-    if(lastTap&&now-lastTap<TAP_GAP){lastTap=0;go(prevFrom(origin));return;}   /* double: back from where you started */
-    lastTap=now; origin=scrollY; go(nextFrom(origin));                         /* single: next, instantly */
+    if(dbl||held){dbl=held=false;return;}
+    origin=scrollY; go(nextFrom(origin));         /* single tap: next section, instantly */
   });
   /* one-time hint */
   var chip=null;
