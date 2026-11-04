@@ -850,18 +850,6 @@ body.touch #screen-note{order:5;margin-top:12px;padding:10px 12px;font-size:12px
 
   <div class="sec">
     <div class="sec-title">Appearance</div>
-    <div class="slider-group" id="margin-group">
-      <div class="slider-label"><span>Margin</span><span id="margin-val">—</span></div>
-      <input type="range" id="margin" min="0" max="500" step="10">
-    </div>
-    <div class="slider-group" id="bgop-group">
-      <div class="slider-label"><span>Opacity</span><span id="bgop-val">—</span></div>
-      <input type="range" id="bgop" min="20" max="100" step="5">
-    </div>
-    <div class="slider-group" id="dim-group">
-      <div class="slider-label"><span>Fade others</span><span id="dim-val">—</span></div>
-      <input type="range" id="dim" min="0" max="90" step="5">
-    </div>
     <div class="slider-group" id="size-group">
       <div class="slider-label"><span>Text size</span><span id="size-val">—</span></div>
       <input type="range" id="size" min="22" max="110" step="2">
@@ -875,16 +863,6 @@ body.touch #screen-note{order:5;margin-top:12px;padding:10px 12px;font-size:12px
       </div>
     </div>
     <div class="tpair">
-      <button class="tbtn" id="mirror-btn" aria-pressed="false" aria-label="Flip H — horizontal flip" title="Horizontal flip (stage window in dual mode)">
-        <span>Flip H</span>
-        <svg viewBox="0 0 24 24"><path d="M11 3h2v18h-2zM4 7l5 5-5 5zM20 7l-5 5 5 5z"/></svg>
-      </button>
-      <button class="tbtn" id="flip-btn" aria-pressed="false" aria-label="Flip V — vertical flip" title="Vertical flip (stage window in dual mode)">
-        <span>Flip V</span>
-        <svg viewBox="0 0 24 24" style="transform:rotate(90deg)"><path d="M11 3h2v18h-2zM4 7l5 5-5 5zM20 7l-5 5 5 5z"/></svg>
-      </button>
-    </div>
-    <div class="tpair">
       <button class="tbtn guide" id="guide-btn" aria-pressed="true" aria-label="Guide line" title="Reading guide line">
         <span>Guide line</span>
         <svg viewBox="0 0 24 24"><path fill-rule="evenodd" clip-rule="evenodd" d="M3 5h18v14H3V5zm2 2v10h14V7H5z"/><rect x="5" y="11" width="14" height="2"/></svg>
@@ -894,11 +872,33 @@ body.touch #screen-note{order:5;margin-top:12px;padding:10px 12px;font-size:12px
         <svg viewBox="0 0 24 24"><path d="M3 5h18v2H3zM3 9h18v2H3z" opacity=".35"/><path d="M3 13h18v2H3zM3 17h18v2H3z"/></svg>
       </button>
     </div>
+    <div class="slider-group" id="dim-group">
+      <div class="slider-label"><span>Fade others</span><span id="dim-val">—</span></div>
+      <input type="range" id="dim" min="0" max="90" step="5">
+    </div>
+    <div class="slider-group" id="bgop-group">
+      <div class="slider-label"><span>Opacity</span><span id="bgop-val">—</span></div>
+      <input type="range" id="bgop" min="20" max="100" step="5">
+    </div>
+    <div class="tpair">
+      <button class="tbtn" id="mirror-btn" aria-pressed="false" aria-label="Flip H — horizontal flip" title="Horizontal flip (stage window in dual mode)">
+        <span>Flip H</span>
+        <svg viewBox="0 0 24 24"><path d="M11 3h2v18h-2zM4 7l5 5-5 5zM20 7l-5 5 5 5z"/></svg>
+      </button>
+      <button class="tbtn" id="flip-btn" aria-pressed="false" aria-label="Flip V — vertical flip" title="Vertical flip (stage window in dual mode)">
+        <span>Flip V</span>
+        <svg viewBox="0 0 24 24" style="transform:rotate(90deg)"><path d="M11 3h2v18h-2zM4 7l5 5-5 5zM20 7l-5 5 5 5z"/></svg>
+      </button>
+    </div>
     <div class="tpair half">
       <button class="tbtn" id="rotate-btn" aria-label="Rotate 90 degrees" title="Each press turns the prompter 90°, then loops back to 0° (stage window in dual mode)">
         <span>Rotate</span><span class="rot-deg" id="rot-deg">0°</span>
         <svg viewBox="0 0 24 24"><path d="M16.5 3.5L21 8l-4.5 4.5V9.2c-2.6.4-4.5 2.6-4.5 5.3 0 3 2.5 5.5 5.5 5.5v2c-4.1 0-7.5-3.4-7.5-7.5 0-3.8 2.8-6.9 6.5-7.4V3.5zM3 6h6v6H3z"/></svg>
       </button>
+    </div>
+    <div class="slider-group" id="margin-group">
+      <div class="slider-label"><span>Margin</span><span id="margin-val">—</span></div>
+      <input type="range" id="margin" min="0" max="500" step="10">
     </div>
     <div class="caption only-dual">Rotate, Flip H and Flip V only change the Stage window — this control view stays readable either way.</div>
   </div>
