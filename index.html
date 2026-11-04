@@ -877,12 +877,8 @@ body.touch #screen-note{order:5;margin-top:12px;padding:10px 12px;font-size:12px
       </button>
     </div>
     <div class="slider-group" id="dim-group">
-      <div class="slider-label"><span>Fade others</span><span id="dim-val">—</span></div>
+      <div class="slider-label"><span>Fade opacity</span><span id="dim-val">—</span></div>
       <input type="range" id="dim" min="0" max="90" step="5">
-    </div>
-    <div class="slider-group" id="bgop-group">
-      <div class="slider-label"><span>Opacity</span><span id="bgop-val">—</span></div>
-      <input type="range" id="bgop" min="20" max="100" step="5">
     </div>
     <div class="tpair three">
       <button class="tbtn" id="mirror-btn" aria-pressed="false" aria-label="Flip H — horizontal flip" title="Horizontal flip (stage window in dual mode)">
@@ -3367,8 +3363,6 @@ var qrcode = function() {
   var sizeVal = document.getElementById('size-val');
   var marginSlider = document.getElementById('margin');
   var marginVal = document.getElementById('margin-val');
-  var bgopSlider = document.getElementById('bgop');
-  var bgopVal = document.getElementById('bgop-val');
   var dimSlider = document.getElementById('dim');
   var dimVal = document.getElementById('dim-val');
   var fadeBtn = document.getElementById('fade-btn');
@@ -3642,11 +3636,10 @@ var qrcode = function() {
     // can't make a browser window see-through to the desktop behind it).
     // 100% = solid black; dialing it down blends toward gray so you can
     // preview how the text reads against a lighter backdrop before a mirror.
-    var v = Math.max(20, Math.min(100, state.bgOpacity));
+    state.bgOpacity = 100; // slider removed: stage is always solid black
+    var v = 100;
     var g = Math.round(255 * (1 - v / 100));
     stage.style.backgroundColor = 'rgb(' + g + ',' + g + ',' + g + ')';
-    bgopSlider.value = v;
-    bgopVal.textContent = v + '%';
   }
   function applySize(){
     scriptText.style.fontSize = state.fontSize + 'px';
@@ -4088,12 +4081,6 @@ var qrcode = function() {
   dimSlider.addEventListener('input', function(){
     state.dimPct = Number(dimSlider.value);
     applyDim();
-    save();
-  });
-  bgopSlider.addEventListener('input', function(){
-    state.bgOpacity = Number(bgopSlider.value);
-    applyBgOpacity();
-  applyDim();
     save();
   });
   mirrorBtn.addEventListener('click', function(){
