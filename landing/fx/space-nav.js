@@ -8,7 +8,7 @@
   var me=document.currentScript||document.querySelector('script[src*="space-nav"]');
   var OFFSET=+(me&&me.getAttribute('data-offset'))||0;
   var HINT=!(me&&me.getAttribute('data-hint')==='off');
-  var TAP_GAP=300, HOLD=500, EDGE=30;
+  var TAP_GAP=380, HOLD=450, EDGE=30;
   var reduce=window.matchMedia&&matchMedia('(prefers-reduced-motion:reduce)').matches;
   function sections(){
     var l=[].slice.call(document.querySelectorAll('[data-space-section]'));
@@ -20,40 +20,50 @@
     var n=(t.tagName||'').toLowerCase();
     return /^(input|textarea|select|button|a|video|audio|iframe|summary)$/.test(n)||t.isContentEditable||(t.getAttribute&&/^(button|link|textbox|slider|tab|menuitem)$/.test(t.getAttribute('role')||''))||!!(t.closest&&t.closest('dialog[open],[aria-modal="true"]'));
   }
-  function go(y){window.scrollTo({top:Math.max(0,y),behavior:reduce?'auto':'smooth'});}
-  /* Where a section should land: its first heading/content sits just under the top edge,
-     so the empty padding above it is skipped and the section is framed properly. */
+  /* instant, smooth scroll: fixed short ease-out, interruptible */
+  var raf=0;
+  function stop(){if(raf){cancelAnimationFrame(raf);raf=0;}}
+  function go(y){
+    stop();
+    var max=document.documentElement.scrollHeight-innerHeight;
+    y=Math.max(0,Math.min(max,y));
+    var from=scrollY, d=y-from;
+    if(!d) return;
+    if(reduce){scrollTo(0,y);return;}
+    var dur=Math.min(380,160+Math.abs(d)/8), t0=performance.now();
+    (function step(t){
+      var k=Math.min(1,(t-t0)/dur), e=1-Math.pow(1-k,3);
+      scrollTo(0,from+d*e);
+      raf=k<1?requestAnimationFrame(step):0;
+    })(t0);
+  }
+  ['wheel','touchstart','mousedown'].forEach(function(n){addEventListener(n,stop,{passive:true});});
+  /* Where a section should land: first heading/content just under the top edge. */
   var PAD=56;
-  function rel(el,i){
-    if(i===0) return -scrollY;
-    var c=el.querySelector('h1,h2,h3,.eyebrow,video,img,p')||el;
-    return c.getBoundingClientRect().top-PAD-OFFSET;
+  function anchors(){
+    return sections().map(function(el,i){
+      if(i===0) return 0;
+      var c=el.querySelector('h1,h2,h3,.eyebrow,video,img,p')||el;
+      return c.getBoundingClientRect().top+scrollY-PAD-OFFSET;
+    });
   }
-  function next(){
-    var s=sections();
-    for(var i=0;i<s.length;i++){var r=rel(s[i],i); if(r>EDGE){go(scrollY+r);return;}}
-    go(document.documentElement.scrollHeight);
-  }
-  function prev(){
-    var s=sections(), best=null;
-    for(var i=0;i<s.length;i++){var r=rel(s[i],i); if(r<-EDGE) best=r;}
-    go(best===null?0:scrollY+best);
-  }
-  var down=false, held=false, holdT=null, tapT=null, lastTap=0;
+  function nextFrom(y){var a=anchors();for(var i=0;i<a.length;i++) if(a[i]>y+EDGE) return a[i]; return 1e9;}
+  function prevFrom(y){var a=anchors(),b=0;for(var i=0;i<a.length;i++) if(a[i]<y-EDGE) b=a[i]; return b;}
+  var down=false, held=false, holdT=null, lastTap=0, origin=0;
   addEventListener('keydown',function(e){
     if(e.code!=='Space'||e.ctrlKey||e.metaKey||e.altKey||e.shiftKey||skip(e.target)) return;
     e.preventDefault(); hideHint();
     if(e.repeat||down) return;
     down=true; held=false;
-    holdT=setTimeout(function(){held=true;clearTimeout(tapT);tapT=null;go(0);},HOLD);
+    holdT=setTimeout(function(){held=true;go(0);},HOLD);
   });
   addEventListener('keyup',function(e){
     if(e.code!=='Space'||!down) return;
     down=false; clearTimeout(holdT);
-    if(held){held=false;return;}
+    if(held){held=false;lastTap=0;return;}
     var now=Date.now();
-    if(tapT&&now-lastTap<TAP_GAP+120){clearTimeout(tapT);tapT=null;lastTap=0;prev();return;}
-    lastTap=now; tapT=setTimeout(function(){tapT=null;next();},TAP_GAP);
+    if(lastTap&&now-lastTap<TAP_GAP){lastTap=0;go(prevFrom(origin));return;}   /* double: back from where you started */
+    lastTap=now; origin=scrollY; go(nextFrom(origin));                         /* single: next, instantly */
   });
   /* one-time hint */
   var chip=null;
