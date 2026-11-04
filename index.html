@@ -907,6 +907,10 @@ body.touch #screen-note{order:5;margin-top:12px;padding:10px 12px;font-size:12px
       <div class="slider-label"><span>Margin</span><span id="margin-val">—</span></div>
       <input type="range" id="margin" min="0" max="500" step="10">
     </div>
+    <div class="slider-group" id="bgop-group">
+      <div class="slider-label"><span>Opacity</span><span id="bgop-val">—</span></div>
+      <input type="range" id="bgop" min="20" max="100" step="5">
+    </div>
     <div class="caption only-dual">Rotate, Flip H and Flip V only change the Stage window — this control view stays readable either way.</div>
   </div>
 
@@ -3374,6 +3378,8 @@ var qrcode = function() {
   var marginVal = document.getElementById('margin-val');
   var dimSlider = document.getElementById('dim');
   var dimVal = document.getElementById('dim-val');
+  var bgopSlider = document.getElementById('bgop');
+  var bgopVal = document.getElementById('bgop-val');
   var fadeBtn = document.getElementById('fade-btn');
   var mirrorBtn = document.getElementById('mirror-btn');
   var flipBtn = document.getElementById('flip-btn');
@@ -3645,10 +3651,11 @@ var qrcode = function() {
     // can't make a browser window see-through to the desktop behind it).
     // 100% = solid black; dialing it down blends toward gray so you can
     // preview how the text reads against a lighter backdrop before a mirror.
-    state.bgOpacity = 100; // slider removed: stage is always solid black
-    var v = 100;
+    var v = Math.max(20, Math.min(100, state.bgOpacity));
     var g = Math.round(255 * (1 - v / 100));
     stage.style.backgroundColor = 'rgb(' + g + ',' + g + ',' + g + ')';
+    bgopSlider.value = v;
+    bgopVal.textContent = v + '%';
   }
   function applySize(){
     scriptText.style.fontSize = state.fontSize + 'px';
@@ -4089,6 +4096,12 @@ var qrcode = function() {
   });
   dimSlider.addEventListener('input', function(){
     state.dimPct = Number(dimSlider.value);
+    applyDim();
+    save();
+  });
+  bgopSlider.addEventListener('input', function(){
+    state.bgOpacity = Number(bgopSlider.value);
+    applyBgOpacity();
     applyDim();
     save();
   });
