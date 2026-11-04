@@ -28,3 +28,30 @@
   },{passive:true});
   document.documentElement.addEventListener('pointerleave',function(){d.classList.remove('on');});
 })();
+
+/* mobile burger menu: mirrors .navlinks, shown <=820px */
+(function(){
+  function init(){
+    var nav=document.querySelector('.navlinks'); if(!nav||document.querySelector('.fx-burger')) return;
+    var row=nav.parentNode; row.style.position='relative';
+    var btn=document.createElement('button'); btn.type='button'; btn.className='fx-burger';
+    btn.setAttribute('aria-label','Menu'); btn.setAttribute('aria-expanded','false'); btn.setAttribute('aria-controls','fx-menu');
+    btn.innerHTML='<i></i><i></i><i></i>';
+    var m=document.createElement('div'); m.className='fx-menu'; m.id='fx-menu'; m.hidden=true;
+    [].forEach.call(nav.querySelectorAll('a'),function(a){
+      var t=(a.textContent||'').trim()||a.getAttribute('aria-label'); if(!t) return;
+      var c=document.createElement('a'); c.href=a.getAttribute('href'); c.textContent=t;
+      if(a.target){c.target=a.target;c.rel='noopener';}
+      if(!a.classList.contains('navlink')&&!a.classList.contains('navico')) c.className='cta';
+      m.appendChild(c);
+    });
+    row.appendChild(btn); row.appendChild(m);
+    function set(o){m.hidden=!o;btn.classList.toggle('open',o);btn.setAttribute('aria-expanded',o?'true':'false');}
+    btn.addEventListener('click',function(e){e.stopPropagation();set(m.hidden);});
+    m.addEventListener('click',function(e){if(e.target.tagName==='A')set(false);});
+    document.addEventListener('click',function(e){if(!m.hidden&&!m.contains(e.target))set(false);});
+    document.addEventListener('keydown',function(e){if(e.key==='Escape'&&!m.hidden){set(false);btn.focus();}});
+    window.addEventListener('resize',function(){if(innerWidth>820)set(false);});
+  }
+  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',init); else init();
+})();
