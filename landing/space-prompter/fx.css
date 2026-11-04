@@ -14,3 +14,7 @@
   .fx-hover-text{transition:text-shadow .25s ease}.fx-hover-text:hover{text-shadow:0 0 22px rgba(var(--fx-w),.55)}
 }
 .btn-primary:focus-visible,.btn-ghost:focus-visible,nav a:focus-visible{outline:none;box-shadow:0 0 0 2px rgba(var(--fx-w),.6),0 0 40px rgba(var(--fx-w),.3)}
+/* Page-wide soft cursor glow (mouse only; JS adds the element) */
+.fx-cursor{position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;transition:opacity .35s ease;mix-blend-mode:screen;background:radial-gradient(520px circle at var(--cx,50%) var(--cy,40%),rgba(255,255,255,.10),rgba(255,255,255,.035) 38%,transparent 68%)}
+.fx-cursor.on{opacity:1}
+@media print{.fx-cursor{display:none}}
