@@ -681,7 +681,7 @@ body.touch #screen-note{order:5;margin-top:12px;padding:10px 12px;font-size:12px
 }
 .install-btn[hidden]{display:none!important}
 #install-setup{display:inline-flex;align-items:center;gap:6px;margin-left:auto;margin-right:10px;padding:7px 12px;border-radius:999px;border:1px solid #3b82f6;background:rgba(59,130,246,.15);color:#9cc2ff;font:600 12.5px/1 inherit;cursor:pointer}
-#install-rail{display:flex;align-items:center;justify-content:center;gap:6px;margin:0 0 12px;padding:9px 12px;border-radius:10px;border:1px solid #3b82f6;background:rgba(59,130,246,.15);color:#9cc2ff;font:600 12.5px/1 inherit;cursor:pointer}
+#install-rail{display:flex;align-items:center;justify-content:center;gap:6px;margin:12px 0 4px;padding:9px 12px;border-radius:10px;border:1px solid #3b82f6;background:rgba(59,130,246,.15);color:#9cc2ff;font:600 12.5px/1 inherit;cursor:pointer}
 #install-rail:hover,#install-setup:hover{background:rgba(59,130,246,.3)}
 #install-ctl{margin-top:8px;border-color:#3b82f6;color:#9cc2ff}
 </style>
@@ -696,6 +696,7 @@ body.touch #screen-note{order:5;margin-top:12px;padding:10px 12px;font-size:12px
       <span class="meta" id="build-meta">—</span>
     </span>
   </button>
+  <button type="button" class="install-btn" id="install-rail" hidden aria-label="Install Space Prompter as an app"><svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor"><path d="M5 20h14v-2H5v2zM19 9h-4V3H9v6H5l7 7 7-7z"/></svg><span>Install app</span></button>
   <div class="scripts-head">
     <div class="sec-title">Scripts</div>
     <button type="button" id="new-script-btn" aria-label="New script">+ New</button>
@@ -711,7 +712,6 @@ body.touch #screen-note{order:5;margin-top:12px;padding:10px 12px;font-size:12px
   <div id="screen-note-mini" class="only-dual">
     <b>Two screens.</b> Control window = this one. Stage window = your second display, the view the camera reads.
   </div>
-  <button type="button" class="install-btn" id="install-rail" hidden aria-label="Install Space Prompter as an app"><svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor"><path d="M5 20h14v-2H5v2zM19 9h-4V3H9v6H5l7 7 7-7z"/></svg><span>Install app</span></button>
   <div class="copyright">© shovonix</div>
 </aside>
 
@@ -5139,13 +5139,18 @@ var qrcode = function() {
     var safariMac = /Safari/.test(ua) && !/Chrome|Chromium|Edg|OPR/.test(ua) && /Macintosh/.test(ua);
     function show(label){ btns.forEach(function(b){ if(label){ var sp = b.querySelector('span'); if(sp) sp.textContent = label; } b.hidden = false; }); }
     function hide(){ btns.forEach(function(b){ b.hidden = true; }); }
-    window.addEventListener('beforeinstallprompt', function(e){ e.preventDefault(); deferred = e; show(); });
-    window.addEventListener('appinstalled', function(){ deferred = null; hide(); });
-    if(safariMac) show('Install: Share → Add to Dock');
+    var FLAG = 'spInstalled';
+    function flag(v){ try{ if(v) localStorage.setItem(FLAG,'1'); else localStorage.removeItem(FLAG); }catch(e){} }
+    function flagged(){ try{ return localStorage.getItem(FLAG) === '1'; }catch(e){ return false; } }
+    // Chrome only fires this when the app is NOT installed, so it also clears a stale flag.
+    window.addEventListener('beforeinstallprompt', function(e){ e.preventDefault(); deferred = e; flag(false); show(); });
+    window.addEventListener('appinstalled', function(){ deferred = null; flag(true); hide(); });
+    if(safariMac && !flagged()) show('Install: Share → Add to Dock');
+    if(navigator.getInstalledRelatedApps){ navigator.getInstalledRelatedApps().then(function(a){ if(a && a.length){ flag(true); deferred = null; hide(); } }).catch(function(){}); }
     btns.forEach(function(b){ b.addEventListener('click', function(){
       if(!deferred) return;
       var d = deferred; deferred = null; hide();
-      d.prompt(); d.userChoice.then(function(c){ if(c.outcome !== 'accepted'){ deferred = d; show(); } }).catch(function(){});
+      d.prompt(); d.userChoice.then(function(c){ if(c.outcome === 'accepted') flag(true); else { deferred = d; show(); } }).catch(function(){});
     }); });
   })();
   if('serviceWorker' in navigator && location.protocol === 'https:' && !isStageWindow){
