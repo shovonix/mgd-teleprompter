@@ -420,7 +420,11 @@ input[type=range]::-moz-range-thumb{
 }
 .tpair{display:flex;gap:8px;margin-bottom:8px}
 .tpair .tbtn{margin-bottom:0;flex:1;min-width:0;padding:10px}
-.tpair.half .tbtn{flex:0 0 calc(50% - 4px)}
+.tpair.three{gap:6px}
+.tpair.three .tbtn{padding:10px 8px;gap:6px;font-size:12.5px}
+.tpair.three .tbtn svg{width:14px;height:14px}
+.tpair.three .rot-deg{display:none}
+#rotate-btn svg{transition:transform .25s ease}
 .tpair .rot-deg{margin-right:4px}
 .tbtn:hover{border-color:#4a4a50}
 .tbtn svg{width:16px;height:16px;fill:currentColor;flex:none;opacity:.8}
@@ -880,7 +884,7 @@ body.touch #screen-note{order:5;margin-top:12px;padding:10px 12px;font-size:12px
       <div class="slider-label"><span>Opacity</span><span id="bgop-val">—</span></div>
       <input type="range" id="bgop" min="20" max="100" step="5">
     </div>
-    <div class="tpair">
+    <div class="tpair three">
       <button class="tbtn" id="mirror-btn" aria-pressed="false" aria-label="Flip H — horizontal flip" title="Horizontal flip (stage window in dual mode)">
         <span>Flip H</span>
         <svg viewBox="0 0 24 24"><path d="M11 3h2v18h-2zM4 7l5 5-5 5zM20 7l-5 5 5 5z"/></svg>
@@ -889,8 +893,6 @@ body.touch #screen-note{order:5;margin-top:12px;padding:10px 12px;font-size:12px
         <span>Flip V</span>
         <svg viewBox="0 0 24 24" style="transform:rotate(90deg)"><path d="M11 3h2v18h-2zM4 7l5 5-5 5zM20 7l-5 5 5 5z"/></svg>
       </button>
-    </div>
-    <div class="tpair half">
       <button class="tbtn" id="rotate-btn" aria-label="Rotate 90 degrees" title="Each press turns the prompter 90°, then loops back to 0° (stage window in dual mode)">
         <span>Rotate</span><span class="rot-deg" id="rot-deg">0°</span>
         <svg viewBox="0 0 24 24"><path d="M16.5 3.5L21 8l-4.5 4.5V9.2c-2.6.4-4.5 2.6-4.5 5.3 0 3 2.5 5.5 5.5 5.5v2c-4.1 0-7.5-3.4-7.5-7.5 0-3.8 2.8-6.9 6.5-7.4V3.5zM3 6h6v6H3z"/></svg>
@@ -3546,6 +3548,8 @@ var qrcode = function() {
       scroller.style.transform = 'none';
     }
     rotDeg.textContent = (state.rotation || 0) + '°';
+    var rotSvg = rotateBtn.querySelector('svg'); if(rotSvg) rotSvg.style.transform = 'rotate(' + (state.rotation || 0) + 'deg)';
+    rotateBtn.title = 'Rotate 90° — now ' + (state.rotation || 0) + '° (stage window in dual mode)';
     mirrorBtn.setAttribute('aria-pressed', state.mirrored ? 'true' : 'false');
     flipBtn.setAttribute('aria-pressed', state.flipped ? 'true' : 'false');
   }
