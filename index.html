@@ -420,6 +420,8 @@ input[type=range]::-moz-range-thumb{
 }
 .tpair{display:flex;gap:8px;margin-bottom:8px}
 .tpair .tbtn{margin-bottom:0;flex:1;min-width:0;padding:10px}
+.tpair.half .tbtn{flex:0 0 calc(50% - 4px)}
+.tpair .rot-deg{margin-right:4px}
 .tbtn:hover{border-color:#4a4a50}
 .tbtn svg{width:16px;height:16px;fill:currentColor;flex:none;opacity:.8}
 .tbtn[aria-pressed="true"]{background:rgba(255,255,255,.1);border-color:rgba(255,255,255,.4);color:var(--fg)}
@@ -872,10 +874,6 @@ body.touch #screen-note{order:5;margin-top:12px;padding:10px 12px;font-size:12px
         <button type="button" data-align="right" aria-pressed="false" aria-label="Align right" title="Align right"><svg viewBox="0 0 24 24"><path d="M3 5h18v2H3zM9 9h12v2H9zM3 13h18v2H3zM9 17h12v2H9z"/></svg></button>
       </div>
     </div>
-    <button class="tbtn" id="rotate-btn" aria-label="Rotate 90 degrees" title="Each press turns the prompter 90°, then loops back to 0° (stage window in dual mode)">
-      <span>Rotate 90°</span><span class="rot-deg" id="rot-deg">0°</span>
-      <svg viewBox="0 0 24 24"><path d="M16.5 3.5L21 8l-4.5 4.5V9.2c-2.6.4-4.5 2.6-4.5 5.3 0 3 2.5 5.5 5.5 5.5v2c-4.1 0-7.5-3.4-7.5-7.5 0-3.8 2.8-6.9 6.5-7.4V3.5zM3 6h6v6H3z"/></svg>
-    </button>
     <div class="tpair">
       <button class="tbtn" id="mirror-btn" aria-pressed="false" aria-label="Flip H — horizontal flip" title="Horizontal flip (stage window in dual mode)">
         <span>Flip H</span>
@@ -894,6 +892,12 @@ body.touch #screen-note{order:5;margin-top:12px;padding:10px 12px;font-size:12px
       <button class="tbtn" id="fade-btn" aria-pressed="true" aria-label="Fade other lines" title="On: lines away from the guide fade to grey. Off: all text stays white.">
         <span>Fade text</span>
         <svg viewBox="0 0 24 24"><path d="M3 5h18v2H3zM3 9h18v2H3z" opacity=".35"/><path d="M3 13h18v2H3zM3 17h18v2H3z"/></svg>
+      </button>
+    </div>
+    <div class="tpair half">
+      <button class="tbtn" id="rotate-btn" aria-label="Rotate 90 degrees" title="Each press turns the prompter 90°, then loops back to 0° (stage window in dual mode)">
+        <span>Rotate</span><span class="rot-deg" id="rot-deg">0°</span>
+        <svg viewBox="0 0 24 24"><path d="M16.5 3.5L21 8l-4.5 4.5V9.2c-2.6.4-4.5 2.6-4.5 5.3 0 3 2.5 5.5 5.5 5.5v2c-4.1 0-7.5-3.4-7.5-7.5 0-3.8 2.8-6.9 6.5-7.4V3.5zM3 6h6v6H3z"/></svg>
       </button>
     </div>
     <div class="caption only-dual">Rotate, Flip H and Flip V only change the Stage window — this control view stays readable either way.</div>
