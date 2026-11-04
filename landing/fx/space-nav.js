@@ -12,7 +12,7 @@
   var reduce=window.matchMedia&&matchMedia('(prefers-reduced-motion:reduce)').matches;
   function sections(){
     var l=[].slice.call(document.querySelectorAll('[data-space-section]'));
-    if(!l.length) l=[].slice.call(document.querySelectorAll('main > *, body > section, article > section'));
+    if(!l.length) l=[].slice.call(document.querySelectorAll('main > *, body > section, body > div, body > footer, article > section'));
     return l.filter(function(e){return e.offsetHeight>120;});
   }
   function skip(t){
@@ -53,6 +53,7 @@
   var down=false, held=false, holdT=null, longT=null;
   addEventListener('keydown',function(e){
     if(e.code!=='Space'||e.ctrlKey||e.metaKey||e.altKey||skip(e.target)) return;
+    if(e.defaultPrevented) return;   /* page owns Space here (e.g. hero demo) */
     e.preventDefault(); hideHint();
     if(e.repeat||down) return;
     down=true; held=false;

@@ -1,0 +1,16 @@
+/* Space glow effects, shared. Include fx.css + fx.js on any page.
+   Ambient glow = static, no movement. Hover glow = real mouse only. */
+:root{--fx:255,255,255;--fx-w:255,255,255}
+.fx-glow-text{text-shadow:0 0 32px rgba(var(--fx-w),.42),0 0 80px rgba(var(--fx),.22)}
+.fx-glow-box{box-shadow:0 30px 80px rgba(0,0,0,.6),0 0 0 1px rgba(var(--fx),.22),0 0 64px rgba(var(--fx),.16)!important}
+.btn-primary,.btn-ghost,.card,nav a{transition:box-shadow .25s ease,border-color .25s ease,background .25s ease,color .25s ease}
+.card{position:relative}
+.card::before{content:"";position:absolute;inset:0;border-radius:inherit;pointer-events:none;opacity:0;transition:opacity .3s ease;background:radial-gradient(360px circle at var(--mx,50%) var(--my,50%),rgba(var(--fx-w),.12),transparent 62%)}
+@media (hover:hover){
+  .btn-primary:hover{box-shadow:0 0 44px rgba(var(--fx-w),.38),0 0 90px rgba(var(--fx),.22)}
+  .btn-ghost:hover{border-color:#8a8a92;box-shadow:0 0 30px rgba(var(--fx-w),.14)}
+  .card:hover{border-color:#3a3a42}.card:hover::before{opacity:1}
+  nav a:hover{color:#fff;text-shadow:0 0 14px rgba(var(--fx-w),.5)}
+  .fx-hover-text{transition:text-shadow .25s ease}.fx-hover-text:hover{text-shadow:0 0 22px rgba(var(--fx-w),.55)}
+}
+.btn-primary:focus-visible,.btn-ghost:focus-visible,nav a:focus-visible{outline:none;box-shadow:0 0 0 2px rgba(var(--fx-w),.6),0 0 40px rgba(var(--fx-w),.3)}
