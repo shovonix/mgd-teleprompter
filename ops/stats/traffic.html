@@ -1,0 +1,65 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="robots" content="noindex,nofollow"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Space Prompter Move</title>
+<style>
+:root{--bg:#0a0a0b;--card:#141416;--line:#26262a;--fg:#f4f4f2;--mute:#8a8a90;--old:#f0a04b;--new:#6b9bff;--ok:#4cc58a;--warn:#e0b04a}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--fg);font:15px/1.5 system-ui,sans-serif;padding:32px max(16px,env(safe-area-inset-left))}
+main{max-width:860px;margin:auto;display:flex;flex-direction:column;gap:18px}a{color:var(--new)}
+h1{font-size:26px;margin:0}h2{font-size:13px;margin:0 0 10px;text-transform:uppercase;letter-spacing:.07em;color:var(--mute)}
+.sub,.lbl,.src{color:var(--mute)}.lbl{font-size:13px}.src{font-size:12.5px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:18px;min-width:0}
+.tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:12px}
+.big{font-size:34px;font-weight:700;font-variant-numeric:tabular-nums}
+.pill{display:inline-block;padding:2px 10px;border-radius:99px;font-size:12px;font-weight:700;background:var(--warn);color:#111}.pill.go{background:var(--ok)}
+.bar{height:14px;background:var(--line);border-radius:7px;overflow:hidden;margin:12px 0 6px}.bar i{display:block;height:100%;background:var(--ok)}
+table{border-collapse:collapse;width:100%;font-variant-numeric:tabular-nums}th,td{text-align:right;padding:7px 8px;border-bottom:1px solid var(--line)}th:first-child,td:first-child{text-align:left}th{color:var(--mute);font-size:13px}
+.scroll{overflow-x:auto}svg text{fill:var(--mute);font-size:11px}
+.top{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap}
+button{background:var(--card);color:var(--fg);border:1px solid var(--line);border-radius:8px;padding:8px 14px;font:inherit;cursor:pointer}button:hover{border-color:var(--new)}
+#stale{display:none;color:#111;background:var(--warn);border-radius:8px;padding:8px 12px;font-size:13.5px}
+</style></head><body><main>
+<div class="top"><div><a href="./">&larr; Stats</a><h1>Space Prompter Move</h1>
+<p class="sub">studio.shovonix.dev (old) vs prompter.shovonix.dev (new). Close the old link when it stays under 5% of daily visitors for 14 days in a row.</p></div>
+<div><button id="rf" type="button">Refresh</button><div class="lbl" id="gen" style="margin-top:6px;text-align:right"></div></div></div>
+<div id="stale"></div>
+<section class="tiles" id="tiles"></section>
+<section class="card"><h2>Close-the-old-link rule</h2><p id="rule" style="margin:0"></p><div class="bar"><i id="prog" style="width:0"></i></div><div class="lbl" id="progl"></div></section>
+<section class="card"><h2>Unique visitors per day</h2><div class="scroll"><svg id="ch" viewBox="0 0 640 220" width="100%" role="img" aria-label="Daily unique visitors, old vs new"></svg></div>
+<div class="lbl" style="display:flex;gap:16px"><span style="color:var(--old)">&#9632; studio (old)</span><span style="color:var(--new)">&#9632; prompter (new)</span></div></section>
+<section class="card"><h2>Daily numbers</h2><div class="scroll"><table id="tb"></table></div></section>
+<p class="src">Source: nginx access logs of each site, summarised by GoAccess every hour. Visitors are counted per day by anonymised IP and browser; crawlers excluded. The latest day is partial until it ends. Refresh re-reads the latest hourly file.</p>
+</main>
+<script>
+var TH=5,NEED=14;
+function $(i){return document.getElementById(i)}
+function fmt(d){var m=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];return (+d.slice(6))+' '+m[+d.slice(4,6)-1]}
+function render(J){
+ var S=J.sites.studio||[],P=J.sites.prompter||[],pm={},sm={};P.forEach(function(r){pm[r.d]=r.v});S.forEach(function(r){sm[r.d]=r.v});
+ var days=Object.keys(sm).concat(Object.keys(pm)).filter(function(v,i,a){return a.indexOf(v)===i}).sort();
+ var D=days.map(function(d){return {d:d,s:sm[d]||0,p:(d in pm)?pm[d]:null}});
+ function share(r){if(r.p==null)return null;var t=r.s+r.p;return t?r.s/t*100:0}
+ var streak=0;D.slice(0,-1).forEach(function(r){var s=share(r);streak=(s!=null&&s<TH)?streak+1:0});
+ var last=D[D.length-1],ls=share(last);
+ $('gen').textContent='Data from '+J.generated.replace('T',' ').replace('Z',' UTC');
+ var age=(Date.now()-Date.parse(J.generated))/36e5,st=$('stale');
+ if(age>3){st.style.display='block';st.textContent='Data is '+Math.round(age)+' hours old. The hourly job may have stopped.'}else st.style.display='none';
+ $('tiles').innerHTML='<div class="card"><div class="lbl">Studio (old), latest day</div><div class="big" style="color:var(--old)">'+last.s+'</div><div class="lbl">unique visitors, '+fmt(last.d)+'</div></div>'+
+ '<div class="card"><div class="lbl">Prompter (new), latest day</div><div class="big" style="color:var(--new)">'+(last.p==null?0:last.p)+'</div><div class="lbl">unique visitors</div></div>'+
+ '<div class="card"><div class="lbl">Studio share, latest day</div><div class="big">'+(ls==null?'n/a':ls.toFixed(0)+'%')+'</div><div class="lbl">target: under '+TH+'%</div></div>'+
+ '<div class="card"><div class="lbl">Status</div><div style="margin:8px 0"><span class="pill'+(streak>=NEED?' go':'')+'">'+(streak>=NEED?'Ready to close':'Keep both open')+'</span></div><div class="lbl">'+streak+' of '+NEED+' qualifying days</div></div>';
+ $('rule').textContent='A finished day qualifies when studio has under '+TH+"% of that day's combined visitors. Any day above that resets the count. At "+NEED+' in a row, studio becomes a permanent redirect to prompter (not deleted), kept 3 to 6 months before the name is reused.';
+ $('prog').style.width=Math.min(100,streak/NEED*100)+'%';$('progl').textContent=streak+' / '+NEED+' days (today excluded until it ends)';
+ var tb='<tr><th>Day</th><th>Studio</th><th>Prompter</th><th>Studio share</th></tr>';
+ D.slice().reverse().forEach(function(r){var s=share(r);tb+='<tr><td>'+fmt(r.d)+'</td><td>'+r.s+'</td><td>'+(r.p==null?'not live yet':r.p)+'</td><td>'+(s==null?'n/a':s.toFixed(0)+'%')+'</td></tr>'});$('tb').innerHTML=tb;
+ var W=640,H=220,L=34,B=24,T=12,max=Math.max.apply(null,D.map(function(r){return Math.max(r.s,r.p||0)}));max=Math.max(10,Math.ceil(max/10)*10);
+ var n=Math.max(D.length-1,1),x=function(i){return L+i*(W-L-14)/n},y=function(v){return T+(H-T-B)*(1-v/max)},s='';
+ for(var g=0;g<=4;g++){var v=max*g/4;s+='<line x1="'+L+'" x2="'+(W-10)+'" y1="'+y(v)+'" y2="'+y(v)+'" stroke="#26262a"/><text x="'+(L-6)+'" y="'+(y(v)+4)+'" text-anchor="end">'+Math.round(v)+'</text>'}
+ D.forEach(function(r,i){s+='<text x="'+x(i)+'" y="'+(H-6)+'" text-anchor="middle">'+fmt(r.d)+'</text>'});
+ function line(k,col){var pts=[];D.forEach(function(r,i){if(r[k]!=null)pts.push([x(i),y(r[k]),r[k]])});
+  var o='<polyline fill="none" stroke="'+col+'" stroke-width="2.5" points="'+pts.map(function(p){return p[0]+','+p[1]}).join(' ')+'"/>';
+  pts.forEach(function(p){o+='<circle cx="'+p[0]+'" cy="'+p[1]+'" r="4" fill="'+col+'"/><text x="'+p[0]+'" y="'+(p[1]-8)+'" text-anchor="middle" style="fill:'+col+'">'+p[2]+'</text>'});return o}
+ $('ch').innerHTML=s+line('s',getComputedStyle(document.documentElement).getPropertyValue('--old'))+line('p',getComputedStyle(document.documentElement).getPropertyValue('--new'));
+}
+function load(){var b=$('rf');b.textContent='Refreshing...';
+ fetch('data/traffic.json?'+Date.now(),{cache:'no-store'}).then(function(r){if(!r.ok)throw 0;return r.json()}).then(render)
+ .catch(function(){$('gen').textContent='Could not load data/traffic.json'}).then(function(){b.textContent='Refresh'})}
+$('rf').addEventListener('click',load);load();setInterval(load,600000);
+</script></body></html>
