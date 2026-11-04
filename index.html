@@ -683,7 +683,6 @@ body.touch #screen-note{order:5;margin-top:12px;padding:10px 12px;font-size:12px
 #install-setup{display:inline-flex;align-items:center;gap:6px;margin-left:auto;margin-right:10px;padding:7px 12px;border-radius:999px;border:1px solid #3b82f6;background:rgba(59,130,246,.15);color:#9cc2ff;font:600 12.5px/1 inherit;cursor:pointer}
 #install-rail{display:flex;align-items:center;justify-content:center;gap:6px;margin:12px 0 4px;padding:9px 12px;border-radius:10px;border:1px solid #3b82f6;background:rgba(59,130,246,.15);color:#9cc2ff;font:600 12.5px/1 inherit;cursor:pointer}
 #install-rail:hover,#install-setup:hover{background:rgba(59,130,246,.3)}
-#install-ctl{margin-top:8px;border-color:#3b82f6;color:#9cc2ff}
 </style>
 
 <button type="button" id="update-toast" aria-live="polite"></button>
@@ -917,7 +916,6 @@ body.touch #screen-note{order:5;margin-top:12px;padding:10px 12px;font-size:12px
     </div>
   </div>
 
-  <button class="tbtn install-btn" id="install-ctl" hidden aria-label="Install Space Prompter as an app"><span>Install app</span><svg viewBox="0 0 24 24"><path d="M5 20h14v-2H5v2zM19 9h-4V3H9v6H5l7 7 7-7z"/></svg></button>
   <div class="rail-spacer"></div>
   <div id="shortcuts-hint">
     <span><kbd>space</kbd> play / pause</span>
@@ -5130,7 +5128,7 @@ var qrcode = function() {
 
   // ---- Install-as-app prompts (landing header + Controls panel; never on the prompting stage) ----
   (function(){
-    var btns = [document.getElementById('install-setup'), document.getElementById('install-rail'), document.getElementById('install-ctl')].filter(Boolean);
+    var btns = [document.getElementById('install-setup'), document.getElementById('install-rail')].filter(Boolean);
     if(!btns.length || isStageWindow) return;
     var standalone = (window.matchMedia && matchMedia('(display-mode: standalone)').matches) || navigator.standalone;
     if(standalone) return;
