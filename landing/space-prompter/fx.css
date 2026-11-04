@@ -2,12 +2,12 @@
    Ambient glow = near-static, 8s breathing. Hover glow = real mouse only. */
 :root{--fx:232,70,58;--fx-w:255,255,255}
 .fx-glow-text{animation:fxText 8s ease-in-out infinite}
-@keyframes fxText{0%,100%{text-shadow:0 0 26px rgba(var(--fx-w),.16),0 0 60px rgba(var(--fx),.10)}50%{text-shadow:0 0 30px rgba(var(--fx-w),.26),0 0 70px rgba(var(--fx),.18)}}
+@keyframes fxText{0%,100%{text-shadow:0 0 28px rgba(var(--fx-w),.34),0 0 70px rgba(var(--fx),.30)}50%{text-shadow:0 0 36px rgba(var(--fx-w),.5),0 0 90px rgba(var(--fx),.45)}}
 .fx-glow-box{animation:fxBox 8s ease-in-out infinite}
-@keyframes fxBox{0%,100%{box-shadow:0 30px 80px rgba(0,0,0,.6),0 0 0 1px rgba(var(--fx),.16),0 0 46px rgba(var(--fx),.10)}50%{box-shadow:0 30px 80px rgba(0,0,0,.6),0 0 0 1px rgba(var(--fx),.26),0 0 60px rgba(var(--fx),.18)}}
+@keyframes fxBox{0%,100%{box-shadow:0 30px 80px rgba(0,0,0,.6),0 0 0 1px rgba(var(--fx),.4),0 0 50px rgba(var(--fx),.28)}50%{box-shadow:0 30px 80px rgba(0,0,0,.6),0 0 0 1px rgba(var(--fx),.6),0 0 80px rgba(var(--fx),.45)}}
 .btn-primary,.btn-ghost,.card,nav a{transition:box-shadow .25s ease,border-color .25s ease,background .25s ease,color .25s ease}
 .card{position:relative}
-.card::before{content:"";position:absolute;inset:0;border-radius:inherit;pointer-events:none;opacity:0;transition:opacity .3s ease;background:radial-gradient(360px circle at var(--mx,50%) var(--my,50%),rgba(var(--fx-w),.07),transparent 62%)}
+.card::before{content:"";position:absolute;inset:0;border-radius:inherit;pointer-events:none;opacity:0;transition:opacity .3s ease;background:radial-gradient(360px circle at var(--mx,50%) var(--my,50%),rgba(var(--fx-w),.12),transparent 62%)}
 @media (hover:hover){
   .btn-primary:hover{box-shadow:0 0 44px rgba(var(--fx-w),.38),0 0 90px rgba(var(--fx),.22)}
   .btn-ghost:hover{border-color:#8a8a92;box-shadow:0 0 30px rgba(var(--fx-w),.14)}
