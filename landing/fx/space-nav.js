@@ -8,7 +8,7 @@
   var me=document.currentScript||document.querySelector('script[src*="space-nav"]');
   var OFFSET=+(me&&me.getAttribute('data-offset'))||0;
   var HINT=!(me&&me.getAttribute('data-hint')==='off');
-  var DOUBLE=520, HOLD=450, EDGE=30;
+  var DOUBLE=700, HOLD=450, EDGE=30;
   var reduce=window.matchMedia&&matchMedia('(prefers-reduced-motion:reduce)').matches;
   function sections(){
     var l=[].slice.call(document.querySelectorAll('[data-space-section]'));
@@ -21,12 +21,13 @@
     return /^(input|textarea|select|button|a|video|audio|iframe|summary)$/.test(n)||t.isContentEditable||(t.getAttribute&&/^(button|link|textbox|slider|tab|menuitem)$/.test(t.getAttribute('role')||''))||!!(t.closest&&t.closest('dialog[open],[aria-modal="true"]'));
   }
   /* instant, smooth scroll: fixed short ease-out, interruptible */
-  var raf=0;
+  var raf=0, dest=0;
   function stop(){if(raf){cancelAnimationFrame(raf);raf=0;}}
+  function base(){return raf?dest:scrollY;}   /* logical position: where the last jump is heading */
   function go(y){
     stop();
     var max=document.documentElement.scrollHeight-innerHeight;
-    y=Math.max(0,Math.min(max,y));
+    y=Math.max(0,Math.min(max,y)); dest=y;
     var from=scrollY, d=y-from;
     if(!d) return;
     if(reduce){scrollTo(0,y);return;}
@@ -51,9 +52,10 @@
   function prevFrom(y){var a=anchors(),b=0;for(var i=0;i<a.length;i++) if(a[i]<y-EDGE) b=a[i]; return b;}
   var down=false, held=false, dbl=false, holdT=null, lastDown=0, origin=0;
   addEventListener('keydown',function(e){
-    if(e.code!=='Space'||e.ctrlKey||e.metaKey||e.altKey||e.shiftKey||skip(e.target)) return;
+    if(e.code!=='Space'||e.ctrlKey||e.metaKey||e.altKey||skip(e.target)) return;
     e.preventDefault(); hideHint();
     if(e.repeat||down) return;
+    if(e.shiftKey){down=true;held=false;dbl=true;go(prevFrom(base()));return;}   /* Shift+Space: back, no timing needed */
     down=true; held=false; dbl=false;
     var now=Date.now();
     if(lastDown&&now-lastDown<DOUBLE){            /* second press: go back from where the first started */
@@ -66,7 +68,7 @@
     if(e.code!=='Space'||!down) return;
     down=false; clearTimeout(holdT);
     if(dbl||held){dbl=held=false;return;}
-    origin=scrollY; go(nextFrom(origin));         /* single tap: next section, instantly */
+    origin=base(); go(nextFrom(origin));         /* single tap: next section, instantly */
   });
   /* one-time hint */
   var chip=null;
