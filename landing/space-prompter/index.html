@@ -35,6 +35,11 @@ a{color:inherit;text-decoration:none}
 .btn-primary:hover{background:#fff}.btn-ghost:hover{border-color:#6a6a72}
 .navlink{font:500 14px 'Archivo',sans-serif;color:#B4B4B9}.navlink:hover{color:#fff}
 .tb{white-space:nowrap}
+.sp-col{position:absolute;left:0;right:0;font:700 25px/37.5px 'Archivo',sans-serif;white-space:nowrap}
+.sp-col.sp-st{font-size:21px}
+.sp-run{animation:spScroll 16s linear infinite;will-change:transform}
+@keyframes spScroll{to{transform:translateY(-375px)}}
+@media (prefers-reduced-motion:reduce){.sp-run{animation:none}}
 @media (max-width:820px){.navlinks{display:none !important}.hide-s{display:none !important}.wrap{padding:0 20px}.mock-t{font-size:20px !important;line-height:1.45 !important;padding-left:20px !important;padding-right:20px !important}.tb{padding:0 8px !important}}
 .navico{display:inline-flex;color:#8A8A90;margin-left:-6px}.navico:hover{color:#fff}
 </style>
@@ -94,16 +99,9 @@ a{color:inherit;text-decoration:none}
         </div>
         <!-- centre -->
         <div style="flex:1;min-width:0;position:relative;overflow:hidden">
-          <div class="mock-t" style="position:absolute;left:0;right:0;top:0;padding:34px 30px 0;font:700 25px/1.5 'Archivo',sans-serif;color:#5d5d62">
-            Hello and welcome back.<br>Today we are going to
-          </div>
-          <div style="position:absolute;left:0;right:0;top:50%;height:3px;background:linear-gradient(90deg,transparent,#E8463A 18%,#E8463A 82%,transparent);opacity:.85"></div>
-          <div class="mock-t" style="position:absolute;left:0;right:0;top:calc(50% + 24px);padding:0 30px;font:700 25px/1.5 'Archivo',sans-serif;color:#F4F4F2">
-            build something you can use on your very next shoot.
-          </div>
-          <div class="hide-s" style="position:absolute;left:0;right:0;display:none;top:calc(50% + 120px);padding:0 30px;font:700 25px/1.5 'Archivo',sans-serif;color:#4a4a4f">
-            Keep your eyes on the lens.
-          </div>
+          <div aria-hidden="true" style="position:absolute;left:0;right:0;top:0;height:50%;overflow:hidden"><div class="sp-col " style="top:34px;padding:0 30px;color:#5d5d62"><div class="sp-run">Hello and welcome<br>back. Today we are<br>going to build<br>something you can<br>use on your very<br>next shoot.<br>Keep your eyes<br>on the lens.<br>Pause, breathe,<br>then press play.<br>Hello and welcome<br>back. Today we are<br>going to build<br>something you can<br>use on your very<br>next shoot.<br>Keep your eyes<br>on the lens.<br>Pause, breathe,<br>then press play.</div></div></div>
+          <div aria-hidden="true" style="position:absolute;left:0;right:0;top:50%;height:50%;overflow:hidden"><div class="sp-col " style="top:-166px;padding:0 30px;color:#F4F4F2"><div class="sp-run">Hello and welcome<br>back. Today we are<br>going to build<br>something you can<br>use on your very<br>next shoot.<br>Keep your eyes<br>on the lens.<br>Pause, breathe,<br>then press play.<br>Hello and welcome<br>back. Today we are<br>going to build<br>something you can<br>use on your very<br>next shoot.<br>Keep your eyes<br>on the lens.<br>Pause, breathe,<br>then press play.</div></div></div>
+          <div style="position:absolute;left:0;right:0;top:50%;height:3px;background:linear-gradient(90deg,transparent,#E8463A 18%,#E8463A 82%,transparent);opacity:.85;z-index:2"></div>
           <div style="position:absolute;left:50%;transform:translateX(-50%);bottom:18px;display:flex;align-items:center;gap:6px;padding:6px;border-radius:999px;background:rgba(18,18,20,.92);border:1px solid #2c2c31">
             <span class="tb" style="display:flex;align-items:center;gap:7px;padding:0 14px;height:34px;font:600 11px 'Archivo',sans-serif;color:#cfcfd2">
               <svg width="13" height="13" viewBox="0 0 24 24" fill="#cfcfd2" aria-hidden="true"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75z"/></svg>Edit script</span>
@@ -132,10 +130,9 @@ a{color:inherit;text-decoration:none}
       <div style="display:flex;align-items:center;gap:8px;margin:0 0 12px 4px;white-space:nowrap;font:600 12px 'Archivo',sans-serif;letter-spacing:.14em;text-transform:uppercase;color:#9A9AA0">Stage window <span style="color:#6c6c72">· faces the camera</span></div>
       <div style="height:400px;border-radius:16px;overflow:hidden;border:1px solid #2A2A2E;background:#000;position:relative;box-shadow:0 30px 80px rgba(0,0,0,.6)">
         <div style="position:absolute;inset:0;transform:scaleX(-1)">
-          <div style="position:absolute;left:0;right:0;top:0;padding:34px 22px 0;font:700 21px/1.5 'Archivo',sans-serif;color:#5d5d62">Hello and welcome back.<br>Today we are going to</div>
-          <div style="position:absolute;left:0;right:0;top:50%;height:3px;background:linear-gradient(90deg,transparent,#E8463A 18%,#E8463A 82%,transparent);opacity:.85"></div>
-          <div style="position:absolute;left:0;right:0;top:calc(50% + 24px);padding:0 22px;font:700 21px/1.5 'Archivo',sans-serif;color:#F4F4F2">build something you can use on your very next shoot.</div>
-          <div style="position:absolute;left:0;right:0;display:none;top:calc(50% + 150px);padding:0 22px;font:700 21px/1.5 'Archivo',sans-serif;color:#4a4a4f">Keep your eyes on the lens.</div>
+          <div aria-hidden="true" style="position:absolute;left:0;right:0;top:0;height:50%;overflow:hidden"><div class="sp-col sp-st" style="top:34px;padding:0 22px;color:#5d5d62"><div class="sp-run">Hello and welcome<br>back. Today we are<br>going to build<br>something you can<br>use on your very<br>next shoot.<br>Keep your eyes<br>on the lens.<br>Pause, breathe,<br>then press play.<br>Hello and welcome<br>back. Today we are<br>going to build<br>something you can<br>use on your very<br>next shoot.<br>Keep your eyes<br>on the lens.<br>Pause, breathe,<br>then press play.</div></div></div>
+          <div aria-hidden="true" style="position:absolute;left:0;right:0;top:50%;height:50%;overflow:hidden"><div class="sp-col sp-st" style="top:-166px;padding:0 22px;color:#F4F4F2"><div class="sp-run">Hello and welcome<br>back. Today we are<br>going to build<br>something you can<br>use on your very<br>next shoot.<br>Keep your eyes<br>on the lens.<br>Pause, breathe,<br>then press play.<br>Hello and welcome<br>back. Today we are<br>going to build<br>something you can<br>use on your very<br>next shoot.<br>Keep your eyes<br>on the lens.<br>Pause, breathe,<br>then press play.</div></div></div>
+          <div style="position:absolute;left:0;right:0;top:50%;height:3px;background:linear-gradient(90deg,transparent,#E8463A 18%,#E8463A 82%,transparent);opacity:.85;z-index:2"></div>
         </div>
         <div style="position:absolute;left:12px;bottom:12px;display:flex;align-items:center;gap:7px;padding:6px 11px;border-radius:999px;background:rgba(18,18,20,.92);border:1px solid #2c2c31;font:600 10.5px 'Archivo',sans-serif;color:#cfcfd2"><span style="width:7px;height:7px;border-radius:50%;background:#E8463A"></span>Connected · mirrored</div>
       </div>
