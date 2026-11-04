@@ -15,6 +15,6 @@
 }
 .btn-primary:focus-visible,.btn-ghost:focus-visible,nav a:focus-visible{outline:none;box-shadow:0 0 0 2px rgba(var(--fx-w),.6),0 0 40px rgba(var(--fx-w),.3)}
 /* Page-wide soft glow under the mouse (mouse only; JS adds the element) */
-.fx-cursor{position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;transition:opacity .35s ease;mix-blend-mode:screen;background:radial-gradient(860px circle at var(--cx,50%) var(--cy,50%),rgba(255,255,255,.12),rgba(255,255,255,.045) 40%,transparent 70%)}
+.fx-cursor{position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;transition:opacity .35s ease;mix-blend-mode:screen;background:radial-gradient(860px circle at var(--cx,50%) var(--cy,50%),rgba(255,255,255,.045),rgba(255,255,255,.016) 40%,transparent 70%)}
 .fx-cursor.on{opacity:1}
 @media print{.fx-cursor{display:none}}
