@@ -678,6 +678,11 @@ body.touch #screen-note{order:5;margin-top:12px;padding:10px 12px;font-size:12px
   body.touch #setup-top{margin-bottom:8px}
   body.touch #script-input{height:clamp(80px,34dvh,160px)}
 }
+.install-btn[hidden]{display:none!important}
+#install-setup{display:inline-flex;align-items:center;gap:6px;margin-left:auto;margin-right:10px;padding:7px 12px;border-radius:999px;border:1px solid #3b82f6;background:rgba(59,130,246,.15);color:#9cc2ff;font:600 12.5px/1 inherit;cursor:pointer}
+#install-rail{display:flex;align-items:center;justify-content:center;gap:6px;margin:0 0 12px;padding:9px 12px;border-radius:10px;border:1px solid #3b82f6;background:rgba(59,130,246,.15);color:#9cc2ff;font:600 12.5px/1 inherit;cursor:pointer}
+#install-rail:hover,#install-setup:hover{background:rgba(59,130,246,.3)}
+#install-ctl{margin-top:8px;border-color:#3b82f6;color:#9cc2ff}
 </style>
 
 <button type="button" id="update-toast" aria-live="polite"></button>
@@ -705,6 +710,7 @@ body.touch #screen-note{order:5;margin-top:12px;padding:10px 12px;font-size:12px
   <div id="screen-note-mini" class="only-dual">
     <b>Two screens.</b> Control window = this one. Stage window = your second display, the view the camera reads.
   </div>
+  <button type="button" class="install-btn" id="install-rail" hidden aria-label="Install Space Prompter as an app"><svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor"><path d="M5 20h14v-2H5v2zM19 9h-4V3H9v6H5l7 7 7-7z"/></svg><span>Install app</span></button>
   <div class="copyright">© shovonix</div>
 </aside>
 
@@ -712,6 +718,7 @@ body.touch #screen-note{order:5;margin-top:12px;padding:10px 12px;font-size:12px
   <div class="setup-inner">
     <div id="setup-top">
       <button type="button" id="setup-brand" aria-label="New script"><img class="brand-logo" id="setup-logo" alt=""><span class="name">Space Prompter</span></button>
+      <button type="button" class="install-btn" id="install-setup" hidden aria-label="Install Space Prompter as an app"><svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor"><path d="M5 20h14v-2H5v2zM19 9h-4V3H9v6H5l7 7 7-7z"/></svg><span>Install app</span></button>
       <button type="button" id="menu-btn" aria-label="Manage scripts" title="Manage scripts (rename, delete)">☰</button>
     </div>
     <div id="setup-scripts"></div>
@@ -909,6 +916,7 @@ body.touch #screen-note{order:5;margin-top:12px;padding:10px 12px;font-size:12px
     </div>
   </div>
 
+  <button class="tbtn install-btn" id="install-ctl" hidden aria-label="Install Space Prompter as an app"><span>Install app</span><svg viewBox="0 0 24 24"><path d="M5 20h14v-2H5v2zM19 9h-4V3H9v6H5l7 7 7-7z"/></svg></button>
   <div class="rail-spacer"></div>
   <div id="shortcuts-hint">
     <span><kbd>space</kbd> play / pause</span>
@@ -5119,6 +5127,26 @@ var qrcode = function() {
     }
   })();
 
+  // ---- Install-as-app prompts (landing header + Controls panel; never on the prompting stage) ----
+  (function(){
+    var btns = [document.getElementById('install-setup'), document.getElementById('install-rail'), document.getElementById('install-ctl')].filter(Boolean);
+    if(!btns.length || isStageWindow) return;
+    var standalone = (window.matchMedia && matchMedia('(display-mode: standalone)').matches) || navigator.standalone;
+    if(standalone) return;
+    var deferred = null;
+    var ua = navigator.userAgent;
+    var safariMac = /Safari/.test(ua) && !/Chrome|Chromium|Edg|OPR/.test(ua) && /Macintosh/.test(ua);
+    function show(label){ btns.forEach(function(b){ if(label){ var sp = b.querySelector('span'); if(sp) sp.textContent = label; } b.hidden = false; }); }
+    function hide(){ btns.forEach(function(b){ b.hidden = true; }); }
+    window.addEventListener('beforeinstallprompt', function(e){ e.preventDefault(); deferred = e; show(); });
+    window.addEventListener('appinstalled', function(){ deferred = null; hide(); });
+    if(safariMac) show('Install: Share → Add to Dock');
+    btns.forEach(function(b){ b.addEventListener('click', function(){
+      if(!deferred) return;
+      var d = deferred; deferred = null; hide();
+      d.prompt(); d.userChoice.then(function(c){ if(c.outcome !== 'accepted'){ deferred = d; show(); } }).catch(function(){});
+    }); });
+  })();
   if('serviceWorker' in navigator && location.protocol === 'https:' && !isStageWindow){
     window.addEventListener('load', function(){ navigator.serviceWorker.register('/sw.js').catch(function(){}); });
   }
