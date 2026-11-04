@@ -1,5 +1,5 @@
 /*! space-nav.js - Space key moves through page sections.
- *  Space = next section · hold Space = previous section.
+ *  Space = next section · hold Space = previous section · hold longer = top.
  *  Use: <script src="https://shovonix.dev/fx/space-nav.js" defer></script>
  *  Mark sections with data-space-section; otherwise it auto-detects (main > *, body > section).
  *  Options on the script tag: data-offset="64" (sticky header height), data-hint="off".
@@ -8,7 +8,7 @@
   var me=document.currentScript||document.querySelector('script[src*="space-nav"]');
   var OFFSET=+(me&&me.getAttribute('data-offset'))||0;
   var HINT=!(me&&me.getAttribute('data-hint')==='off');
-  var HOLD=380, EDGE=30;
+  var HOLD=380, LONG=1200, EDGE=30;
   var reduce=window.matchMedia&&matchMedia('(prefers-reduced-motion:reduce)').matches;
   function sections(){
     var l=[].slice.call(document.querySelectorAll('[data-space-section]'));
@@ -50,7 +50,7 @@
   }
   function nextFrom(y){var a=anchors();for(var i=0;i<a.length;i++) if(a[i]>y+EDGE) return a[i]; return 1e9;}
   function prevFrom(y){var a=anchors(),b=0;for(var i=0;i<a.length;i++) if(a[i]<y-EDGE) b=a[i]; return b;}
-  var down=false, held=false, holdT=null;
+  var down=false, held=false, holdT=null, longT=null;
   addEventListener('keydown',function(e){
     if(e.code!=='Space'||e.ctrlKey||e.metaKey||e.altKey||skip(e.target)) return;
     e.preventDefault(); hideHint();
@@ -58,10 +58,11 @@
     down=true; held=false;
     if(e.shiftKey){held=true;go(prevFrom(base()));return;}   /* Shift+Space: back, instant */
     holdT=setTimeout(function(){held=true;go(prevFrom(base()));},HOLD);   /* hold: previous section */
+    longT=setTimeout(function(){held=true;go(0);},LONG);                  /* hold longer: top */
   });
   addEventListener('keyup',function(e){
     if(e.code!=='Space'||!down) return;
-    down=false; clearTimeout(holdT);
+    down=false; clearTimeout(holdT); clearTimeout(longT);
     if(held){held=false;return;}
     go(nextFrom(base()));                        /* tap: next section */
   });
@@ -74,7 +75,7 @@
       chip=document.createElement('div');
       chip.setAttribute('role','note');
       chip.style.cssText='position:fixed;left:50%;bottom:22px;transform:translateX(-50%);z-index:9999;padding:9px 16px;border-radius:999px;background:rgba(20,20,22,.92);border:1px solid rgba(255,255,255,.14);color:#cfcfd2;font:500 12.5px/1 system-ui,sans-serif;letter-spacing:.01em;white-space:nowrap;opacity:0;transition:opacity .4s;pointer-events:none;box-shadow:0 10px 30px rgba(0,0,0,.5)';
-      chip.innerHTML='<b style="color:#fff">Space</b> next &nbsp;·&nbsp; <b style="color:#fff">hold Space</b> back';
+      chip.innerHTML='<b style="color:#fff">Space</b> next &nbsp;·&nbsp; <b style="color:#fff">hold Space</b> back &nbsp;·&nbsp; <b style="color:#fff">hold longer</b> top';
       document.body.appendChild(chip);
       requestAnimationFrame(function(){chip.style.opacity='1';});
       setTimeout(hideHint,7000);
