@@ -682,6 +682,8 @@ body.touch #screen-note{order:5;margin-top:12px;padding:10px 12px;font-size:12px
 .install-btn[hidden]{display:none!important}
 #install-setup{display:inline-flex;align-items:center;gap:6px;margin-left:auto;margin-right:10px;padding:7px 12px;border-radius:999px;border:1px solid #3b82f6;background:rgba(59,130,246,.15);color:#9cc2ff;font:600 12.5px/1 inherit;cursor:pointer}
 #install-rail{display:flex;align-items:center;justify-content:center;gap:6px;margin:12px 0 4px;padding:9px 12px;border-radius:10px;border:1px solid #3b82f6;background:rgba(59,130,246,.15);color:#9cc2ff;font:600 12.5px/1 inherit;cursor:pointer}
+@keyframes installPulse{0%,100%{box-shadow:0 0 0 0 rgba(59,130,246,.0)}50%{box-shadow:0 0 0 6px rgba(59,130,246,.35)}}
+.install-pulse{animation:installPulse 1.2s ease-in-out 6}
 #install-rail:hover,#install-setup:hover{background:rgba(59,130,246,.3)}
 </style>
 
@@ -5144,6 +5146,8 @@ var qrcode = function() {
     window.addEventListener('beforeinstallprompt', function(e){ e.preventDefault(); deferred = e; flag(false); show(); });
     window.addEventListener('appinstalled', function(){ deferred = null; flag(true); hide(); });
     if(safariMac && !flagged()) show('Install: Share → Add to Dock');
+    // Arrived from the landing page's "Install as an app" link: draw the eye to the button.
+    if(/[?&]install=1/.test(location.search)) btns.forEach(function(b){ b.classList.add('install-pulse'); setTimeout(function(){ b.classList.remove('install-pulse'); }, 8000); });
     if(navigator.getInstalledRelatedApps){ navigator.getInstalledRelatedApps().then(function(a){ if(a && a.length){ flag(true); deferred = null; hide(); } }).catch(function(){}); }
     btns.forEach(function(b){ b.addEventListener('click', function(){
       if(!deferred) return;
