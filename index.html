@@ -418,6 +418,8 @@ input[type=range]::-moz-range-thumb{
   padding:10px 12px;margin-bottom:8px;cursor:pointer;font-size:13px;color:#dcdcde;
   transition:background .2s ease, border-color .2s ease;
 }
+.tpair{display:flex;gap:8px;margin-bottom:8px}
+.tpair .tbtn{margin-bottom:0;flex:1;min-width:0;padding:10px}
 .tbtn:hover{border-color:#4a4a50}
 .tbtn svg{width:16px;height:16px;fill:currentColor;flex:none;opacity:.8}
 .tbtn[aria-pressed="true"]{background:rgba(255,255,255,.1);border-color:rgba(255,255,255,.4);color:var(--fg)}
@@ -874,18 +876,26 @@ body.touch #screen-note{order:5;margin-top:12px;padding:10px 12px;font-size:12px
       <span>Rotate 90°</span><span class="rot-deg" id="rot-deg">0°</span>
       <svg viewBox="0 0 24 24"><path d="M16.5 3.5L21 8l-4.5 4.5V9.2c-2.6.4-4.5 2.6-4.5 5.3 0 3 2.5 5.5 5.5 5.5v2c-4.1 0-7.5-3.4-7.5-7.5 0-3.8 2.8-6.9 6.5-7.4V3.5zM3 6h6v6H3z"/></svg>
     </button>
-    <button class="tbtn" id="mirror-btn" aria-pressed="false" aria-label="Flip H — horizontal flip" title="Horizontal flip (stage window in dual mode)">
-      <span>Flip H</span>
-      <svg viewBox="0 0 24 24"><path d="M11 3h2v18h-2zM4 7l5 5-5 5zM20 7l-5 5 5 5z"/></svg>
-    </button>
-    <button class="tbtn" id="flip-btn" aria-pressed="false" aria-label="Flip V — vertical flip" title="Vertical flip (stage window in dual mode)">
-      <span>Flip V</span>
-      <svg viewBox="0 0 24 24" style="transform:rotate(90deg)"><path d="M11 3h2v18h-2zM4 7l5 5-5 5zM20 7l-5 5 5 5z"/></svg>
-    </button>
-    <button class="tbtn guide" id="guide-btn" aria-pressed="true" aria-label="Guide line" title="Reading guide line">
-      <span>Guide line</span>
-      <svg viewBox="0 0 24 24"><path fill-rule="evenodd" clip-rule="evenodd" d="M3 5h18v14H3V5zm2 2v10h14V7H5z"/><rect x="5" y="11" width="14" height="2"/></svg>
-    </button>
+    <div class="tpair">
+      <button class="tbtn" id="mirror-btn" aria-pressed="false" aria-label="Flip H — horizontal flip" title="Horizontal flip (stage window in dual mode)">
+        <span>Flip H</span>
+        <svg viewBox="0 0 24 24"><path d="M11 3h2v18h-2zM4 7l5 5-5 5zM20 7l-5 5 5 5z"/></svg>
+      </button>
+      <button class="tbtn" id="flip-btn" aria-pressed="false" aria-label="Flip V — vertical flip" title="Vertical flip (stage window in dual mode)">
+        <span>Flip V</span>
+        <svg viewBox="0 0 24 24" style="transform:rotate(90deg)"><path d="M11 3h2v18h-2zM4 7l5 5-5 5zM20 7l-5 5 5 5z"/></svg>
+      </button>
+    </div>
+    <div class="tpair">
+      <button class="tbtn guide" id="guide-btn" aria-pressed="true" aria-label="Guide line" title="Reading guide line">
+        <span>Guide line</span>
+        <svg viewBox="0 0 24 24"><path fill-rule="evenodd" clip-rule="evenodd" d="M3 5h18v14H3V5zm2 2v10h14V7H5z"/><rect x="5" y="11" width="14" height="2"/></svg>
+      </button>
+      <button class="tbtn" id="fade-btn" aria-pressed="true" aria-label="Fade other lines" title="On: lines away from the guide fade to grey. Off: all text stays white.">
+        <span>Fade text</span>
+        <svg viewBox="0 0 24 24"><path d="M3 5h18v2H3zM3 9h18v2H3z" opacity=".35"/><path d="M3 13h18v2H3zM3 17h18v2H3z"/></svg>
+      </button>
+    </div>
     <div class="caption only-dual">Rotate, Flip H and Flip V only change the Stage window — this control view stays readable either way.</div>
   </div>
 
@@ -3254,6 +3264,7 @@ var qrcode = function() {
     fontSize: 48,     // px
     marginPx: 0,       // extra left/right margin, px per side
     dimPct: 55,        // how much the paragraphs away from the guide line fade (0 = no fade)
+    dimOn: true,       // fade toggle: false = every line stays full white
     bgOpacity: 100,    // stage background darkness, 100 = solid black
     pedalKeys: [],     // [{code,key}] — any of these behave exactly like Space
     guideVisible: true, // red reading-guide line across the middle of the stage
@@ -3354,6 +3365,7 @@ var qrcode = function() {
   var bgopVal = document.getElementById('bgop-val');
   var dimSlider = document.getElementById('dim');
   var dimVal = document.getElementById('dim-val');
+  var fadeBtn = document.getElementById('fade-btn');
   var mirrorBtn = document.getElementById('mirror-btn');
   var flipBtn = document.getElementById('flip-btn');
   var rotateBtn = document.getElementById('rotate-btn');
@@ -3596,12 +3608,16 @@ var qrcode = function() {
     var pct = Math.max(0, Math.min(90, state.dimPct == null ? 55 : state.dimPct));
     scriptText.style.setProperty('--dimop', String(1 - pct / 100));
     if(dimSlider){ dimSlider.value = pct; dimVal.textContent = pct ? pct + '%' : 'Off'; }
+    var fadeOn = state.dimOn !== false;
+    if(fadeBtn) fadeBtn.setAttribute('aria-pressed', fadeOn ? 'true' : 'false');
+    var dimGroup = document.getElementById('dim-group');
+    if(dimGroup) dimGroup.style.display = fadeOn ? '' : 'none';
     dimCur = -2;
     updateDim();
   }
   function updateDim(){
     var paras = scriptText.querySelectorAll('.para');
-    var off = !paras.length || !(state.dimPct > 0) || (typeof editMode !== 'undefined' && editMode);
+    var off = !paras.length || state.dimOn === false || !(state.dimPct > 0) || (typeof editMode !== 'undefined' && editMode);
     var cur = -1;
     if(!off){
       var y = (scroller.scrollTop + scroller.clientHeight / 2) / viewK;
@@ -4092,6 +4108,12 @@ var qrcode = function() {
   flipBtn.addEventListener('click', function(){
     state.flipped = !state.flipped;
     applyFlip();
+    save();
+  });
+  fadeBtn.addEventListener('click', function(){
+    state.dimOn = state.dimOn === false;
+    if(state.dimOn && !(state.dimPct > 0)) state.dimPct = 55;
+    applyDim();
     save();
   });
   guideBtn.addEventListener('click', function(){
