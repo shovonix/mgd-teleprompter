@@ -31,5 +31,11 @@ Preview locally: `python3 -m http.server 8000`, then open http://localhost:8000
 
 ## Workflow
 - Work on the Mac in `~/Sites/space/space-teleprompter`. Preview locally, commit small, push to `main`.
-- Deploy by pulling on the VPS. Server paths for prompter, studio, the hub and the relay aren't written down yet: check CloudPanel, don't guess, then record them here.
+- Live files on the VPS (CloudPanel, one site user each):
+  - App: `/home/prompter/htdocs/prompter.shovonix.dev` (user `prompter`)
+  - Old address: `/home/studio/htdocs/studio.shovonix.dev` (user `studio`)
+  - Hub + blog + landing pages (`site/`, `landing/`): `/home/shovonix/htdocs/shovonix.dev` (user `shovonix`)
+  - Stats: `/home/stats/htdocs/stats.shovonix.dev` (user `stats`)
+  - Relay: not under any htdocs folder. Location not recorded yet; find it before touching it, then add it here.
+- None of these folders is a git checkout yet, and this repo is private, so the server can't fetch it without a deploy key. Until one is set up (like Space Balance), ask Shovon before deploying. Keep each site's files owned by its own user.
 - Never edit the live files on the VPS directly.
