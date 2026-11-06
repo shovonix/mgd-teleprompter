@@ -37,5 +37,7 @@ Preview locally: `python3 -m http.server 8000`, then open http://localhost:8000
   - Hub + blog + landing pages (`site/`, `landing/`): `/home/shovonix/htdocs/shovonix.dev` (user `shovonix`)
   - Stats: `/home/stats/htdocs/stats.shovonix.dev` (user `stats`)
   - Relay: not under any htdocs folder. Location not recorded yet; find it before touching it, then add it here.
-- None of these folders is a git checkout yet, and this repo is private, so the server can't fetch it without a deploy key. Until one is set up (like Space Balance), ask Shovon before deploying. Keep each site's files owned by its own user.
+- Deploy the app: push to `main`, then on the VPS run `deploy-space prompter` as root. It pulls `main` as user `prompter` (fast-forward only) and checks the site returns 200.
+- Git data lives outside the web root at `/home/prompter/space-teleprompter.git`. `landing/`, `site/`, `relay/`, `ops/`, `README.md` and `CLAUDE.md` are excluded from the live folder via sparse-checkout.
+- studio, the hub (`site/` + `landing/`) and the relay are NOT on `deploy-space` yet. Ask Shovon before deploying those.
 - Never edit the live files on the VPS directly.
