@@ -39,5 +39,6 @@ Preview locally: `python3 -m http.server 8000`, then open http://localhost:8000
   - Relay: not under any htdocs folder. Location not recorded yet; find it before touching it, then add it here.
 - Deploy the app: push to `main`, then on the VPS run `deploy-space prompter` as root. It pulls `main` as user `prompter` (fast-forward only) and checks the site returns 200.
 - Git data lives outside the web root at `/home/prompter/space-teleprompter.git`. `landing/`, `site/`, `relay/`, `ops/`, `README.md` and `CLAUDE.md` are excluded from the live folder via sparse-checkout.
-- studio, the hub (`site/` + `landing/`) and the relay are NOT on `deploy-space` yet. Ask Shovon before deploying those.
+- Hub: `deploy-space hub` pulls source copies in `/home/shovonix/src/` and copies `site/` → hub root, `landing/fx/` → `/fx/`, `landing/space-prompter/` → `/space-prompter/`, plus each app's `landing/space-<app>/`. It never deletes files on the hub (the `stats-…` folder lives there).
+- studio (old address) and the relay are NOT on `deploy-space`. Ask Shovon before touching them.
 - Never edit the live files on the VPS directly.
